@@ -1,0 +1,22 @@
+# Công cụ và log chạy thử cục bộ
+.tools/
+runtime-logs/
+*.log
+
+# Frontend
+node_modules/
+dist/
+.env
+.env.local
+
+# Backend
+target/
+uploads/*
+!uploads/.gitkeep
+
+# IDE / hệ điều hành
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

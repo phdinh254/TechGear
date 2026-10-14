@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="889.6875px" preserveAspectRatio="none" style="width:881px;height:889px;" version="1.1" viewBox="0 0 881 889" width="881.5625px" zoomAndPan="magnify"><defs/><g><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="507.8125" x="202.4479" y="16.3406">Use case phân rã - Quản lý người dùng, đánh giá, thống kê</text><!--cluster Trang quản trị TechGear--><rect fill="#FFFFFF" height="821.9792" style="stroke: #94A3B8; stroke-width: 2.03125;" width="683.8542" x="182.8125" y="52.9924"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="242.3958" x="403.5417" y="72.0413">Trang quản trị TechGear</text><ellipse cx="306.3188" cy="262.8082" fill="#F0FDFA" rx="101.8396" ry="23.6179" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="166.5625" x="223.0376" y="268.3148">Quản lý người dùng</text><ellipse cx="703.3132" cy="310.2487" fill="#F0FDFA" rx="132.5319" ry="29.7564" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="235.625" x="585.5007" y="315.7553">Xem danh sách người dùng</text><ellipse cx="703.7941" cy="212.9803" fill="#F0FDFA" rx="86.2941" ry="20.5088" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="128.6458" x="639.4712" y="218.4869">Khóa tài khoản</text><ellipse cx="703.7159" cy="121.9647" fill="#F0FDFA" rx="98.4034" ry="22.9307" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="158.4375" x="624.4972" y="127.4713">Mở khóa tài khoản</text><ellipse cx="306.0754" cy="456.6762" fill="#F0FDFA" rx="92.7941" ry="21.8088" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="144.8958" x="233.6275" y="462.1828">Quản lý đánh giá</text><ellipse cx="703.5035" cy="499.5993" fill="#F0FDFA" rx="87.3576" ry="20.7215" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="131.3542" x="637.8264" y="505.1059">Duyệt đánh giá</text><ellipse cx="703.3574" cy="408.8409" fill="#F0FDFA" rx="90.597" ry="21.3694" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="139.4792" x="633.6178" y="414.3475">Ẩn/xóa đánh giá</text><ellipse cx="306.268" cy="650.0897" fill="#F0FDFA" rx="98.4034" ry="22.9307" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="158.4375" x="227.0493" y="655.5963">Thống kê, báo cáo</text><ellipse cx="703.719" cy="822.2383" fill="#F0FDFA" rx="118.0419" ry="31.2252" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="171.9792" x="617.7294" y="820.1621">Thống kê doanh thu</text><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="119.1667" x="644.1356" y="840.6545">theo thời gian</text><ellipse cx="703.256" cy="710.7998" fill="#F0FDFA" rx="141.2768" ry="31.5054" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="254.5833" x="575.9643" y="716.3064">Thống kê sản phẩm bán chạy</text><ellipse cx="703.6683" cy="599.9067" fill="#F0FDFA" rx="115.2829" ry="31.6539" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="165.2083" x="621.0641" y="597.1838">Thống kê đơn hàng</text><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="128.6458" x="639.3454" y="617.6761">theo trạng thái</text><!--entity QTV--><ellipse cx="63.6458" cy="417.2632" fill="#CCFBF1" rx="10.8333" ry="10.8333" style="stroke: #0F766E; stroke-width: 2.7083333333333335;"/><path d="M63.6458,428.0965 L63.6458,464.659 M46.0417,438.9299 L81.25,438.9299 M63.6458,464.659 L46.0417,484.9715 M63.6458,464.659 L81.25,484.9715 " fill="none" style="stroke: #0F766E; stroke-width: 2.7083333333333335;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="111.0417" x="8.125" y="505.3746">Quản trị viên</text><!--link QTV to U1--><path d="M119.3833,412.5913 C165.9938,374.9455 231.6438,321.9028 270.9958,290.1069 " fill="none" id="QTV-U1" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><polygon fill="#475569" points="276.6156,285.5705,263.7272,289.0002,271.3436,289.819,270.5248,297.4354,276.6156,285.5705" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><!--link U1 to U2--><path d="M378.5573,282.6726 C400.7115,288.1028 425.3438,293.4111 448.2292,296.7424 C487.974,302.5246 531.551,305.9101 571.2146,307.8736 " fill="none" id="U1-U2" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="371.7729,280.9799,382.2999,289.1688,378.345,282.6083,384.9054,278.6535,371.7729,280.9799" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="449.5833" y="292.9648">«extend»</text><!--link U1 to U3--><path d="M403,250.7549 C471.8729,242.0069 563.4958,230.3882 627.1146,222.3038 " fill="none" id="U1-U3" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="395.9854,251.6486,408.7575,255.4891,402.7025,250.7969,407.3947,244.7418,395.9854,251.6486" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="449.5833" y="233.3815">«extend»</text><!--link U1 to U4--><path d="M364.4198,239.759 C389.9594,229.5757 420.5094,217.6184 448.2292,207.3674 C498.401,188.8288 511.2927,185.1726 561.9792,168.0965 C589.1573,158.9424 619.3823,148.9757 644.7865,140.6746 " fill="none" id="U1-U4" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="358.0417,242.3184,371.3692,242.8213,364.3282,239.8038,367.3458,232.7628,358.0417,242.3184" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="449.5833" y="179.2148">«extend»</text><!--link QTV to U5--><path d="M119.3833,456.534 C144.9635,456.534 176.2719,456.534 205.8198,456.534 " fill="none" id="QTV-U5" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><polygon fill="#475569" points="212.9021,456.534,200.7146,451.1174,206.1313,456.534,200.7146,461.9507,212.9021,456.534" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><!--link U5 to U6--><path d="M367.7646,476.2236 C392.4375,483.3601 421.4167,490.6184 448.2292,494.4507 C504.1021,502.4403 567.5719,503.7944 617.0802,503.158 " fill="none" id="U5-U6" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="360.926,474.2194,371.1094,482.8319,367.426,476.1153,374.1427,472.4319,360.926,474.2194" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="449.5833" y="490.6732">«extend»</text><!--link U5 to U7--><path d="M396.0667,445.8903 C463.775,437.7517 556.2646,426.6476 621.8063,418.7799 " fill="none" id="U5-U7" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="389.1875,446.7163,401.9362,450.6336,395.9096,445.905,400.6382,439.8784,389.1875,446.7163" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="449.5833" y="428.3815">«extend»</text><!--link QTV to U8--><path d="M119.3833,500.4767 C166.251,538.3392 232.3885,591.7611 271.6594,623.5028 " fill="none" id="QTV-U8" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><polygon fill="#475569" points="277.2521,628.0257,271.1561,616.1634,271.9782,623.7794,264.3621,624.6015,277.2521,628.0257" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><!--link U8 to U9--><path d="M357.4865,674.0267 C408.5792,698.1309 490.3167,736.0746 561.9792,766.6382 C585.8125,776.808 612.1781,787.4111 635.5375,796.5924 " fill="none" id="U8-U9" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="350.7833,670.858,359.4967,680.9551,356.9075,673.7456,364.117,671.1564,350.7833,670.858" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="449.5833" y="714.1107">«extend»</text><!--link U8 to U10--><path d="M395.4708,663.7757 C451.6958,672.4559 525.1865,683.8038 586.124,693.2017 " fill="none" id="U8-U10" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="388.7135,662.733,399.9404,669.9325,395.4063,663.7582,401.5807,659.2241,388.7135,662.733" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="449.5833" y="670.7773">«extend»</text><!--link U8 to U11--><path d="M399.8448,638.4392 C459.3604,630.8965 536.8052,621.0653 598.4198,613.2382 " fill="none" id="U8-U11" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="393.0469,639.3059,405.8189,643.1464,399.7639,638.4542,404.4562,632.3991,393.0469,639.3059" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="449.5833" y="620.6732">«extend»</text><!--
+@startuml UC_QT_NguoiDungThongKe
+title Use case phân rã - Quản lý người dùng, đánh giá, thống kê
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam dpi 130
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F0FDFA
+  BorderColor #0F766E
+  ArrowColor #475569
+}
+skinparam actor {
+  BorderColor #0F766E
+  BackgroundColor #CCFBF1
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  FontStyle bold
+}
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #475569
+left to right direction
+
+actor "Quản trị viên" as QTV
+
+rectangle "Trang quản trị TechGear" {
+  usecase "Quản lý người dùng" as U1
+  usecase "Xem danh sách người dùng" as U2
+  usecase "Khóa tài khoản" as U3
+  usecase "Mở khóa tài khoản" as U4
+  usecase "Quản lý đánh giá" as U5
+  usecase "Duyệt đánh giá" as U6
+  usecase "Ẩn/xóa đánh giá" as U7
+  usecase "Thống kê, báo cáo" as U8
+  usecase "Thống kê doanh thu\ntheo thời gian" as U9
+  usecase "Thống kê sản phẩm bán chạy" as U10
+  usecase "Thống kê đơn hàng\ntheo trạng thái" as U11
+}
+
+QTV - -> U1
+U1 <.. U2 : <<extend>>
+U1 <.. U3 : <<extend>>
+U1 <.. U4 : <<extend>>
+QTV - -> U5
+U5 <.. U6 : <<extend>>
+U5 <.. U7 : <<extend>>
+QTV - -> U8
+U8 <.. U9 : <<extend>>
+U8 <.. U10 : <<extend>>
+U8 <.. U11 : <<extend>>
+
+
+@enduml
+
+PlantUML version 1.2019.06(Sat May 25 00:10:25 ICT 2019)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.12.1+1-1-24.04.4-Ubuntu
+Operating System: Linux
+OS Version: 6.18.44-fc-v114
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

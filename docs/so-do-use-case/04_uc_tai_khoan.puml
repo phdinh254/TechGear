@@ -1,0 +1,62 @@
+@startuml UC_TaiKhoan
+title Use case phân rã - Tài khoản
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam dpi 130
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F0FDFA
+  BorderColor #0F766E
+  ArrowColor #475569
+}
+skinparam actor {
+  BorderColor #0F766E
+  BackgroundColor #CCFBF1
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  FontStyle bold
+}
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #475569
+left to right direction
+
+actor "Khách vãng lai" as KVL
+actor "Khách hàng" as KH
+actor "Dịch vụ Email" as MAIL <<Hệ thống>>
+KH -|> KVL
+
+rectangle "Website TechGear" {
+  usecase "Đăng ký tài khoản" as U1
+  usecase "Đăng nhập" as U2
+  usecase "Quên mật khẩu" as U3
+  usecase "Gửi mã đặt lại\nmật khẩu qua email" as U4
+  usecase "Quản lý thông tin cá nhân" as U5
+  usecase "Cập nhật thông tin" as U6
+  usecase "Đổi mật khẩu" as U7
+  usecase "Quản lý sổ địa chỉ" as U8
+  usecase "Thêm địa chỉ" as U9
+  usecase "Sửa địa chỉ" as U10
+  usecase "Xóa địa chỉ" as U11
+  usecase "Đặt địa chỉ mặc định" as U12
+  usecase "Đăng xuất" as U13
+}
+
+KVL --> U1
+KVL --> U2
+KVL --> U3
+U3 ..> U4 : <<include>>
+KH --> U5
+U5 <.. U6 : <<extend>>
+U5 <.. U7 : <<extend>>
+KH --> U8
+U8 <.. U9 : <<extend>>
+U8 <.. U10 : <<extend>>
+U8 <.. U11 : <<extend>>
+U8 <.. U12 : <<extend>>
+KH --> U13
+
+U4 --> MAIL
+@enduml

@@ -1,0 +1,58 @@
+@startuml UC_QT_KhoDonHang
+title Use case phân rã - Quản lý tồn kho và đơn hàng
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam dpi 130
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F0FDFA
+  BorderColor #0F766E
+  ArrowColor #475569
+}
+skinparam actor {
+  BorderColor #0F766E
+  BackgroundColor #CCFBF1
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  FontStyle bold
+}
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #475569
+left to right direction
+
+actor "Quản trị viên" as QTV
+
+rectangle "Trang quản trị TechGear" {
+  usecase "Quản lý tồn kho" as U1
+  usecase "Nhập kho" as U2
+  usecase "Điều chỉnh tồn kho" as U3
+  usecase "Xem lịch sử nhập - xuất kho" as U4
+  usecase "Xem cảnh báo sắp hết hàng" as U5
+  usecase "Quản lý đơn hàng" as U6
+  usecase "Tìm kiếm, lọc đơn hàng" as U7
+  usecase "Xem chi tiết đơn hàng" as U8
+  usecase "Cập nhật trạng thái đơn hàng" as U9
+  usecase "Cập nhật trạng thái thanh toán" as U10
+  usecase "Hủy đơn hàng" as U11
+}
+
+QTV --> U1
+U1 <.. U2 : <<extend>>
+U1 <.. U3 : <<extend>>
+U1 <.. U4 : <<extend>>
+U1 <.. U5 : <<extend>>
+QTV --> U6
+U6 <.. U7 : <<extend>>
+U6 <.. U8 : <<extend>>
+U6 <.. U9 : <<extend>>
+U6 <.. U10 : <<extend>>
+U6 <.. U11 : <<extend>>
+
+note right of U9
+  Chờ xác nhận -> Đã xác nhận -> Đang giao -> Hoàn thành.
+  Mỗi lần đổi trạng thái được ghi vào lịch sử đơn hàng.
+end note
+@enduml

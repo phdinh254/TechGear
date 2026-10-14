@@ -1,0 +1,55 @@
+@startuml UC_QT_NguoiDungThongKe
+title Use case phân rã - Quản lý người dùng, đánh giá, thống kê
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam dpi 130
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F0FDFA
+  BorderColor #0F766E
+  ArrowColor #475569
+}
+skinparam actor {
+  BorderColor #0F766E
+  BackgroundColor #CCFBF1
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  FontStyle bold
+}
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #475569
+left to right direction
+
+actor "Quản trị viên" as QTV
+
+rectangle "Trang quản trị TechGear" {
+  usecase "Quản lý người dùng" as U1
+  usecase "Xem danh sách người dùng" as U2
+  usecase "Khóa tài khoản" as U3
+  usecase "Mở khóa tài khoản" as U4
+  usecase "Quản lý đánh giá" as U5
+  usecase "Duyệt đánh giá" as U6
+  usecase "Ẩn/xóa đánh giá" as U7
+  usecase "Thống kê, báo cáo" as U8
+  usecase "Thống kê doanh thu\ntheo thời gian" as U9
+  usecase "Thống kê sản phẩm bán chạy" as U10
+  usecase "Thống kê đơn hàng\ntheo trạng thái" as U11
+}
+
+QTV --> U1
+U1 <.. U2 : <<extend>>
+U1 <.. U3 : <<extend>>
+U1 <.. U4 : <<extend>>
+QTV --> U5
+U5 <.. U6 : <<extend>>
+U5 <.. U7 : <<extend>>
+QTV --> U8
+U8 <.. U9 : <<extend>>
+U8 <.. U10 : <<extend>>
+U8 <.. U11 : <<extend>>
+
+
+@enduml

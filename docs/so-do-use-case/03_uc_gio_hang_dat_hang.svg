@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="895.1042px" preserveAspectRatio="none" style="width:1526px;height:895px;" version="1.1" viewBox="0 0 1526 895" width="1526.1458px" zoomAndPan="magnify"><defs/><g><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="460.4167" x="536.9271" y="16.3406">Use case phân rã - Giỏ hàng, đặt hàng và thanh toán</text><!--cluster Website TechGear--><rect fill="#FFFFFF" height="827.3958" style="stroke: #94A3B8; stroke-width: 2.03125;" width="694.6875" x="606.6667" y="52.9924"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="181.4583" x="863.2813" y="72.0413">Website TechGear</text><ellipse cx="721.1275" cy="273.8637" fill="#F0FDFA" rx="92.7941" ry="21.8088" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="144.8958" x="648.6796" y="279.3703">Quản lý giỏ hàng</text><ellipse cx="1125.0308" cy="321.3318" fill="#F0FDFA" rx="120.2391" ry="27.2978" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="208.5417" x="1020.76" y="326.8384">Thêm sản phẩm vào giỏ</text><ellipse cx="1125.6481" cy="223.4136" fill="#F0FDFA" rx="97.8356" ry="22.8171" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="157.0833" x="1047.1064" y="228.9202">Cập nhật số lượng</text><ellipse cx="1125.0108" cy="125.9216" fill="#F0FDFA" rx="114.8025" ry="26.2105" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="196.3542" x="1026.8337" y="131.4282">Xóa sản phẩm khỏi giỏ</text><ellipse cx="721.3907" cy="589.5139" fill="#F0FDFA" rx="60.5574" ry="18.5528" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="79.8958" x="681.4428" y="595.0205">Đặt hàng</text><ellipse cx="1125.1763" cy="830.1214" fill="#F0FDFA" rx="125.1243" ry="28.2749" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="219.375" x="1015.4888" y="835.628">Nhập thông tin giao hàng</text><ellipse cx="1125.4713" cy="732.8158" fill="#F0FDFA" rx="92.2422" ry="21.6984" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="143.5417" x="1053.7005" y="738.3224">Kiểm tra tồn kho</text><ellipse cx="1124.9779" cy="638.1963" fill="#F0FDFA" rx="110.0299" ry="25.256" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="185.5208" x="1032.2174" y="643.7028">Áp dụng mã giảm giá</text><ellipse cx="1125.4985" cy="531.3212" fill="#F0FDFA" rx="154.561" ry="34.1622" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="283.0208" x="983.9881" y="536.8278">Thanh toán khi nhận hàng (COD)</text><ellipse cx="1125.6115" cy="422.6042" fill="#F0FDFA" rx="115.4032" ry="26.3306" style="stroke: #0F766E; stroke-width: 2.03125;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="197.7083" x="1026.7574" y="428.1108">Thanh toán qua VNPay</text><!--entity KVL--><ellipse cx="480.7292" cy="392.8882" fill="#CCFBF1" rx="10.8333" ry="10.8333" style="stroke: #0F766E; stroke-width: 2.7083333333333335;"/><path d="M480.7292,403.7215 L480.7292,440.284 M463.125,414.5549 L498.3333,414.5549 M480.7292,440.284 L463.125,460.5965 M480.7292,440.284 L498.3333,460.5965 " fill="none" style="stroke: #0F766E; stroke-width: 2.7083333333333335;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="124.5833" x="418.4375" y="480.9996">Khách vãng lai</text><!--entity VNP--><ellipse cx="1437.4479" cy="383.5889" fill="#CCFBF1" rx="10.8333" ry="10.8333" style="stroke: #0F766E; stroke-width: 2.7083333333333335;"/><path d="M1437.4479,394.4222 L1437.4479,430.9847 M1419.8438,405.2555 L1455.0521,405.2555 M1437.4479,430.9847 L1419.8438,451.2972 M1437.4479,430.9847 L1455.0521,451.2972 " fill="none" style="stroke: #0F766E; stroke-width: 2.7083333333333335;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="144.8958" x="1365" y="471.7003">Cổng thanh toán</text><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="56.875" x="1365" y="492.1926">VNPay</text><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="101.5625" x="1386.6667" y="365.8954">«Hệ thống»</text><path d="M8.125,394.9194 L8.125,469.9382 A0,0 0 0 0 8.125,469.9382 L335.8333,469.9382 A0,0 0 0 0 335.8333,469.9382 L335.8333,437.5757 L418.2479,432.159 L335.8333,426.7424 L335.8333,408.4611 L322.2917,394.9194 L8.125,394.9194 A0,0 0 0 0 8.125,394.9194 " fill="#FBFB77" style="stroke: #A80036; stroke-width: 1.3541666666666667;"/><path d="M322.2917,394.9194 L322.2917,408.4611 L335.8333,408.4611 L322.2917,394.9194 " fill="#FBFB77" style="stroke: #A80036; stroke-width: 1.3541666666666667;"/><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="287.0833" x="16.25" y="418.0309">Khách hàng (đã đăng nhập) cũng</text><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="299.2708" x="16.25" y="438.5232">thực hiện được các chức năng này;</text><text fill="#000000" font-family="DejaVu Sans" font-size="17.6042" lengthAdjust="spacingAndGlyphs" textLength="268.125" x="16.25" y="459.0156">địa chỉ được chọn từ sổ địa chỉ.</text><!--link KVL to U1--><path d="M543.2917,391.358 C587.6677,361.7694 646.2083,322.7424 683.4208,297.934 " fill="none" id="KVL-U1" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><polygon fill="#475569" points="689.2031,294.0746,676.0633,296.3593,683.5784,297.8438,682.0939,305.3589,689.2031,294.0746" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><!--link U1 to U2--><path d="M785.7281,292.6934 C807.3542,298.4351 831.7969,304.1361 854.4792,307.5757 C903.3375,314.9965 957.6938,318.5986 1004.724,320.2642 " fill="none" id="U1-U2" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="779.1198,290.9194,789.4569,299.3468,785.6529,292.6977,792.3021,288.8938,779.1198,290.9194" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="857.1875" y="303.7982">«extend»</text><!--link U1 to U3--><path d="M810.1167,262.7799 C878.0281,254.3028 971.5604,242.6299 1038.8083,234.2476 " fill="none" id="U1-U3" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="803.2104,263.6465,815.9715,267.5233,809.9299,262.8138,814.6393,256.7722,803.2104,263.6465" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="857.1875" y="245.569">«extend»</text><!--link U1 to U4--><path d="M774.2313,252.0142 C798.5115,241.9528 827.9104,229.9413 854.4792,219.5549 C905.9104,199.4455 918.8021,194.4486 970.9375,176.2215 C998.9146,166.4444 1029.9521,156.1663 1056.724,147.4861 " fill="none" id="U1-U4" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="767.5146,254.8038,780.847,255.1514,773.7714,252.2161,776.7067,245.1405,767.5146,254.8038" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="857.1875" y="188.694">«extend»</text><!--link KVL to U5--><path d="M543.2917,472.608 C590.024,503.4965 652.451,544.7715 689.149,569.0246 " fill="none" id="KVL-U5" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><polygon fill="#475569" points="694.8094,572.7621,687.6288,561.5232,689.1609,569.0287,681.6553,570.5608,694.8094,572.7621" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><!--link U5 to U6--><path d="M737.2219,607.009 C760.2156,633.8486 806.8531,685.1986 854.4792,719.2424 C910.2573,759.109 982.475,787.8851 1038.1177,806.1392 " fill="none" id="U5-U6" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="1044.8073,808.3059,1034.8853,799.3935,1038.3667,806.2171,1031.5432,809.6984,1044.8073,808.3059" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="73.125" x="855.8333" y="715.4648">«include»</text><!--link U5 to U7--><path d="M747.2563,605.8715 C773.0802,622.5278 815.1677,647.9184 854.4792,663.7215 C916.2292,688.5434 989.5979,706.6621 1044.1708,718.0913 " fill="none" id="U5-U7" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="1051.4021,719.5944,1040.5655,711.8198,1044.7718,718.222,1038.3696,722.4282,1051.4021,719.5944" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="73.125" x="855.8333" y="659.944">«include»</text><!--link U5 to U8--><path d="M769.8573,604.4767 C794.774,611.8163 825.9875,619.9819 854.4792,624.4507 C906.7771,632.6434 965.4125,636.2455 1014.5958,637.708 " fill="none" id="U5-U8" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="763.0052,602.4319,773.1412,611.1001,769.4947,604.3633,776.2315,600.7168,763.0052,602.4319" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="857.1875" y="620.6732">«extend»</text><!--link U5 to U9--><path d="M782.4646,580.5351 C838.649,572.3965 924.4354,559.9517 995.9625,549.5788 " fill="none" id="U5-U9" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="775.7615,581.5101,788.5984,585.1279,782.4627,580.5417,787.049,574.406,775.7615,581.5101" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="857.1875" y="557.0273">«extend»</text><!--link U5 to U10--><path d="M759.1323,570.3246 C807.0698,546.0038 894.0073,503.2799 970.9375,472.784 C997.8313,462.1267 1027.9885,451.8892 1054.3813,443.4934 " fill="none" id="U5-U10" style="stroke: #475569; stroke-width: 1.3541666666666667; stroke-dasharray: 7.0,7.0;"/><polygon fill="#475569" points="752.9031,573.4934,766.2231,572.8196,758.9436,570.4344,761.3288,563.1549,752.9031,573.4934" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><text fill="#475569" font-family="DejaVu Sans" font-size="14.8958" lengthAdjust="spacingAndGlyphs" textLength="70.4167" x="857.1875" y="486.6107">«extend»</text><!--link U10 to VNP--><path d="M1240.5656,422.6799 C1279.4979,422.6799 1322.1542,422.6799 1357.6469,422.6799 " fill="none" id="U10-VNP" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><polygon fill="#475569" points="1364.6479,422.6799,1352.4604,417.2632,1357.8771,422.6799,1352.4604,428.0965,1364.6479,422.6799" style="stroke: #475569; stroke-width: 1.3541666666666667;"/><!--
+@startuml UC_GioHangDatHang
+title Use case phân rã - Giỏ hàng, đặt hàng và thanh toán
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam dpi 130
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F0FDFA
+  BorderColor #0F766E
+  ArrowColor #475569
+}
+skinparam actor {
+  BorderColor #0F766E
+  BackgroundColor #CCFBF1
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  FontStyle bold
+}
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #475569
+left to right direction
+
+actor "Khách vãng lai" as KVL
+actor "Cổng thanh toán\nVNPay" as VNP <<Hệ thống>>
+
+rectangle "Website TechGear" {
+  usecase "Quản lý giỏ hàng" as U1
+  usecase "Thêm sản phẩm vào giỏ" as U2
+  usecase "Cập nhật số lượng" as U3
+  usecase "Xóa sản phẩm khỏi giỏ" as U4
+  usecase "Đặt hàng" as U5
+  usecase "Nhập thông tin giao hàng" as U6
+  usecase "Kiểm tra tồn kho" as U7
+  usecase "Áp dụng mã giảm giá" as U8
+  usecase "Thanh toán khi nhận hàng (COD)" as U9
+  usecase "Thanh toán qua VNPay" as U10
+}
+
+KVL - -> U1
+U1 <.. U2 : <<extend>>
+U1 <.. U3 : <<extend>>
+U1 <.. U4 : <<extend>>
+KVL - -> U5
+U5 ..> U6 : <<include>>
+U5 ..> U7 : <<include>>
+U5 <.. U8 : <<extend>>
+U5 <.. U9 : <<extend>>
+U5 <.. U10 : <<extend>>
+
+U10 - -> VNP
+note left of KVL
+  Khách hàng (đã đăng nhập) cũng
+  thực hiện được các chức năng này;
+  địa chỉ được chọn từ sổ địa chỉ.
+end note
+@enduml
+
+PlantUML version 1.2019.06(Sat May 25 00:10:25 ICT 2019)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.12.1+1-1-24.04.4-Ubuntu
+Operating System: Linux
+OS Version: 6.18.44-fc-v114
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>
