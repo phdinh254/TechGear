@@ -1,5 +1,6 @@
 package com.techgear.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.techgear.dto.PageResponse;
 import com.techgear.dto.SanPhamChiTietResponse;
 import com.techgear.dto.SanPhamTomTatResponse;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+@Tag(name = "Sản phẩm")
 @RestController
 @RequestMapping("/api/san-pham")
 @RequiredArgsConstructor
