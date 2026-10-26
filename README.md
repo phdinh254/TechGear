@@ -45,21 +45,69 @@ TechGear/
             └── utils/            Định dạng tiền VNĐ, đường dẫn ảnh
 ```
 
-## Tài liệu thiết kế (`docs/thiet-ke/`)
+## Sơ đồ thiết kế
 
-Mỗi sơ đồ có 3 file: `.drawio` (mở bằng [draw.io](https://www.drawio.com/) để sửa), `.drawio.png` (chèn vào Word, vẫn mở lại được bằng draw.io) và `.svg` (ảnh vector).
-
-| Sơ đồ | Nội dung |
-|---|---|
-| `01_erd` | Sơ đồ thực thể – liên kết: 24 bảng, 32 khóa ngoại, gom theo 6 nhóm nghiệp vụ |
-| `02_kien_truc_tong_the` | Kiến trúc tổng thể: React ↔ các tầng Spring Boot ↔ MySQL, VNPay, SMTP |
-| `03_so_do_lop_entity` | Sơ đồ lớp các entity JPA (thuộc tính, quan hệ, bội số, enum) |
-| `04_hd_dang_ky` | Sơ đồ hoạt động: đăng ký |
-| `05_hd_dang_nhap` | Sơ đồ hoạt động: đăng nhập |
-| `06_hd_quen_mat_khau` | Sơ đồ hoạt động: quên / đặt lại mật khẩu |
-| `07_tt_dang_nhap_jwt` | Sơ đồ tuần tự: đăng nhập nhận JWT và gọi API có token |
+Sơ đồ thiết kế nằm trong `docs/thiet-ke/`, mỗi sơ đồ có 3 file: `.drawio` (mở bằng [draw.io](https://www.drawio.com/) để sửa), `.drawio.png` (chèn vào Word, vẫn mở lại được bằng draw.io) và `.svg` (ảnh vector). Bấm vào ảnh để xem kích thước đầy đủ.
 
 Đặc tả API đầy đủ (quy ước, mã lỗi, dữ liệu vào/ra, quy tắc nghiệp vụ, biến môi trường): [`docs/thiet-ke/dac-ta-api.md`](docs/thiet-ke/dac-ta-api.md).
+
+### 1. Kiến trúc tổng thể
+
+React ↔ các tầng xử lý của Spring Boot ↔ MySQL, cùng cổng thanh toán VNPay và máy chủ email SMTP.
+
+[![Kiến trúc tổng thể](docs/thiet-ke/02_kien_truc_tong_the.drawio.png)](docs/thiet-ke/02_kien_truc_tong_the.drawio.png)
+
+### 2. Sơ đồ thực thể – liên kết (ERD)
+
+24 bảng, 32 khóa ngoại, gom theo 6 nhóm nghiệp vụ.
+
+[![ERD](docs/thiet-ke/01_erd.drawio.png)](docs/thiet-ke/01_erd.drawio.png)
+
+### 3. Sơ đồ lớp (entity JPA)
+
+Thuộc tính, quan hệ và bội số giữa các entity; các kiểu liệt kê (enum).
+
+[![Sơ đồ lớp entity](docs/thiet-ke/03_so_do_lop_entity.drawio.png)](docs/thiet-ke/03_so_do_lop_entity.drawio.png)
+
+### 4. Sơ đồ hoạt động – Đăng ký
+
+[![Hoạt động đăng ký](docs/thiet-ke/04_hd_dang_ky.drawio.png)](docs/thiet-ke/04_hd_dang_ky.drawio.png)
+
+### 5. Sơ đồ hoạt động – Đăng nhập
+
+[![Hoạt động đăng nhập](docs/thiet-ke/05_hd_dang_nhap.drawio.png)](docs/thiet-ke/05_hd_dang_nhap.drawio.png)
+
+### 6. Sơ đồ hoạt động – Quên / đặt lại mật khẩu
+
+[![Hoạt động quên mật khẩu](docs/thiet-ke/06_hd_quen_mat_khau.drawio.png)](docs/thiet-ke/06_hd_quen_mat_khau.drawio.png)
+
+### 7. Sơ đồ tuần tự – Đăng nhập JWT và gọi API có token
+
+[![Tuần tự đăng nhập JWT](docs/thiet-ke/07_tt_dang_nhap_jwt.drawio.png)](docs/thiet-ke/07_tt_dang_nhap_jwt.drawio.png)
+
+## Sơ đồ use case
+
+Nằm trong `docs/so-do-use-case/` (mã nguồn PlantUML `.puml`, ảnh `.png` và `.svg`). Tác nhân và quy ước quan hệ: xem [`docs/so-do-use-case/README.md`](docs/so-do-use-case/README.md).
+
+### Use case tổng quát
+
+[![Use case tổng quát](docs/so-do-use-case/01_use_case_tong_quat.png)](docs/so-do-use-case/01_use_case_tong_quat.png)
+
+### Phía khách hàng
+
+| Xem, tìm kiếm sản phẩm | Giỏ hàng, đặt hàng, thanh toán |
+|:---:|:---:|
+| [![Xem, tìm kiếm sản phẩm](docs/so-do-use-case/02_uc_xem_tim_kiem_san_pham.png)](docs/so-do-use-case/02_uc_xem_tim_kiem_san_pham.png) | [![Giỏ hàng, đặt hàng](docs/so-do-use-case/03_uc_gio_hang_dat_hang.png)](docs/so-do-use-case/03_uc_gio_hang_dat_hang.png) |
+| **Tài khoản** | **Đơn hàng, đánh giá, yêu thích** |
+| [![Tài khoản](docs/so-do-use-case/04_uc_tai_khoan.png)](docs/so-do-use-case/04_uc_tai_khoan.png) | [![Đơn hàng, đánh giá](docs/so-do-use-case/05_uc_don_hang_danh_gia.png)](docs/so-do-use-case/05_uc_don_hang_danh_gia.png) |
+
+### Phía quản trị
+
+| Danh mục, thương hiệu, sản phẩm | Tồn kho, đơn hàng |
+|:---:|:---:|
+| [![Quản trị sản phẩm](docs/so-do-use-case/06_uc_qt_san_pham.png)](docs/so-do-use-case/06_uc_qt_san_pham.png) | [![Quản trị kho, đơn hàng](docs/so-do-use-case/07_uc_qt_kho_don_hang.png)](docs/so-do-use-case/07_uc_qt_kho_don_hang.png) |
+| **Mã giảm giá, banner, cấu hình** | **Người dùng, đánh giá, thống kê** |
+| [![Quản trị khuyến mãi](docs/so-do-use-case/08_uc_qt_khuyen_mai_giao_dien.png)](docs/so-do-use-case/08_uc_qt_khuyen_mai_giao_dien.png) | [![Quản trị người dùng, thống kê](docs/so-do-use-case/09_uc_qt_nguoi_dung_thong_ke.png)](docs/so-do-use-case/09_uc_qt_nguoi_dung_thong_ke.png) |
 
 ## Cách chạy
 
