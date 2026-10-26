@@ -20,7 +20,7 @@ TechGear/
 │   ├── DB_TechGear.sql          Script tạo CSDL techgear + dữ liệu mẫu
 │   └── DB_TechGear_ban_cu.sql   Bản cũ (đề tài thời trang/Laravel), giữ lại để đối chiếu
 ├── docs/
-│   ├── so-do-use-case/           9 sơ đồ use case (PlantUML)
+│   ├── so-do-use-case/           9 sơ đồ use case (draw.io)
 │   ├── thiet-ke/                 Sơ đồ thiết kế (draw.io) + đặc tả API
 │   └── TechGear.dbml             Lược đồ CSDL dạng dbdiagram.io
 └── source/
@@ -87,27 +87,27 @@ Thuộc tính, quan hệ và bội số giữa các entity; các kiểu liệt k
 
 ## Sơ đồ use case
 
-Nằm trong `docs/so-do-use-case/` (mã nguồn PlantUML `.puml`, ảnh `.png` và `.svg`). Tác nhân và quy ước quan hệ: xem [`docs/so-do-use-case/README.md`](docs/so-do-use-case/README.md).
+Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png`, `.svg`). Tác nhân và quy ước quan hệ: xem [`docs/so-do-use-case/README.md`](docs/so-do-use-case/README.md).
 
 ### Use case tổng quát
 
-[![Use case tổng quát](docs/so-do-use-case/01_use_case_tong_quat.png)](docs/so-do-use-case/01_use_case_tong_quat.png)
+[![Use case tổng quát](docs/so-do-use-case/01_use_case_tong_quat.drawio.png)](docs/so-do-use-case/01_use_case_tong_quat.drawio.png)
 
 ### Phía khách hàng
 
 | Xem, tìm kiếm sản phẩm | Giỏ hàng, đặt hàng, thanh toán |
 |:---:|:---:|
-| [![Xem, tìm kiếm sản phẩm](docs/so-do-use-case/02_uc_xem_tim_kiem_san_pham.png)](docs/so-do-use-case/02_uc_xem_tim_kiem_san_pham.png) | [![Giỏ hàng, đặt hàng](docs/so-do-use-case/03_uc_gio_hang_dat_hang.png)](docs/so-do-use-case/03_uc_gio_hang_dat_hang.png) |
+| [![Xem, tìm kiếm sản phẩm](docs/so-do-use-case/02_uc_xem_tim_kiem_san_pham.drawio.png)](docs/so-do-use-case/02_uc_xem_tim_kiem_san_pham.drawio.png) | [![Giỏ hàng, đặt hàng](docs/so-do-use-case/03_uc_gio_hang_dat_hang.drawio.png)](docs/so-do-use-case/03_uc_gio_hang_dat_hang.drawio.png) |
 | **Tài khoản** | **Đơn hàng, đánh giá, yêu thích** |
-| [![Tài khoản](docs/so-do-use-case/04_uc_tai_khoan.png)](docs/so-do-use-case/04_uc_tai_khoan.png) | [![Đơn hàng, đánh giá](docs/so-do-use-case/05_uc_don_hang_danh_gia.png)](docs/so-do-use-case/05_uc_don_hang_danh_gia.png) |
+| [![Tài khoản](docs/so-do-use-case/04_uc_tai_khoan.drawio.png)](docs/so-do-use-case/04_uc_tai_khoan.drawio.png) | [![Đơn hàng, đánh giá](docs/so-do-use-case/05_uc_don_hang_danh_gia.drawio.png)](docs/so-do-use-case/05_uc_don_hang_danh_gia.drawio.png) |
 
 ### Phía quản trị
 
 | Danh mục, thương hiệu, sản phẩm | Tồn kho, đơn hàng |
 |:---:|:---:|
-| [![Quản trị sản phẩm](docs/so-do-use-case/06_uc_qt_san_pham.png)](docs/so-do-use-case/06_uc_qt_san_pham.png) | [![Quản trị kho, đơn hàng](docs/so-do-use-case/07_uc_qt_kho_don_hang.png)](docs/so-do-use-case/07_uc_qt_kho_don_hang.png) |
+| [![Quản trị sản phẩm](docs/so-do-use-case/06_uc_qt_san_pham.drawio.png)](docs/so-do-use-case/06_uc_qt_san_pham.drawio.png) | [![Quản trị kho, đơn hàng](docs/so-do-use-case/07_uc_qt_kho_don_hang.drawio.png)](docs/so-do-use-case/07_uc_qt_kho_don_hang.drawio.png) |
 | **Mã giảm giá, banner, cấu hình** | **Người dùng, đánh giá, thống kê** |
-| [![Quản trị khuyến mãi](docs/so-do-use-case/08_uc_qt_khuyen_mai_giao_dien.png)](docs/so-do-use-case/08_uc_qt_khuyen_mai_giao_dien.png) | [![Quản trị người dùng, thống kê](docs/so-do-use-case/09_uc_qt_nguoi_dung_thong_ke.png)](docs/so-do-use-case/09_uc_qt_nguoi_dung_thong_ke.png) |
+| [![Quản trị khuyến mãi](docs/so-do-use-case/08_uc_qt_khuyen_mai_giao_dien.drawio.png)](docs/so-do-use-case/08_uc_qt_khuyen_mai_giao_dien.drawio.png) | [![Quản trị người dùng, thống kê](docs/so-do-use-case/09_uc_qt_nguoi_dung_thong_ke.drawio.png)](docs/so-do-use-case/09_uc_qt_nguoi_dung_thong_ke.drawio.png) |
 
 ## Cách chạy
 
