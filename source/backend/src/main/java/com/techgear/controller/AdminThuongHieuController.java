@@ -1,5 +1,6 @@
 package com.techgear.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.techgear.dto.ThuongHieuRequest;
 import com.techgear.dto.ThuongHieuResponse;
 import com.techgear.service.ThuongHieuService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /** Quản lý thương hiệu - chỉ tài khoản quản trị (cấu hình ở SecurityConfig: /api/admin/**). */
+@Tag(name = "Quản trị - Thương hiệu")
 @RestController
 @RequestMapping("/api/admin/thuong-hieu")
 @RequiredArgsConstructor

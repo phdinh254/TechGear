@@ -21,4 +21,12 @@ public class ApiException extends RuntimeException {
     public static ApiException yeuCauKhongHopLe(String message) {
         return new ApiException(HttpStatus.BAD_REQUEST, message);
     }
+
+    public static ApiException xungDot(String message) {
+        return new ApiException(HttpStatus.CONFLICT, message);
+    }
+
+    public static ApiException khongCoQuyen(String message) {
+        return new ApiException(HttpStatus.FORBIDDEN, message);
+    }
 }

@@ -1,116 +1,67 @@
 package com.techgear.service;
 
 import com.techgear.dto.CapNhatHoSoRequest;
-import com.techgear.dto.DiaChiRequest;
-import com.techgear.dto.DiaChiResponse;
 import com.techgear.dto.DoiMatKhauRequest;
 import com.techgear.dto.NguoiDungResponse;
-import com.techgear.entity.DiaChi;
+import com.techgear.dto.ThongBaoResponse;
 import com.techgear.entity.NguoiDung;
 import com.techgear.exception.ApiException;
-import com.techgear.repository.DiaChiRepository;
 import com.techgear.repository.NguoiDungRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
+/** Hồ sơ tài khoản của người dùng đang đăng nhập. */
 @Service
 @RequiredArgsConstructor
 public class TaiKhoanService {
 
     private final NguoiDungRepository nguoiDungRepository;
-    private final DiaChiRepository diaChiRepository;
     private final PasswordEncoder passwordEncoder;
-
-    @Transactional
-    public NguoiDungResponse capNhatHoSo(Long nguoiDungId, CapNhatHoSoRequest request) {
-        NguoiDung nguoiDung = timNguoiDung(nguoiDungId);
-        nguoiDung.setHoTen(request.hoTen().trim());
-        nguoiDung.setSoDienThoai(chuanHoaRong(request.soDienThoai()));
-        nguoiDung.setGioiTinh(request.gioiTinh());
-        nguoiDung.setNgaySinh(request.ngaySinh());
-        nguoiDung.setAnhDaiDien(chuanHoaRong(request.anhDaiDien()));
-        return NguoiDungResponse.tu(nguoiDung);
-    }
-
-    @Transactional
-    public void doiMatKhau(Long nguoiDungId, DoiMatKhauRequest request) {
-        NguoiDung nguoiDung = timNguoiDung(nguoiDungId);
-        if (!passwordEncoder.matches(request.matKhauHienTai(), nguoiDung.getPassword())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không đúng");
-        }
-        if (passwordEncoder.matches(request.matKhauMoi(), nguoiDung.getPassword())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Mật khẩu mới phải khác mật khẩu hiện tại");
-        }
-        nguoiDung.setPassword(passwordEncoder.encode(request.matKhauMoi()));
-    }
+    private final FileStorageService fileStorageService;
 
     @Transactional(readOnly = true)
-    public List<DiaChiResponse> layDiaChi(Long nguoiDungId) {
-        return diaChiRepository.findByNguoiDungIdOrderByLaMacDinhDescIdDesc(nguoiDungId).stream()
-                .map(DiaChiResponse::tu)
-                .toList();
+    public NguoiDungResponse layThongTin(Long nguoiDungId) {
+        return NguoiDungResponse.tu(timTheoId(nguoiDungId));
     }
 
     @Transactional
-    public DiaChiResponse taoDiaChi(Long nguoiDungId, DiaChiRequest request) {
-        DiaChi diaChi = new DiaChi();
-        diaChi.setNguoiDung(timNguoiDung(nguoiDungId));
-        ganDiaChi(diaChi, request);
-        if (Boolean.TRUE.equals(diaChi.getLaMacDinh())) {
-            diaChiRepository.boMacDinhCuaNguoiDung(nguoiDungId);
+    public NguoiDungResponse capNhatHoSo(Long nguoiDungId, CapNhatHoSoRequest req) {
+        NguoiDung nd = timTheoId(nguoiDungId);
+        nd.setHoTen(req.hoTen().trim());
+        nd.setSoDienThoai(StringUtils.hasText(req.soDienThoai()) ? req.soDienThoai().trim() : null);
+        nd.setGioiTinh(req.gioiTinh());
+        nd.setNgaySinh(req.ngaySinh());
+        return NguoiDungResponse.tu(nd);
+    }
+
+    @Transactional
+    public ThongBaoResponse doiMatKhau(Long nguoiDungId, DoiMatKhauRequest req) {
+        NguoiDung nd = timTheoId(nguoiDungId);
+        if (!passwordEncoder.matches(req.matKhauCu(), nd.getPassword())) {
+            throw ApiException.yeuCauKhongHopLe("Mật khẩu hiện tại không đúng");
         }
-        return DiaChiResponse.tu(diaChiRepository.save(diaChi));
-    }
-
-    @Transactional
-    public DiaChiResponse capNhatDiaChi(Long nguoiDungId, Long diaChiId, DiaChiRequest request) {
-        DiaChi diaChi = timDiaChi(nguoiDungId, diaChiId);
-        ganDiaChi(diaChi, request);
-        if (Boolean.TRUE.equals(diaChi.getLaMacDinh())) {
-            diaChiRepository.boMacDinhKhac(nguoiDungId, diaChiId);
+        if (req.matKhauMoi().equals(req.matKhauCu())) {
+            throw ApiException.yeuCauKhongHopLe("Mật khẩu mới phải khác mật khẩu hiện tại");
         }
-        return DiaChiResponse.tu(diaChi);
+        nd.setPassword(passwordEncoder.encode(req.matKhauMoi()));
+        return new ThongBaoResponse("Đổi mật khẩu thành công");
     }
 
     @Transactional
-    public DiaChiResponse datMacDinh(Long nguoiDungId, Long diaChiId) {
-        DiaChi diaChi = timDiaChi(nguoiDungId, diaChiId);
-        diaChiRepository.boMacDinhKhac(nguoiDungId, diaChiId);
-        diaChi.setLaMacDinh(true);
-        return DiaChiResponse.tu(diaChi);
+    public NguoiDungResponse capNhatAnhDaiDien(Long nguoiDungId, MultipartFile file) {
+        NguoiDung nd = timTheoId(nguoiDungId);
+        String anhMoi = fileStorageService.luuAnh(file, "anh-dai-dien");
+        fileStorageService.donDepSauGiaoDich(nd.getAnhDaiDien(), anhMoi);
+        nd.setAnhDaiDien(anhMoi);
+        return NguoiDungResponse.tu(nd);
     }
 
-    @Transactional
-    public void xoaDiaChi(Long nguoiDungId, Long diaChiId) {
-        diaChiRepository.delete(timDiaChi(nguoiDungId, diaChiId));
-    }
-
-    private NguoiDung timNguoiDung(Long id) {
+    private NguoiDung timTheoId(Long id) {
         return nguoiDungRepository.findById(id)
                 .orElseThrow(() -> ApiException.khongTimThay("Không tìm thấy người dùng"));
-    }
-
-    private DiaChi timDiaChi(Long nguoiDungId, Long diaChiId) {
-        return diaChiRepository.findByIdAndNguoiDungId(diaChiId, nguoiDungId)
-                .orElseThrow(() -> ApiException.khongTimThay("Không tìm thấy địa chỉ"));
-    }
-
-    private void ganDiaChi(DiaChi diaChi, DiaChiRequest request) {
-        diaChi.setTenNguoiNhan(request.tenNguoiNhan().trim());
-        diaChi.setSoDienThoai(request.soDienThoai().trim());
-        diaChi.setTinhThanh(request.tinhThanh().trim());
-        diaChi.setPhuongXa(request.phuongXa().trim());
-        diaChi.setDiaChiChiTiet(request.diaChiChiTiet().trim());
-        diaChi.setLaMacDinh(Boolean.TRUE.equals(request.laMacDinh()));
-    }
-
-    private String chuanHoaRong(String giaTri) {
-        return StringUtils.hasText(giaTri) ? giaTri.trim() : null;
     }
 }

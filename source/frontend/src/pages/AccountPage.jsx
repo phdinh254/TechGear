@@ -23,9 +23,8 @@ export default function AccountPage() {
     soDienThoai: nguoiDung.soDienThoai || '',
     gioiTinh: nguoiDung.gioiTinh || '',
     ngaySinh: nguoiDung.ngaySinh || '',
-    anhDaiDien: nguoiDung.anhDaiDien || '',
   });
-  const [matKhau, setMatKhau] = useState({ matKhauHienTai: '', matKhauMoi: '', nhapLai: '' });
+  const [matKhau, setMatKhau] = useState({ matKhauCu: '', matKhauMoi: '', nhapLai: '' });
   const [diaChis, setDiaChis] = useState([]);
   const [diaChiForm, setDiaChiForm] = useState(DIA_CHI_RONG);
   const [diaChiDangSua, setDiaChiDangSua] = useState(null);
@@ -68,6 +67,21 @@ export default function AccountPage() {
     }
   };
 
+  const doiAnhDaiDien = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    batDau();
+    try {
+      capNhatNguoiDung(await accountApi.doiAnhDaiDien(file));
+      setThongBao('Cập nhật ảnh đại diện thành công');
+    } catch (error) {
+      setLoi(layThongBaoLoi(error));
+    } finally {
+      setDangGui(false);
+    }
+  };
+
   const doiMatKhau = async (event) => {
     event.preventDefault();
     setLoi('');
@@ -81,7 +95,7 @@ export default function AccountPage() {
       const { nhapLai, ...duLieu } = matKhau;
       const response = await accountApi.doiMatKhau(duLieu);
       setThongBao(response.thongBao);
-      setMatKhau({ matKhauHienTai: '', matKhauMoi: '', nhapLai: '' });
+      setMatKhau({ matKhauCu: '', matKhauMoi: '', nhapLai: '' });
     } catch (error) {
       setLoi(layThongBaoLoi(error));
     } finally {
@@ -167,7 +181,7 @@ export default function AccountPage() {
               <option value="">Chưa chọn</option><option value="nam">Nam</option><option value="nu">Nữ</option><option value="khac">Khác</option>
             </select></label>
             <label>Ngày sinh<input type="date" max={new Date().toISOString().slice(0, 10)} value={hoSo.ngaySinh} onChange={(e) => setHoSo({ ...hoSo, ngaySinh: e.target.value })} /></label>
-            <label>Ảnh đại diện (đường dẫn)<input maxLength="255" value={hoSo.anhDaiDien} onChange={(e) => setHoSo({ ...hoSo, anhDaiDien: e.target.value })} /></label>
+            <label>Ảnh đại diện (JPG/PNG/WEBP/GIF, tối đa 5MB)<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={dangGui} onChange={doiAnhDaiDien} /></label>
             <button className="btn" disabled={dangGui}>Lưu thay đổi</button>
           </form>
         )}
@@ -175,7 +189,7 @@ export default function AccountPage() {
         {tab === 'mat-khau' && (
           <form className="form" onSubmit={doiMatKhau}>
             <h1>Đổi mật khẩu</h1>
-            <label>Mật khẩu hiện tại<input type="password" required autoComplete="current-password" value={matKhau.matKhauHienTai} onChange={(e) => setMatKhau({ ...matKhau, matKhauHienTai: e.target.value })} /></label>
+            <label>Mật khẩu hiện tại<input type="password" required autoComplete="current-password" value={matKhau.matKhauCu} onChange={(e) => setMatKhau({ ...matKhau, matKhauCu: e.target.value })} /></label>
             <label>Mật khẩu mới<input type="password" required minLength="8" maxLength="100" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,100}" autoComplete="new-password" value={matKhau.matKhauMoi} onChange={(e) => setMatKhau({ ...matKhau, matKhauMoi: e.target.value })} /></label>
             <label>Nhập lại mật khẩu<input type="password" required minLength="8" maxLength="100" autoComplete="new-password" value={matKhau.nhapLai} onChange={(e) => setMatKhau({ ...matKhau, nhapLai: e.target.value })} /></label>
             <button className="btn" disabled={dangGui}>Đổi mật khẩu</button>

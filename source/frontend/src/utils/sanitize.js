@@ -21,7 +21,7 @@ export function lamSachHtml(html) {
     const href = element.tagName === 'A' ? element.getAttribute('href') : null;
     [...element.attributes].forEach((attribute) => element.removeAttribute(attribute.name));
     if (element.tagName === 'A') {
-      if (href && /^(https?:\/\/|\/|#)/i.test(href)) {
+      if (href && /^(https?:\/\/|\/(?![\/\\])|#)/i.test(href)) {
         element.setAttribute('href', href);
         element.setAttribute('rel', 'noopener noreferrer');
       }

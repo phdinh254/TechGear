@@ -9,13 +9,13 @@ public record DiaChiResponse(
         String tinhThanh,
         String phuongXa,
         String diaChiChiTiet,
-        boolean laMacDinh
+        boolean laMacDinh,
+        /** Địa chỉ ghép sẵn để hiển thị: "12 Lê Lợi, Phường 1, TP. Trà Vinh" */
+        String diaChiDayDu
 ) {
-    public static DiaChiResponse tu(DiaChi diaChi) {
-        return new DiaChiResponse(
-                diaChi.getId(), diaChi.getTenNguoiNhan(), diaChi.getSoDienThoai(),
-                diaChi.getTinhThanh(), diaChi.getPhuongXa(), diaChi.getDiaChiChiTiet(),
-                Boolean.TRUE.equals(diaChi.getLaMacDinh())
-        );
+    public static DiaChiResponse tu(DiaChi dc) {
+        return new DiaChiResponse(dc.getId(), dc.getTenNguoiNhan(), dc.getSoDienThoai(), dc.getTinhThanh(),
+                dc.getPhuongXa(), dc.getDiaChiChiTiet(), Boolean.TRUE.equals(dc.getLaMacDinh()),
+                dc.getDiaChiChiTiet() + ", " + dc.getPhuongXa() + ", " + dc.getTinhThanh());
     }
 }

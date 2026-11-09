@@ -1,8 +1,8 @@
 package com.techgear;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.techgear.dto.ApiErrorResponse;
 import com.techgear.dto.DangKyRequest;
+import com.techgear.exception.ApiError;
 import com.techgear.exception.ApiException;
 import com.techgear.exception.GlobalExceptionHandler;
 import jakarta.validation.ConstraintViolation;
@@ -46,7 +46,7 @@ class M0FoundationTest {
 
     @Test
     void responseLoiBaoGomCacTruongThongNhat() throws Exception {
-        ApiErrorResponse response = ApiErrorResponse.tao(401, "Bạn cần đăng nhập");
+        ApiError response = ApiError.of(401, "Bạn cần đăng nhập", null);
         String json = new ObjectMapper().findAndRegisterModules().writeValueAsString(response);
 
         assertTrue(json.contains("\"thoiGian\""));
@@ -59,7 +59,7 @@ class M0FoundationTest {
     void globalHandlerGiuDungHttpStatusVaThongBao() {
         GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
-        ResponseEntity<ApiErrorResponse> response = handler.xuLyApiException(
+        ResponseEntity<ApiError> response = handler.xuLyApiException(
                 new ApiException(HttpStatus.CONFLICT, "Dữ liệu đã tồn tại"));
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());

@@ -31,8 +31,9 @@ public class AuthService {
     @Transactional
     public AuthResponse dangKy(DangKyRequest req) {
         String email = req.email().trim().toLowerCase(Locale.ROOT);
-        if (nguoiDungRepository.existsByEmail(email)) {
-            throw new ApiException(HttpStatus.CONFLICT, "Email đã được sử dụng");
+        // Đếm cả tài khoản đã xóa mềm vì cột email là UNIQUE trong CSDL
+        if (nguoiDungRepository.demEmailKeCaDaXoa(email) > 0) {
+            throw ApiException.xungDot("Email đã được sử dụng");
         }
         NguoiDung nd = new NguoiDung();
         nd.setHoTen(req.hoTen().trim());
@@ -55,13 +56,6 @@ public class AuthService {
             throw new ApiException(HttpStatus.FORBIDDEN, "Tài khoản đã bị khóa");
         }
         return taoPhanHoi(nd);
-    }
-
-    @Transactional(readOnly = true)
-    public NguoiDungResponse layThongTin(Long nguoiDungId) {
-        return nguoiDungRepository.findById(nguoiDungId)
-                .map(NguoiDungResponse::tu)
-                .orElseThrow(() -> ApiException.khongTimThay("Không tìm thấy người dùng"));
     }
 
     private AuthResponse taoPhanHoi(NguoiDung nd) {

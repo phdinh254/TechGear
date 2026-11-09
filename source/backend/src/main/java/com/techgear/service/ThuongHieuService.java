@@ -8,7 +8,6 @@ import com.techgear.repository.ThuongHieuRepository;
 import com.techgear.util.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,22 +33,23 @@ public class ThuongHieuService {
 
     @Transactional
     public ThuongHieuResponse tao(ThuongHieuRequest req) {
-        String slug = SlugUtil.taoSlug(req.ten());
-        if (thuongHieuRepository.existsBySlug(slug)) {
-            throw new ApiException(HttpStatus.CONFLICT, "Thương hiệu đã tồn tại");
+        if (thuongHieuRepository.existsBySlug(SlugUtil.taoSlug(req.ten()))) {
+            throw ApiException.xungDot("Thương hiệu đã tồn tại");
         }
         ThuongHieu th = new ThuongHieu();
-        ganDuLieu(th, req, slug);
+        ganDuLieu(th, req, taoSlugDuyNhat(req.ten(), 0));
         return ThuongHieuResponse.tu(thuongHieuRepository.save(th));
     }
 
     @Transactional
     public ThuongHieuResponse capNhat(Long id, ThuongHieuRequest req) {
         ThuongHieu th = timTheoId(id);
-        String slug = SlugUtil.taoSlug(req.ten());
-        if (thuongHieuRepository.existsBySlugAndIdNot(slug, id)) {
-            throw new ApiException(HttpStatus.CONFLICT, "Tên thương hiệu trùng với thương hiệu khác");
+        String slugGoc = SlugUtil.taoSlug(req.ten());
+        if (thuongHieuRepository.existsBySlugAndIdNot(slugGoc, id)) {
+            throw ApiException.xungDot("Tên thương hiệu trùng với thương hiệu khác");
         }
+        // Giữ slug cũ nếu tên không đổi về mặt slug (tránh làm hỏng đường dẫn đã chia sẻ)
+        String slug = SlugUtil.cungGoc(th.getSlug(), slugGoc) ? th.getSlug() : taoSlugDuyNhat(req.ten(), id);
         ganDuLieu(th, req, slug);
         return ThuongHieuResponse.tu(th);
     }
@@ -58,6 +58,11 @@ public class ThuongHieuService {
     @Transactional
     public void xoa(Long id) {
         thuongHieuRepository.delete(timTheoId(id));
+    }
+
+    /** Slug không trùng với bất kỳ thương hiệu nào, kể cả thương hiệu đã xóa mềm. */
+    private String taoSlugDuyNhat(String ten, long boQuaId) {
+        return SlugUtil.taoSlugDuyNhat(ten, s -> thuongHieuRepository.demSlugKeCaDaXoa(s, boQuaId) > 0);
     }
 
     private ThuongHieu timTheoId(Long id) {

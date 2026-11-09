@@ -18,10 +18,7 @@ public record CapNhatHoSoRequest(
 
         GioiTinh gioiTinh,
 
-        @Past(message = "Ngày sinh phải nhỏ hơn ngày hiện tại")
-        LocalDate ngaySinh,
-
-        @Size(max = 255, message = "Đường dẫn ảnh đại diện tối đa 255 ký tự")
-        String anhDaiDien
+        @Past(message = "Ngày sinh phải trước ngày hiện tại")
+        LocalDate ngaySinh
 ) {
 }
