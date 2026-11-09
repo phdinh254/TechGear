@@ -21,23 +21,41 @@ export default function ProductListPage() {
   const [ketQua, setKetQua] = useState(null);
   const [dangTai, setDangTai] = useState(true);
   const [loi, setLoi] = useState('');
+  const [loiBoLoc, setLoiBoLoc] = useState('');
+  const [khoangGia, setKhoangGia] = useState({ giaTu: '', giaDen: '' });
 
   const thamSo = Object.fromEntries(params.entries());
+  const chuoiThamSo = params.toString();
 
   useEffect(() => {
-    catalogApi.layDanhMuc().then(setDanhMuc).catch(() => {});
-    catalogApi.layThuongHieu().then(setThuongHieu).catch(() => {});
+    Promise.allSettled([catalogApi.layDanhMuc(), catalogApi.layThuongHieu()]).then(([dm, th]) => {
+      if (dm.status === 'fulfilled') setDanhMuc(dm.value);
+      if (th.status === 'fulfilled') setThuongHieu(th.value);
+      if (dm.status === 'rejected' || th.status === 'rejected') {
+        setLoiBoLoc('Một phần bộ lọc chưa tải được, vui lòng thử lại sau');
+      }
+    });
   }, []);
 
   useEffect(() => {
+    setKhoangGia({ giaTu: params.get('giaTu') || '', giaDen: params.get('giaDen') || '' });
+  }, [chuoiThamSo]);
+
+  useEffect(() => {
+    const controller = new AbortController();
     setDangTai(true);
     setLoi('');
     catalogApi
-      .timSanPham({ kichThuoc: 12, ...Object.fromEntries(params.entries()) })
+      .timSanPham({ kichThuoc: 12, ...Object.fromEntries(params.entries()) }, { signal: controller.signal })
       .then(setKetQua)
-      .catch((e) => setLoi(layThongBaoLoi(e)))
-      .finally(() => setDangTai(false));
-  }, [params]);
+      .catch((e) => {
+        if (e.code !== 'ERR_CANCELED') setLoi(layThongBaoLoi(e));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDangTai(false);
+      });
+    return () => controller.abort();
+  }, [chuoiThamSo]);
 
   /** Đổi một tham số lọc; đổi bộ lọc thì quay về trang đầu. */
   const doiThamSo = (khoa, giaTri) => {
@@ -45,6 +63,29 @@ export default function ProductListPage() {
     if (giaTri === '' || giaTri === null || giaTri === undefined) moi.delete(khoa);
     else moi.set(khoa, giaTri);
     if (khoa !== 'trang') moi.delete('trang');
+    setParams(moi);
+  };
+
+  const apDungKhoangGia = (e) => {
+    e.preventDefault();
+    const tu = khoangGia.giaTu === '' ? null : Number(khoangGia.giaTu);
+    const den = khoangGia.giaDen === '' ? null : Number(khoangGia.giaDen);
+    if ((tu !== null && tu < 0) || (den !== null && den < 0)) {
+      setLoiBoLoc('Khoảng giá không được âm');
+      return;
+    }
+    if (tu !== null && den !== null && tu > den) {
+      setLoiBoLoc('Giá từ không được lớn hơn giá đến');
+      return;
+    }
+
+    setLoiBoLoc('');
+    const moi = new URLSearchParams(params);
+    if (tu === null) moi.delete('giaTu');
+    else moi.set('giaTu', String(tu));
+    if (den === null) moi.delete('giaDen');
+    else moi.set('giaDen', String(den));
+    moi.delete('trang');
     setParams(moi);
   };
 
@@ -76,27 +117,37 @@ export default function ProductListPage() {
           ))}
         </select>
 
-        <h3>Khoảng giá (VNĐ)</h3>
-        <div className="price-range">
-          <input
-            type="number"
-            min="0"
-            step="10000"
-            placeholder="Từ"
-            defaultValue={thamSo.giaTu || ''}
-            onBlur={(e) => doiThamSo('giaTu', e.target.value)}
-          />
-          <input
-            type="number"
-            min="0"
-            step="10000"
-            placeholder="Đến"
-            defaultValue={thamSo.giaDen || ''}
-            onBlur={(e) => doiThamSo('giaDen', e.target.value)}
-          />
-        </div>
+        <form onSubmit={apDungKhoangGia}>
+          <h3>Khoảng giá (VNĐ)</h3>
+          <div className="price-range">
+            <input
+              type="number"
+              min="0"
+              step="10000"
+              placeholder="Từ"
+              value={khoangGia.giaTu}
+              onChange={(e) => setKhoangGia({ ...khoangGia, giaTu: e.target.value })}
+              aria-label="Giá từ"
+            />
+            <input
+              type="number"
+              min="0"
+              step="10000"
+              placeholder="Đến"
+              value={khoangGia.giaDen}
+              onChange={(e) => setKhoangGia({ ...khoangGia, giaDen: e.target.value })}
+              aria-label="Giá đến"
+            />
+          </div>
+          <button type="submit" className="filter-apply">Áp dụng giá</button>
+        </form>
 
-        <button type="button" className="link-button" onClick={() => setParams({})}>
+        {loiBoLoc && <p className="field-error filter-error">{loiBoLoc}</p>}
+
+        <button type="button" className="link-button" onClick={() => {
+          setLoiBoLoc('');
+          setParams({});
+        }}>
           Xóa bộ lọc
         </button>
       </aside>
@@ -118,11 +169,18 @@ export default function ProductListPage() {
         {ketQua && !dangTai && (
           <>
             <p className="muted">Tìm thấy {ketQua.tongSoPhanTu} sản phẩm</p>
-            <div className="product-grid">
+            <div className="product-grid" aria-live="polite">
               {ketQua.noiDung.map((sp) => (
                 <ProductCard key={sp.id} sanPham={sp} />
               ))}
             </div>
+            {ketQua.noiDung.length === 0 && (
+              <div className="empty-result">
+                <h2>Không tìm thấy sản phẩm</h2>
+                <p className="muted">Hãy thử từ khóa khác hoặc xóa bớt bộ lọc.</p>
+                <button type="button" className="btn" onClick={() => setParams({})}>Xóa bộ lọc</button>
+              </div>
+            )}
             <Pagination
               trang={ketQua.trang}
               tongSoTrang={ketQua.tongSoTrang}

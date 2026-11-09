@@ -9,4 +9,6 @@ import java.util.List;
 public interface YeuThichRepository extends JpaRepository<YeuThich, YeuThichId> {
 
     List<YeuThich> findByNguoiDungIdOrderByCreatedAtDesc(Long nguoiDungId);
+
+    boolean existsByNguoiDungIdAndSanPhamId(Long nguoiDungId, Long sanPhamId);
 }

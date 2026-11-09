@@ -46,6 +46,9 @@ public class SanPhamService {
     public PageResponse<SanPhamTomTatResponse> timKiem(String tuKhoa, String danhMucSlug, String thuongHieuSlug,
                                                        BigDecimal giaTu, BigDecimal giaDen,
                                                        String sapXep, int trang, int kichThuoc) {
+        if (giaTu != null && giaDen != null && giaTu.compareTo(giaDen) > 0) {
+            throw ApiException.yeuCauKhongHopLe("Giá từ không được lớn hơn giá đến");
+        }
         List<Long> danhMucIds = StringUtils.hasText(danhMucSlug)
                 ? danhMucService.layIdKemDanhMucCon(danhMucSlug) : null;
 
@@ -73,14 +76,14 @@ public class SanPhamService {
 
         PageRequest pageable = PageRequest.of(Math.max(trang, 0),
                 Math.min(Math.max(kichThuoc, 1), KICH_THUOC_TOI_DA), taoSapXep(sapXep));
-        Page<SanPhamTomTatResponse> page = sanPhamRepository.findAll(spec, pageable).map(this::sangTomTat);
+        Page<SanPhamTomTatResponse> page = sanPhamRepository.findAll(spec, pageable).map(this::taoTomTat);
         return PageResponse.tu(page);
     }
 
     @Transactional(readOnly = true)
     public List<SanPhamTomTatResponse> layNoiBat() {
         return sanPhamRepository.findTop8ByHienThiTrueAndNoiBatTrueOrderByIdDesc().stream()
-                .map(this::sangTomTat).toList();
+                .map(this::taoTomTat).toList();
     }
 
     /** Lấy chi tiết sản phẩm theo slug và tăng lượt xem. */
@@ -119,11 +122,11 @@ public class SanPhamService {
 
         return new SanPhamChiTietResponse(sp.getId(), sp.getTen(), sp.getSlug(), sp.getMoTaNgan(), sp.getMoTa(),
                 sp.getGiaBan(), sp.getGiaGoc(), sp.getBaoHanhThang(), sp.getLuotXem() + 1,
-                danhMuc, ThuongHieuResponse.tu(sp.getThuongHieu()),
+                danhMuc, sp.getThuongHieu() == null ? null : ThuongHieuResponse.tu(sp.getThuongHieu()),
                 hinhAnhs, thongSos, tuyChons, bienThes);
     }
 
-    private SanPhamTomTatResponse sangTomTat(SanPham sp) {
+    public SanPhamTomTatResponse taoTomTat(SanPham sp) {
         String anhChinh = sp.getHinhAnhs().stream()
                 .filter(ha -> Boolean.TRUE.equals(ha.getLaAnhChinh()))
                 .map(HinhAnhSanPham::getDuongDan)

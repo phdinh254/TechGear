@@ -1,5 +1,7 @@
 package com.techgear.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.techgear.dto.ApiErrorResponse;
 import com.techgear.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +23,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,6 +33,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
@@ -45,6 +47,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/dang-ky", "/api/auth/dang-nhap").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/dat-hang", "/api/dat-hang/tinh-tien").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/san-pham/**", "/api/danh-muc/**",
                                 "/api/thuong-hieu/**", "/api/banner/**", "/uploads/**").permitAll()
@@ -77,11 +80,11 @@ public class SecurityConfig {
         return source;
     }
 
-    private static void ghiLoi(jakarta.servlet.http.HttpServletResponse res, int status, String thongBao)
+    private void ghiLoi(jakarta.servlet.http.HttpServletResponse res, int status, String thongBao)
             throws java.io.IOException {
         res.setStatus(status);
         res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        res.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        res.getWriter().write("{\"trangThai\":" + status + ",\"thongBao\":\"" + thongBao + "\"}");
+        res.setCharacterEncoding(java.nio.charset.StandardCharsets.UTF_8.name());
+        objectMapper.writeValue(res.getWriter(), ApiErrorResponse.tao(status, thongBao));
     }
 }

@@ -8,7 +8,7 @@ public record ThuongHieuRequest(
         @Size(max = 100, message = "Tên tối đa 100 ký tự")
         String ten,
 
-        @Size(max = 255)
+        @Size(max = 255, message = "Đường dẫn logo tối đa 255 ký tự")
         String logo,
 
         String moTa,

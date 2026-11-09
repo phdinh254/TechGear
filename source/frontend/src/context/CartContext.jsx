@@ -1,62 +1,138 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import cartApi from '../api/cartApi';
+import { layThongBaoLoi } from '../api/axiosClient';
+import { useAuth } from './AuthContext.jsx';
 
-/**
- * Giỏ hàng tạm lưu ở localStorage (dùng được cả khi chưa đăng nhập).
- * Mỗi dòng: { bienTheId, sanPhamSlug, ten, phanLoai, giaBan, anh, soLuong, tonKho }
- * Bước sau: khi đăng nhập sẽ đồng bộ lên API giỏ hàng của backend.
- */
 const CART_KEY = 'techgear_cart';
 const CartContext = createContext(null);
 
-function docGioHang() {
+function docGioHangKhach() {
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY)) || [];
+    const duLieu = JSON.parse(localStorage.getItem(CART_KEY));
+    return Array.isArray(duLieu) ? duLieu : [];
   } catch {
     return [];
   }
 }
 
+function luuGioHangKhach(dong) {
+  localStorage.setItem(CART_KEY, JSON.stringify(dong));
+}
+
 export function CartProvider({ children }) {
-  const [dong, setDong] = useState(docGioHang);
+  const { nguoiDung, dangTai: dangTaiDangNhap } = useAuth();
+  const [dong, setDong] = useState(docGioHangKhach);
+  const [dangDongBo, setDangDongBo] = useState(false);
+  const [loiGio, setLoiGio] = useState('');
+  const nguoiDungDaTai = useRef(null);
 
   useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(dong));
-  }, [dong]);
+    if (dangTaiDangNhap) return;
+
+    if (!nguoiDung) {
+      const vuaDangXuat = nguoiDungDaTai.current !== null;
+      nguoiDungDaTai.current = null;
+      if (vuaDangXuat) {
+        localStorage.removeItem(CART_KEY);
+        setDong([]);
+      } else {
+        setDong(docGioHangKhach());
+      }
+      setLoiGio('');
+      return;
+    }
+
+    if (nguoiDungDaTai.current === nguoiDung.id) return;
+    nguoiDungDaTai.current = nguoiDung.id;
+    const gioKhach = docGioHangKhach();
+    setDangDongBo(true);
+    setLoiGio('');
+    const request = gioKhach.length > 0
+      ? cartApi.gop(gioKhach.map((item) => ({ bienTheId: item.bienTheId, soLuong: item.soLuong })))
+      : cartApi.layGioHang();
+    request
+      .then((response) => {
+        setDong(response.dong);
+        localStorage.removeItem(CART_KEY);
+      })
+      .catch((error) => {
+        nguoiDungDaTai.current = null;
+        setLoiGio(layThongBaoLoi(error));
+      })
+      .finally(() => setDangDongBo(false));
+  }, [dangTaiDangNhap, nguoiDung]);
+
+  const capNhatGioKhach = (hamCapNhat) => {
+    setDong((cu) => {
+      const moi = hamCapNhat(cu);
+      luuGioHangKhach(moi);
+      return moi;
+    });
+  };
+
+  const xuLyResponse = (promise) => {
+    setLoiGio('');
+    return promise
+      .then((response) => {
+        setDong(response.dong);
+        return response;
+      })
+      .catch((error) => {
+        setLoiGio(layThongBaoLoi(error));
+        throw error;
+      });
+  };
 
   const giaTri = useMemo(() => {
-    const themVaoGio = (sanPham, soLuong = 1) =>
-      setDong((cu) => {
-        const daCo = cu.find((d) => d.bienTheId === sanPham.bienTheId);
+    const themVaoGio = (sanPham, soLuong = 1) => {
+      if (nguoiDung) return xuLyResponse(cartApi.them(sanPham.bienTheId, soLuong));
+      capNhatGioKhach((cu) => {
+        const daCo = cu.find((item) => item.bienTheId === sanPham.bienTheId);
         if (daCo) {
-          return cu.map((d) =>
-            d.bienTheId === sanPham.bienTheId
-              ? { ...d, soLuong: Math.min(d.soLuong + soLuong, d.tonKho) }
-              : d,
-          );
+          return cu.map((item) => item.bienTheId === sanPham.bienTheId
+            ? { ...item, soLuong: Math.min(item.soLuong + soLuong, item.tonKho) }
+            : item);
         }
-        return [...cu, { ...sanPham, soLuong: Math.min(soLuong, sanPham.tonKho) }];
+        return [...cu, { ...sanPham, soLuong: Math.min(soLuong, sanPham.tonKho), conBan: true }];
       });
+      return Promise.resolve();
+    };
 
-    const capNhatSoLuong = (bienTheId, soLuong) =>
-      setDong((cu) =>
-        cu.map((d) =>
-          d.bienTheId === bienTheId ? { ...d, soLuong: Math.max(1, Math.min(soLuong, d.tonKho)) } : d,
-        ),
-      );
+    const capNhatSoLuong = (bienTheId, soLuong) => {
+      if (nguoiDung) return xuLyResponse(cartApi.capNhat(bienTheId, soLuong));
+      capNhatGioKhach((cu) => cu.map((item) => item.bienTheId === bienTheId
+        ? { ...item, soLuong: Math.max(1, Math.min(soLuong, item.tonKho)) }
+        : item));
+      return Promise.resolve();
+    };
 
-    const xoaKhoiGio = (bienTheId) => setDong((cu) => cu.filter((d) => d.bienTheId !== bienTheId));
-    const xoaHet = () => setDong([]);
+    const xoaKhoiGio = (bienTheId) => {
+      if (nguoiDung) return xuLyResponse(cartApi.xoa(bienTheId));
+      capNhatGioKhach((cu) => cu.filter((item) => item.bienTheId !== bienTheId));
+      return Promise.resolve();
+    };
+
+    const xoaHet = () => {
+      if (nguoiDung) {
+        setLoiGio('');
+        return cartApi.xoaTatCa().then(() => setDong([]));
+      }
+      capNhatGioKhach(() => []);
+      return Promise.resolve();
+    };
 
     return {
       dong,
-      tongSoLuong: dong.reduce((t, d) => t + d.soLuong, 0),
-      tamTinh: dong.reduce((t, d) => t + Number(d.giaBan) * d.soLuong, 0),
+      dangDongBo,
+      loiGio,
+      tongSoLuong: dong.reduce((tong, item) => tong + item.soLuong, 0),
+      tamTinh: dong.reduce((tong, item) => tong + Number(item.giaBan) * item.soLuong, 0),
       themVaoGio,
       capNhatSoLuong,
       xoaKhoiGio,
       xoaHet,
     };
-  }, [dong]);
+  }, [dong, nguoiDung, dangDongBo, loiGio]);
 
   return <CartContext.Provider value={giaTri}>{children}</CartContext.Provider>;
 }

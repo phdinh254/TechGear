@@ -51,12 +51,20 @@ export default function RegisterPage() {
         {truong('hoTen', 'Họ và tên', 'text', { required: true, maxLength: 100 })}
         {truong('email', 'Email', 'email', { required: true, autoComplete: 'email' })}
         {truong('soDienThoai', 'Số điện thoại (không bắt buộc)', 'tel', { pattern: '0[0-9]{9}' })}
-        {truong('matKhau', 'Mật khẩu (ít nhất 6 ký tự)', 'password', {
+        {truong('matKhau', 'Mật khẩu (ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số)', 'password', {
           required: true,
-          minLength: 6,
+          minLength: 8,
+          maxLength: 100,
+          pattern: '(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,100}',
+          title: 'Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số',
           autoComplete: 'new-password',
         })}
-        {truong('nhapLai', 'Nhập lại mật khẩu', 'password', { required: true, autoComplete: 'new-password' })}
+        {truong('nhapLai', 'Nhập lại mật khẩu', 'password', {
+          required: true,
+          minLength: 8,
+          maxLength: 100,
+          autoComplete: 'new-password',
+        })}
         <button type="submit" className="btn" disabled={dangGui}>
           {dangGui ? 'Đang xử lý...' : 'Đăng ký'}
         </button>

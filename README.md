@@ -89,11 +89,19 @@ Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env`
 | GET | `/api/san-pham` | Công khai | Tìm kiếm, lọc, sắp xếp, phân trang |
 | GET | `/api/san-pham/noi-bat` | Công khai | 8 sản phẩm nổi bật |
 | GET | `/api/san-pham/{slug}` | Công khai | Chi tiết sản phẩm (tùy chọn, biến thể, thông số) |
+| GET | `/api/san-pham/{slug}/danh-gia` | Công khai | Tổng quan và danh sách đánh giá đã duyệt, có phân trang |
 | GET/POST/PUT/DELETE | `/api/admin/thuong-hieu` | Quản trị | Quản lý thương hiệu (mẫu CRUD cho admin) |
 
 Tham số `/api/san-pham`: `tuKhoa`, `danhMuc` (slug, gồm cả danh mục con), `thuongHieu` (slug), `giaTu`, `giaDen`, `sapXep` (`moi_nhat` | `gia_tang` | `gia_giam` | `pho_bien`), `trang` (bắt đầu từ 0), `kichThuoc` (tối đa 48).
 
-Gửi token: header `Authorization: Bearer <token>`. Lỗi trả về dạng `{ "trangThai": 400, "thongBao": "...", "loi": { ... } }`.
+Gửi token: header `Authorization: Bearer <token>`.
+
+- API thành công trả trực tiếp DTO hoặc danh sách DTO, không bọc thêm một lớp response.
+- Lỗi từ validation, nghiệp vụ và phân quyền đều trả cùng cấu trúc:
+  `{ "thoiGian": "...", "trangThai": 400, "thongBao": "...", "loi": { "tenTruong": "..." } }`.
+- Trường `loi` chỉ xuất hiện khi có lỗi theo từng trường dữ liệu.
+- Mật khẩu đăng ký dài từ 8 đến 100 ký tự, có ít nhất một chữ hoa, một chữ thường và một chữ số.
+- `/api/auth/dang-ky`, `/api/auth/dang-nhap` và API đọc catalog là công khai; `/api/admin/**` chỉ dành cho quản trị viên; API còn lại yêu cầu đăng nhập.
 
 ## Thay đổi so với file CSDL ban đầu
 

@@ -8,6 +8,10 @@ import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import CartPage from './pages/CartPage.jsx';
 import AccountPage from './pages/AccountPage.jsx';
+import CheckoutPage from './pages/CheckoutPage.jsx';
+import OrdersPage from './pages/OrdersPage.jsx';
+import OrderDetailPage from './pages/OrderDetailPage.jsx';
+import WishlistPage from './pages/WishlistPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 
 export default function App() {
@@ -18,6 +22,7 @@ export default function App() {
         <Route path="san-pham" element={<ProductListPage />} />
         <Route path="san-pham/:slug" element={<ProductDetailPage />} />
         <Route path="gio-hang" element={<CartPage />} />
+        <Route path="dat-hang" element={<CheckoutPage />} />
         <Route path="dang-nhap" element={<LoginPage />} />
         <Route path="dang-ky" element={<RegisterPage />} />
         <Route
@@ -28,6 +33,9 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="tai-khoan/don-hang" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+        <Route path="tai-khoan/don-hang/:maDonHang" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+        <Route path="tai-khoan/yeu-thich" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
