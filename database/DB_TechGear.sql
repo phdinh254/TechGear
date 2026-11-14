@@ -3,7 +3,7 @@
 --  Tên dự án   : TechGear
 --  Sinh viên   : Trần Phú Dinh - CNTT - Đại học Trà Vinh
 --  Công nghệ   : ReactJS (frontend) - Java Spring Boot (backend) - MySQL
---  Hệ QTCSDL   : MySQL 8.0.16+ / MariaDB 10.4+ (XAMPP)  (InnoDB, utf8mb4)
+--  Hệ QTCSDL   : MySQL 8.0.16+ / MariaDB 10.4+  (InnoDB, utf8mb4)
 --  Quy ước     : tên bảng, tên cột tiếng Việt không dấu, snake_case;
 --                các cột kỹ thuật dùng tên tiếng Anh: id, password,
 --                created_at, updated_at, deleted_at (xóa mềm)

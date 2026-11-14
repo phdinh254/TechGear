@@ -53,7 +53,7 @@
             <version>${springdoc.version}</version>
         </dependency>
 
-        <!-- Driver MySQL (cũng kết nối được MariaDB của XAMPP) -->
+        <!-- Driver MySQL (cũng kết nối được MariaDB) -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>

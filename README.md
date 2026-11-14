@@ -10,7 +10,7 @@ Nhóm sinh viên thực hiện:
 |---|---|
 | Frontend | ReactJS 18 + Vite 5, React Router 6, Axios |
 | Backend | Java 17, Spring Boot 3.3.5 (Web, Data JPA, Security, Validation, Mail), JWT (jjwt 0.12.6), Lombok, springdoc-openapi (Swagger UI) |
-| CSDL | MySQL 8.0.16+ hoặc MariaDB 10.4+ (XAMPP) |
+| CSDL | MySQL 8.0.16+ hoặc MariaDB 10.4+ |
 
 ## Cấu trúc thư mục
 
@@ -118,12 +118,14 @@ Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png
 | JDK | 17 trở lên | VD: Eclipse Temurin 17 |
 | Maven | 3.9+ | IntelliJ IDEA có sẵn Maven |
 | Node.js | 18 trở lên | |
-| XAMPP | MySQL/MariaDB 10.4+ | |
+| MySQL / MariaDB | 8.0.16+ / 10.4+ | Cổng 3306, tài khoản `root` không mật khẩu |
 
 ### 1. Cơ sở dữ liệu
-1. Mở XAMPP, bật **MySQL**.
-2. Vào phpMyAdmin → tab **Import** → chọn `database/DB_TechGear.sql` → **Go**.
-   (Script tự xóa và tạo lại CSDL `techgear`.)
+1. Bật MySQL / MariaDB.
+2. Nạp script (tự xóa và tạo lại CSDL `techgear`):
+   ```bash
+   mysql -u root --default-character-set=utf8mb4 < database/DB_TechGear.sql
+   ```
 
 Tài khoản mẫu:
 
@@ -147,7 +149,7 @@ Chạy kiểm thử: `mvn test`.
 
 #### Cấu hình (biến môi trường)
 
-Không cần khai báo gì khi chạy trên máy cá nhân với XAMPP mặc định. Khi cần thay đổi, đặt biến môi trường (đầy đủ trong [đặc tả API](docs/thiet-ke/dac-ta-api.md#3-biến-môi-trường)):
+Không cần khai báo gì khi chạy trên máy cá nhân với MySQL mặc định (`root`, không mật khẩu, cổng 3306). Khi cần thay đổi, đặt biến môi trường (đầy đủ trong [đặc tả API](docs/thiet-ke/dac-ta-api.md#3-biến-môi-trường)):
 
 | Biến | Mặc định | Ý nghĩa |
 |---|---|---|
