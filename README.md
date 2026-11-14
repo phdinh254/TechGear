@@ -31,7 +31,29 @@ TechGear/
 
 ## Sơ đồ thiết kế
 
-Đang vẽ lại cùng đợt viết lại backend (ERD, kiến trúc, hoạt động, tuần tự, trạng thái) và đặc tả API – sẽ nằm trong `docs/thiet-ke/`.
+Nằm trong `docs/thiet-ke/`, mỗi sơ đồ có `.drawio` (mở bằng [draw.io](https://www.drawio.com/) để sửa), `.drawio.png` và `.svg`.
+
+| Tài liệu | Nội dung |
+|---|---|
+| [`dac-ta-yeu-cau.md`](docs/thiet-ke/dac-ta-yeu-cau.md) | Đặc tả yêu cầu: tác nhân, module, quy tắc nghiệp vụ, phi chức năng, kiểm thử |
+| [`tu-dien-du-lieu.md`](docs/thiet-ke/tu-dien-du-lieu.md) | Từ điển dữ liệu 23 bảng PostgreSQL |
+| [`dac-ta-api.md`](docs/thiet-ke/dac-ta-api.md) | Đặc tả API: quy ước, định dạng lỗi, danh sách API |
+
+### 1. Kiến trúc tổng thể
+
+[![Kiến trúc tổng thể](docs/thiet-ke/02_kien_truc_tong_the.drawio.png)](docs/thiet-ke/02_kien_truc_tong_the.drawio.png)
+
+### 2. Sơ đồ thực thể – liên kết (ERD)
+
+23 bảng, 31 khóa ngoại, gom theo 6 nhóm nghiệp vụ.
+
+[![ERD](docs/thiet-ke/01_erd.drawio.png)](docs/thiet-ke/01_erd.drawio.png)
+
+### 3. Sơ đồ gói backend
+
+12 module (`com.techgear.<module>`) và quan hệ phụ thuộc.
+
+[![Sơ đồ gói](docs/thiet-ke/03_so_do_goi.drawio.png)](docs/thiet-ke/03_so_do_goi.drawio.png)
 
 ## Sơ đồ use case
 
@@ -93,7 +115,7 @@ Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env`
 | Giai đoạn | Nội dung | Trạng thái |
 |---|---|---|
 | 0. Dọn sạch | Xóa backend, script CSDL MySQL và tài liệu thiết kế cũ | Xong |
-| 1. Thiết kế | Đặc tả yêu cầu, ERD PostgreSQL, kiến trúc, danh sách API | Chưa |
+| 1. Thiết kế | Đặc tả yêu cầu, ERD PostgreSQL, kiến trúc, danh sách API | Xong |
 | 2. Nền tảng | Spring Boot 4, Docker Compose, Flyway, bảo mật JWT, xử lý lỗi, Swagger, upload | Chưa |
 | 3. Tài khoản | Đăng ký, đăng nhập, hồ sơ, mật khẩu, sổ địa chỉ | Chưa |
 | 4. Sản phẩm | Danh mục, thương hiệu, tìm kiếm/lọc, chi tiết, banner, cài đặt | Chưa |
