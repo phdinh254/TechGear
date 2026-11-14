@@ -11,8 +11,7 @@ dist/
 
 # Backend
 target/
-uploads/*
-!uploads/.gitkeep
+uploads/
 
 # IDE / hệ điều hành
 .idea/
