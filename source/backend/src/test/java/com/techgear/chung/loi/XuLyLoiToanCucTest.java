@@ -49,6 +49,11 @@ class XuLyLoiToanCucTest {
             return trang;
         }
 
+        @GetMapping("/thu/trang-thai-418")
+        void trangThai418() {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.I_AM_A_TEAPOT);
+        }
+
         @GetMapping("/thu/loi-he-thong")
         void loiHeThong() {
             throw new IllegalStateException("chi tiết nội bộ không được lộ ra");
@@ -102,6 +107,16 @@ class XuLyLoiToanCucTest {
                 .andExpect(jsonPath("$.thongBao").value("Phương thức DELETE không được hỗ trợ"));
         mvc.perform(post("/thu/dang-ky").contentType(MediaType.TEXT_PLAIN).content("x"))
                 .andExpect(status().isUnsupportedMediaType());
+    }
+
+    @Test
+    void loiCoSanMaCuaSpringGiuDungMaKhongThanh500() throws Exception {
+        mvc.perform(get("/thu/so").param("trang", "1").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isNotAcceptable());
+        mvc.perform(get("/thu/trang-thai-418"))
+                .andExpect(status().isIAmATeapot())
+                .andExpect(jsonPath("$.trangThai").value(418))
+                .andExpect(jsonPath("$.thongBao").value("Yêu cầu không thể xử lý"));
     }
 
     @Test

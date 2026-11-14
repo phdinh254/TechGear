@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponseException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -98,6 +100,20 @@ public class XuLyLoiToanCuc {
     ResponseEntity<ApiError> viPhamRangBuoc(DataIntegrityViolationException e) {
         log.warn("Vi phạm ràng buộc CSDL: {}", e.getMostSpecificCause().getMessage());
         return tra(HttpStatus.CONFLICT, "Dữ liệu bị trùng hoặc đang được sử dụng");
+    }
+
+    /** Các lỗi còn lại của Spring MVC đã mang sẵn mã HTTP (406, ResponseStatusException...): giữ đúng mã. */
+    @ExceptionHandler(ErrorResponseException.class)
+    ResponseEntity<ApiError> loiCoMa(ErrorResponseException e) {
+        HttpStatus trangThai = HttpStatus.valueOf(e.getStatusCode().value());
+        return tra(trangThai, trangThai.is5xxServerError()
+                ? "Đã xảy ra lỗi hệ thống, vui lòng thử lại sau" : "Yêu cầu không thể xử lý");
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    ResponseEntity<Void> khongTraDuocDinhDang() {
+        // client không nhận JSON nên không gửi thân lỗi được
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
     }
 
     @ExceptionHandler(Exception.class)

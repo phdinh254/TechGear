@@ -1,0 +1,178 @@
+{
+  "info": {
+    "_postman_id": "6f0c1d2e-7a3b-4c5d-9e8f-techgear0001",
+    "name": "TechGear API",
+    "description": "Kiểm thử API backend TechGear. Chạy cả bộ: npx -y newman@6 run postman/TechGear.postman_collection.json -e postman/TechGear.local.postman_environment.json\nMỗi thư mục ứng với một module; token đăng nhập tự lưu vào biến môi trường.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Mọi lỗi từ backend phải đúng định dạng { thoiGian, trangThai, thongBao }",
+          "if (pm.response.code >= 400 && (pm.response.headers.get('Content-Type') || '').includes('application/json')) {",
+          "    pm.test('Lỗi đúng định dạng { thoiGian, trangThai, thongBao }', function () {",
+          "        const j = pm.response.json();",
+          "        pm.expect(j.thoiGian).to.match(/\\+07:00$/);",
+          "        pm.expect(j.trangThai).to.eql(pm.response.code);",
+          "        pm.expect(j.thongBao).to.be.a('string').and.not.empty;",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Nền tảng",
+      "item": [
+        {
+          "name": "Swagger – tài liệu API công khai",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 và là tài liệu OpenAPI', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().openapi).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/v3/api-docs"
+          }
+        },
+        {
+          "name": "Chưa đăng nhập gọi API cần đăng nhập → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 Vui lòng đăng nhập', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    pm.expect(pm.response.json().thongBao).to.eql('Vui lòng đăng nhập');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/khong-ton-tai"
+          }
+        },
+        {
+          "name": "Token sai → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 phiên không hợp lệ', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    pm.expect(pm.response.json().thongBao).to.eql('Phiên đăng nhập không hợp lệ hoặc đã hết hạn');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer khong.phai.token"
+              }
+            ],
+            "url": "{{baseUrl}}/api/khong-ton-tai"
+          }
+        },
+        {
+          "name": "Upload ảnh khi chưa đăng nhập → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/upload?thuMuc=san-pham",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "upload"],
+              "query": [{"key": "thuMuc", "value": "san-pham"}]
+            }
+          }
+        },
+        {
+          "name": "Ảnh không tồn tại → 404 JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    pm.expect(pm.response.json().thongBao).to.eql('Không tìm thấy đường dẫn');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/uploads/san-pham/khong-co.png"
+          }
+        },
+        {
+          "name": "CORS – frontend được phép gọi API",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Preflight từ frontend được chấp nhận', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.headers.get('Access-Control-Allow-Origin')).to.eql(pm.environment.get('frontendUrl'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              {"key": "Origin", "value": "{{frontendUrl}}"},
+              {"key": "Access-Control-Request-Method", "value": "GET"}
+            ],
+            "url": "{{baseUrl}}/api/khong-ton-tai"
+          }
+        }
+      ]
+    }
+  ]
+}

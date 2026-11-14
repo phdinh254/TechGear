@@ -90,9 +90,30 @@ Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png
 | Node.js | 18 trở lên | |
 | Docker Desktop | mới nhất | Chạy PostgreSQL 17 bằng Docker Compose |
 
-### 1. Cơ sở dữ liệu và 2. Backend
+### 1. Cơ sở dữ liệu
 
-Đang viết lại (PostgreSQL + Spring Boot 4) – hướng dẫn chạy, tài khoản mẫu và cách kiểm thử bằng Postman sẽ được cập nhật khi xong.
+```bash
+docker compose up -d        # PostgreSQL 17 ở cổng 5433 (đổi bằng biến TECHGEAR_DB_PORT)
+docker compose down -v      # xóa sạch dữ liệu khi cần làm lại từ đầu
+```
+Lược đồ CSDL do Flyway trong backend tự tạo khi khởi động (`source/backend/src/main/resources/db/migration`).
+
+### 2. Backend
+
+```bash
+cd source/backend
+mvn spring-boot:run         # tự bật profile dev (kết nối CSDL ở trên, khóa JWT dùng cho máy cá nhân)
+```
+- Swagger UI: `http://localhost:8080/swagger-ui.html` (bấm **Authorize**, dán token nhận được khi đăng nhập).
+- Biến môi trường khi triển khai: xem `source/backend/.env.example` (bắt buộc `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
+
+Kiểm thử:
+
+| Lệnh | Nội dung |
+|---|---|
+| `mvn test` | Unit test |
+| `mvn verify` | Unit test + kiểm thử tích hợp trên PostgreSQL thật (Testcontainers, cần Docker) |
+| `npx -y newman@6 run postman/TechGear.postman_collection.json -e postman/TechGear.local.postman_environment.json` | Kiểm thử API bằng bộ Postman (chạy ở gốc repo, backend đang chạy). Có thể import 2 file này vào Postman để gọi thử |
 
 ### 3. Frontend
 
@@ -116,7 +137,7 @@ Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env`
 |---|---|---|
 | 0. Dọn sạch | Xóa backend, script CSDL MySQL và tài liệu thiết kế cũ | Xong |
 | 1. Thiết kế | Đặc tả yêu cầu, ERD PostgreSQL, kiến trúc, danh sách API | Xong |
-| 2. Nền tảng | Spring Boot 4, Docker Compose, Flyway, bảo mật JWT, xử lý lỗi, Swagger, upload | Chưa |
+| 2. Nền tảng | Spring Boot 4, Docker Compose, Flyway, bảo mật JWT, xử lý lỗi, Swagger, upload | Xong |
 | 3. Tài khoản | Đăng ký, đăng nhập, hồ sơ, mật khẩu, sổ địa chỉ | Chưa |
 | 4. Sản phẩm | Danh mục, thương hiệu, tìm kiếm/lọc, chi tiết, banner, cài đặt | Chưa |
 | 5. Giỏ hàng | Giỏ hàng trên server, gộp giỏ, yêu thích | Chưa |
