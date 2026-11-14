@@ -1,23 +1,8 @@
 package com.techgear.taikhoan;
 
 import com.jayway.jsonpath.JsonPath;
-import com.techgear.KiemThuTichHop;
-import com.techgear.chung.baomat.JwtService;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwsHeader;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.emptyOrNullString;
@@ -26,36 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class XacThucIT extends KiemThuTichHop {
-
-    @Autowired
-    MockMvc mvc;
-    @Autowired
-    JdbcTemplate jdbc;
-    @Autowired
-    EntityManager em;
-    @Autowired
-    JwtEncoder jwtEncoder;
-
-    static String emailMoi() {
-        return "kh-" + UUID.randomUUID().toString().substring(0, 8) + "@vi-du.vn";
-    }
-
-    String dangKy(String email) throws Exception {
-        String json = mvc.perform(post("/api/auth/dang-ky").contentType(MediaType.APPLICATION_JSON).content("""
-                        {"hoTen":"Nguyễn Văn An","email":"%s","matKhau":"matkhau123","soDienThoai":"0912345678"}
-                        """.formatted(email)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        return JsonPath.read(json, "$.token");
-    }
-
-    /** Sửa CSDL trực tiếp rồi bỏ bộ nhớ đệm của Hibernate để lần đọc sau thấy dữ liệu mới. */
-    void suaCsdl(String sql, Object... thamSo) {
-        em.flush();
-        jdbc.update(sql, thamSo);
-        em.clear();
-    }
+class XacThucIT extends KiemThuTaiKhoan {
 
     @Test
     void dangKyTraTokenVaThongTinDungHopDongFrontend() throws Exception {
@@ -164,13 +120,7 @@ class XacThucIT extends KiemThuTichHop {
         String email = emailMoi();
         dangKy(email);
         suaCsdl("UPDATE nguoi_dung SET doi_mat_khau_luc = now() - interval '30 seconds' WHERE email = ?", email);
-        Long id = jdbc.queryForObject("SELECT id FROM nguoi_dung WHERE email = ?", Long.class, email);
-
-        Instant truoc = Instant.now().minus(1, ChronoUnit.MINUTES);
-        String tokenCu = jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(),
-                JwtClaimsSet.builder().issuer(JwtService.NHA_PHAT_HANH).subject(id.toString())
-                        .issuedAt(truoc).expiresAt(truoc.plus(1, ChronoUnit.DAYS))
-                        .claim(JwtService.CLAIM_VAI_TRO, "khach_hang").build())).getTokenValue();
+        String tokenCu = tokenCu(idCua(email));
         mvc.perform(get("/api/auth/toi").header("Authorization", "Bearer " + tokenCu))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.thongBao").value("Phiên đăng nhập không hợp lệ hoặc đã hết hạn"));
