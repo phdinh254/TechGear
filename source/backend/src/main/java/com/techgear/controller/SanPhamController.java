@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.techgear.dto.PageResponse;
 import com.techgear.dto.SanPhamChiTietResponse;
 import com.techgear.dto.SanPhamTomTatResponse;
+import com.techgear.dto.DanhGiaResponse;
+import com.techgear.service.DanhGiaService;
 import com.techgear.service.SanPhamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,16 +20,17 @@ import java.util.List;
 public class SanPhamController {
 
     private final SanPhamService sanPhamService;
+    private final DanhGiaService danhGiaService;
 
     /**
-     * VD: GET /api/san-pham?tuKhoa=sac&danhMuc=sac-va-cap&thuongHieu=anker
+     * VD: GET /api/san-pham?tuKhoa=sac&danhMuc=sac-va-cap&thuongHieu=anker,baseus
      *         &giaTu=100000&giaDen=1000000&sapXep=gia_tang&trang=0&kichThuoc=12
      */
     @GetMapping
     public PageResponse<SanPhamTomTatResponse> timKiem(
             @RequestParam(required = false) String tuKhoa,
             @RequestParam(required = false) String danhMuc,
-            @RequestParam(required = false) String thuongHieu,
+            @RequestParam(required = false) List<String> thuongHieu,
             @RequestParam(required = false) BigDecimal giaTu,
             @RequestParam(required = false) BigDecimal giaDen,
             @RequestParam(required = false) String sapXep,
@@ -44,5 +47,13 @@ public class SanPhamController {
     @GetMapping("/{slug}")
     public SanPhamChiTietResponse layChiTiet(@PathVariable String slug) {
         return sanPhamService.layChiTiet(slug);
+    }
+
+    @GetMapping("/{slug}/danh-gia")
+    public PageResponse<DanhGiaResponse> layDanhGia(
+            @PathVariable String slug,
+            @RequestParam(defaultValue = "0") int trang,
+            @RequestParam(defaultValue = "10") int kichThuoc) {
+        return danhGiaService.layTheoSanPham(slug, trang, kichThuoc);
     }
 }

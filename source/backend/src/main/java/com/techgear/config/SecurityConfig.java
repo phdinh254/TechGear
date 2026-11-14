@@ -48,7 +48,7 @@ public class SecurityConfig {
                                 "/api/auth/quen-mat-khau", "/api/auth/dat-lai-mat-khau").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/san-pham/**", "/api/danh-muc/**",
-                                "/api/thuong-hieu/**", "/api/banner/**", "/uploads/**").permitAll()
+                                "/api/thuong-hieu/**", "/api/banner/**", "/api/cai-dat", "/uploads/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("QUAN_TRI")
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()

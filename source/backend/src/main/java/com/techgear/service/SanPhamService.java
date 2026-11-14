@@ -5,15 +5,18 @@ import com.techgear.dto.PageResponse;
 import com.techgear.dto.SanPhamChiTietResponse;
 import com.techgear.dto.SanPhamTomTatResponse;
 import com.techgear.dto.ThuongHieuResponse;
+import com.techgear.entity.BienTheSanPham;
 import com.techgear.entity.DanhMuc;
 import com.techgear.entity.GiaTriTuyChon;
 import com.techgear.entity.HinhAnhSanPham;
 import com.techgear.entity.SanPham;
-import com.techgear.entity.ThuongHieu;
 import com.techgear.exception.ApiException;
+import com.techgear.repository.DanhGiaRepository;
 import com.techgear.repository.SanPhamRepository;
-import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +38,7 @@ public class SanPhamService {
     private static final int KICH_THUOC_TOI_DA = 48;
 
     private final SanPhamRepository sanPhamRepository;
+    private final DanhGiaRepository danhGiaRepository;
     private final DanhMucService danhMucService;
 
     /**
@@ -43,11 +47,13 @@ public class SanPhamService {
      * @param sapXep moi_nhat | gia_tang | gia_giam | pho_bien
      */
     @Transactional(readOnly = true)
-    public PageResponse<SanPhamTomTatResponse> timKiem(String tuKhoa, String danhMucSlug, String thuongHieuSlug,
+    public PageResponse<SanPhamTomTatResponse> timKiem(String tuKhoa, String danhMucSlug, List<String> thuongHieuSlugs,
                                                        BigDecimal giaTu, BigDecimal giaDen,
                                                        String sapXep, int trang, int kichThuoc) {
         List<Long> danhMucIds = StringUtils.hasText(danhMucSlug)
                 ? danhMucService.layIdKemDanhMucCon(danhMucSlug) : null;
+        List<String> thuongHieus = thuongHieuSlugs == null ? List.of()
+                : thuongHieuSlugs.stream().filter(StringUtils::hasText).map(String::trim).toList();
 
         Specification<SanPham> spec = (root, query, cb) -> {
             List<Predicate> dk = new ArrayList<>();
@@ -58,15 +64,22 @@ public class SanPhamService {
             if (danhMucIds != null) {
                 dk.add(root.get("danhMuc").get("id").in(danhMucIds));
             }
-            if (StringUtils.hasText(thuongHieuSlug)) {
-                Join<SanPham, ThuongHieu> th = root.join("thuongHieu");
-                dk.add(cb.equal(th.get("slug"), thuongHieuSlug));
+            if (!thuongHieus.isEmpty()) {
+                dk.add(root.get("thuongHieu").get("slug").in(thuongHieus));
             }
-            if (giaTu != null) {
-                dk.add(cb.greaterThanOrEqualTo(root.get("giaBan"), giaTu));
-            }
-            if (giaDen != null) {
-                dk.add(cb.lessThanOrEqualTo(root.get("giaBan"), giaDen));
+            if (giaTu != null || giaDen != null) {
+                // Lọc theo giá thực của biến thể đang bán (biến thể không có giá riêng thì lấy giá sản phẩm)
+                Subquery<Long> sq = query.subquery(Long.class);
+                Root<BienTheSanPham> bt = sq.from(BienTheSanPham.class);
+                Expression<BigDecimal> gia = cb.coalesce(bt.<BigDecimal>get("giaBan"), root.<BigDecimal>get("giaBan"));
+                List<Predicate> dkBt = new ArrayList<>(List.of(cb.equal(bt.get("sanPham"), root), cb.isTrue(bt.get("hienThi"))));
+                if (giaTu != null) {
+                    dkBt.add(cb.greaterThanOrEqualTo(gia, giaTu));
+                }
+                if (giaDen != null) {
+                    dkBt.add(cb.lessThanOrEqualTo(gia, giaDen));
+                }
+                dk.add(cb.exists(sq.select(bt.get("id")).where(dkBt.toArray(new Predicate[0]))));
             }
             return cb.and(dk.toArray(new Predicate[0]));
         };
@@ -120,7 +133,14 @@ public class SanPhamService {
         return new SanPhamChiTietResponse(sp.getId(), sp.getTen(), sp.getSlug(), sp.getMoTaNgan(), sp.getMoTa(),
                 sp.getGiaBan(), sp.getGiaGoc(), sp.getBaoHanhThang(), sp.getLuotXem() + 1,
                 danhMuc, ThuongHieuResponse.tu(sp.getThuongHieu()),
-                hinhAnhs, thongSos, tuyChons, bienThes);
+                hinhAnhs, thongSos, tuyChons, bienThes,
+                lamTronMotChuSo(danhGiaRepository.tinhSoSaoTrungBinh(sp.getId())),
+                danhGiaRepository.countBySanPhamIdAndDaDuyetTrue(sp.getId()));
+    }
+
+    /** Điểm sao trung bình làm tròn 1 chữ số thập phân; chưa có đánh giá thì 0. */
+    static double lamTronMotChuSo(Double trungBinh) {
+        return trungBinh == null ? 0 : Math.round(trungBinh * 10) / 10.0;
     }
 
     private SanPhamTomTatResponse sangTomTat(SanPham sp) {

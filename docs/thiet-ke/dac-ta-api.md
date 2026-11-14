@@ -95,10 +95,41 @@ Mọi lỗi đều trả cùng một dạng:
 | GET | `/thuong-hieu` | Công khai | Thương hiệu đang hiển thị | có sẵn |
 | GET | `/san-pham` | Công khai | Tìm kiếm, lọc, sắp xếp, phân trang | có sẵn |
 | GET | `/san-pham/noi-bat` | Công khai | 8 sản phẩm nổi bật | có sẵn |
-| GET | `/san-pham/{slug}` | Công khai | Chi tiết sản phẩm: tùy chọn, biến thể, thông số, ảnh | có sẵn |
+| GET | `/san-pham/{slug}` | Công khai | Chi tiết sản phẩm: tùy chọn, biến thể, thông số, ảnh, điểm đánh giá | có sẵn, 3 |
+| GET | `/san-pham/{slug}/danh-gia` | Công khai | Đánh giá đã duyệt của sản phẩm, mới nhất trước, phân trang | 3 |
+| GET | `/banner` | Công khai | Banner đang hiển thị (đang bật và trong khung giờ), theo `thuTu` | 3 |
+| GET | `/cai-dat` | Công khai | Cài đặt cửa hàng dạng `{ khoa: giaTri }` | 3 |
 
-Tham số `GET /san-pham`: `tuKhoa`, `danhMuc` (slug, gồm cả danh mục con), `thuongHieu` (slug), `giaTu`, `giaDen`,
-`sapXep` (`moi_nhat` | `gia_tang` | `gia_giam` | `pho_bien`), `trang`, `kichThuoc` (tối đa 48).
+Tham số `GET /san-pham`:
+
+| Tham số | Ý nghĩa |
+|---|---|
+| `tuKhoa` | Tìm trong tên sản phẩm (không phân biệt hoa thường) |
+| `danhMuc` | Slug danh mục, gồm cả danh mục con |
+| `thuongHieu` | Một hoặc nhiều slug, phân tách bằng dấu phẩy (`anker,baseus`) hoặc lặp tham số |
+| `giaTu`, `giaDen` | Khoảng giá (VNĐ, tính cả hai đầu). So với **giá thực của từng biến thể đang bán** (biến thể không có giá riêng thì lấy giá sản phẩm); sản phẩm khớp khi có ít nhất một biến thể nằm trong khoảng |
+| `sapXep` | `moi_nhat` (mặc định) \| `gia_tang` \| `gia_giam` \| `pho_bien` – sắp theo giá hiển thị của sản phẩm (`giaBan`) |
+| `trang`, `kichThuoc` | Trang bắt đầu từ 0; kích thước 1–48, mặc định 12 |
+
+Trả về `PageResponse`: `{ noiDung: [...], trang, kichThuoc, tongSoPhanTu, tongSoTrang }`. Mỗi phần tử:
+`{ id, ten, slug, moTaNgan, giaBan, giaGoc, anhChinh, tenThuongHieu, conHang }`.
+
+`GET /san-pham/{slug}` – ngoài các trường cũ, có thêm `diemTrungBinh` (số, 1 chữ số thập phân, `0` khi chưa có đánh
+giá) và `soDanhGia` (chỉ tính đánh giá đã duyệt). Sản phẩm không tồn tại hoặc đang ẩn → 404.
+Chọn biến thể: mỗi biến thể có `giaTriIds` (đã sắp tăng dần); frontend ghép các giá trị khách chọn (mỗi tùy chọn một
+giá trị), sắp tăng dần rồi so khớp để lấy `giaBan`, `giaGoc`, `soLuongTon` của biến thể. Ảnh có `giaTriTuyChonId` là ảnh
+theo màu.
+
+`GET /san-pham/{slug}/danh-gia?trang=0&kichThuoc=10` (kích thước 1–50) → `PageResponse` gồm
+`{ id, soSao, noiDung, tenNguoiDung, anhDaiDien, ngayTao }`. Sản phẩm không tồn tại hoặc đang ẩn → 404.
+
+`GET /banner` → `[{ id, tieuDe, hinhAnh, lienKet }]`. Banner hiện khi `hienThi = 1` và
+`batDauLuc ≤ hiện tại < ketThucLuc` (mốc để trống = không giới hạn).
+
+`GET /cai-dat` → ví dụ `{ "email_lien_he": "hotro@techgear.vn", "hotline": "0900000000",
+"mien_phi_van_chuyen_tu": "500000", "phi_van_chuyen": "30000", "ten_cua_hang": "TechGear" }`. Mọi giá trị là chuỗi,
+frontend tự đổi sang số khi cần. Bảng `cai_dat` là cấu hình công khai – không lưu bí mật (khóa VNPay, mật khẩu SMTP
+để ở biến môi trường).
 
 ### 2.3. Quản trị
 
@@ -117,7 +148,7 @@ Upload ảnh: chỉ nhận JPG/PNG/WEBP/GIF (kiểm tra theo nội dung file), t
 
 | Biến | Mặc định | Ý nghĩa |
 |---|---|---|
-| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | MySQL XAMPP `localhost:3306/techgear`, `root`, rỗng | Kết nối CSDL |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | MySQL `localhost:3306/techgear`, `root`, rỗng | Kết nối CSDL |
 | `JWT_SECRET` | khóa dev có sẵn | Khóa ký JWT (Base64, ≥ 256 bit) – **bắt buộc đổi khi triển khai** |
 | `JWT_EXPIRATION_MS` | `86400000` (24 giờ) | Thời hạn token |
 | `FRONTEND_URL` | `http://localhost:5173` | Địa chỉ frontend (CORS, link trong email) |

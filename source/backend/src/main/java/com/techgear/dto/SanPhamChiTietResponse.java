@@ -19,7 +19,9 @@ public record SanPhamChiTietResponse(
         List<HinhAnh> hinhAnhs,
         List<ThongSo> thongSos,
         List<TuyChon> tuyChons,
-        List<BienThe> bienThes
+        List<BienThe> bienThes,
+        double diemTrungBinh,
+        long soDanhGia
 ) {
     public record HinhAnh(Long id, String duongDan, String moTa, Long giaTriTuyChonId, boolean laAnhChinh) {
     }
