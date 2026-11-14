@@ -1,5 +1,6 @@
 package com.techgear.chung.baomat;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,14 +14,22 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -28,6 +37,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -46,7 +56,9 @@ public class BaoMatConfig {
             "/uploads/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
     };
     /** POST không cần đăng nhập. */
-    static final String[] CONG_KHAI_POST = {};
+    static final String[] CONG_KHAI_POST = {
+            "/api/auth/dang-ky", "/api/auth/dang-nhap", "/api/auth/quen-mat-khau", "/api/auth/dat-lai-mat-khau"
+    };
 
     private final SecretKey khoaJwt;
 
@@ -59,11 +71,29 @@ public class BaoMatConfig {
         return NimbusJwtEncoder.withSecretKey(khoaJwt).algorithm(MacAlgorithm.HS256).build();
     }
 
+    /** Kiểm tra mặc định (hạn, nhà phát hành) + các kiểm tra của module (VD thu hồi token ở taikhoan). */
     @Bean
-    JwtDecoder jwtDecoder() {
+    JwtDecoder jwtDecoder(ObjectProvider<OAuth2TokenValidator<Jwt>> kiemTraThem) {
+        List<OAuth2TokenValidator<Jwt>> kiemTra = new ArrayList<>();
+        kiemTra.add(JwtValidators.createDefaultWithIssuer(JwtService.NHA_PHAT_HANH));
+        kiemTraThem.orderedStream().forEach(kiemTra::add);
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(khoaJwt).macAlgorithm(MacAlgorithm.HS256).build();
-        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(JwtService.NHA_PHAT_HANH));
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(kiemTra));
         return decoder;
+    }
+
+    /**
+     * Đường dẫn công khai bỏ qua header Authorization: token cũ còn trong trình duyệt
+     * không làm hỏng đăng nhập hay xem sản phẩm (frontend luôn gắn token nếu có).
+     */
+    @Bean
+    BearerTokenResolver bearerTokenResolver() {
+        List<RequestMatcher> ds = new ArrayList<>();
+        Arrays.stream(CONG_KHAI_GET).forEach(p -> ds.add(PathPatternRequestMatcher.pathPattern(HttpMethod.GET, p)));
+        Arrays.stream(CONG_KHAI_POST).forEach(p -> ds.add(PathPatternRequestMatcher.pathPattern(HttpMethod.POST, p)));
+        RequestMatcher congKhai = new OrRequestMatcher(ds);
+        DefaultBearerTokenResolver macDinh = new DefaultBearerTokenResolver();
+        return request -> congKhai.matches(request) ? null : macDinh.resolve(request);
     }
 
     @Bean

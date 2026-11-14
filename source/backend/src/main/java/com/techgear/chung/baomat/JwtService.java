@@ -2,6 +2,7 @@ package com.techgear.chung.baomat;
 
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
@@ -39,5 +40,10 @@ public class JwtService {
                 .build();
         return jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
                 .getTokenValue();
+    }
+
+    /** Mã người dùng của token đã xác thực (claim sub). */
+    public static Long nguoiDungId(Jwt jwt) {
+        return Long.valueOf(jwt.getSubject());
     }
 }

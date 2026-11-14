@@ -62,6 +62,42 @@ Cột "Phase" là phase trong kế hoạch sẽ làm API đó. Quyền: **CK** c
 | PUT, DELETE | `/tai-khoan/dia-chi/{id}` | ĐN | Sửa / xóa địa chỉ |
 | PATCH | `/tai-khoan/dia-chi/{id}/mac-dinh` | ĐN | Đặt mặc định |
 
+#### Chi tiết API tài khoản
+
+Kiểu dữ liệu dùng chung:
+```text
+NguoiDung  { id, hoTen, email, soDienThoai, gioiTinh: "nam"|"nu"|"khac"|null, ngaySinh: "yyyy-MM-dd"|null,
+             anhDaiDien: "/uploads/anh-dai-dien/..."|null, vaiTro: "quan_tri"|"khach_hang" }
+XacThuc    { token, nguoiDung: NguoiDung }
+DiaChi     { id, tenNguoiNhan, soDienThoai, tinhThanh, phuongXa, diaChiChiTiet, laMacDinh }
+ThongBao   { thongBao }
+```
+Quy tắc kiểm tra: mật khẩu 8–72 ký tự (tối đa 72 byte), có cả chữ và số; số điện thoại `0` + 9 chữ số; email đúng định dạng,
+so sánh không phân biệt hoa thường và lưu chữ thường. Sai quy tắc → 400 kèm `loi` theo từng trường.
+
+| API | Gửi lên | Trả về | Lỗi riêng |
+|---|---|---|---|
+| `POST /auth/dang-ky` | `{ hoTen, email, matKhau, soDienThoai? }` (trường thừa như `nhapLai` bị bỏ qua; `soDienThoai` rỗng = không có) | 201 `XacThuc` | 409 "Email đã được sử dụng" |
+| `POST /auth/dang-nhap` | `{ email, matKhau }` | 200 `XacThuc` | 401 "Email hoặc mật khẩu không đúng" (một thông báo cho mọi trường hợp sai); 403 "Tài khoản đã bị khóa" (chỉ khi mật khẩu đúng); 429 sau 5 lần sai / 15 phút cho cùng email + IP |
+| `GET /auth/toi` | – | 200 `NguoiDung` | 401 |
+| `POST /auth/quen-mat-khau` | `{ email }` | 200 `ThongBao` "Nếu email đã đăng ký, liên kết đặt lại mật khẩu đã được gửi" (giống nhau dù email có tồn tại hay không) | 429 khi cùng email gửi lại trong 60 giây hoặc một IP gửi quá 5 lần / 15 phút |
+| `POST /auth/dat-lai-mat-khau` | `{ ma, matKhauMoi }` | 200 `ThongBao` "Đặt lại mật khẩu thành công, vui lòng đăng nhập" | 400 "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn" |
+| `GET /tai-khoan` | – | 200 `NguoiDung` | |
+| `PUT /tai-khoan` | `{ hoTen, soDienThoai?, gioiTinh?, ngaySinh? }` (ghi đè cả 4 trường; `ngaySinh` phải trong quá khứ) | 200 `NguoiDung` | |
+| `PUT /tai-khoan/mat-khau` | `{ matKhauHienTai, matKhauMoi }` | 200 `XacThuc` (token mới; mọi token cũ hết hiệu lực) | 400 "Mật khẩu hiện tại không đúng" |
+| `POST /tai-khoan/anh-dai-dien` | multipart `file` (JPG/PNG/WEBP/GIF ≤ 5MB) | 200 `NguoiDung` | 413, 415 |
+| `GET /tai-khoan/dia-chi` | – | 200 `DiaChi[]` (mặc định trước, rồi mới nhất trước) | |
+| `POST /tai-khoan/dia-chi` | `{ tenNguoiNhan, soDienThoai, tinhThanh, phuongXa, diaChiChiTiet, laMacDinh? }` | 201 `DiaChi` (địa chỉ đầu tiên luôn là mặc định) | 400 "Chỉ lưu tối đa 10 địa chỉ" |
+| `PUT /tai-khoan/dia-chi/{id}` | như trên (`laMacDinh: true` → thành mặc định; `false` không bỏ được mặc định) | 200 `DiaChi` | 404 "Không tìm thấy địa chỉ" (kể cả địa chỉ của người khác) |
+| `DELETE /tai-khoan/dia-chi/{id}` | – | 204 (xóa địa chỉ mặc định → địa chỉ mới nhất còn lại thành mặc định) | 404 |
+| `PATCH /tai-khoan/dia-chi/{id}/mac-dinh` | – | 200 `DiaChi` | 404 |
+
+Token bị từ chối (401 "Phiên đăng nhập không hợp lệ hoặc đã hết hạn") khi: sai chữ ký, hết hạn, tài khoản không còn,
+tài khoản bị khóa, hoặc phát hành trước lần đổi/đặt lại mật khẩu gần nhất (so theo giây).
+Liên kết đặt lại mật khẩu: `FRONTEND_URL/dat-lai-mat-khau?ma=<mã>` – mã ngẫu nhiên 256 bit, CSDL chỉ lưu SHA-256,
+hiệu lực 15 phút, dùng một lần; đặt lại thành công thì mọi mã khác của tài khoản cũng hết hiệu lực.
+Email gửi sau khi giao dịch lưu thành công, không chặn phản hồi; chưa cấu hình `MAIL_USERNAME` thì ghi liên kết ra log.
+
 ### 3.2 Danh mục, thương hiệu, sản phẩm, cửa hàng – Phase 4
 | PT | Đường dẫn | Quyền | Mô tả |
 |---|---|---|---|
@@ -132,7 +168,7 @@ Cột "Phase" là phase trong kế hoạch sẽ làm API đó. Quyền: **CK** c
 ## 4. Biến môi trường
 | Biến | Mặc định (profile `dev`) | Ý nghĩa |
 |---|---|---|
-| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | `jdbc:postgresql://localhost:5432/techgear`, `techgear`, `techgear` | Kết nối CSDL (khớp `docker-compose.yml`) |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | `jdbc:postgresql://localhost:5433/techgear`, `techgear`, `techgear` | Kết nối CSDL (khớp `docker-compose.yml`) |
 | `JWT_SECRET` | khóa dev (chỉ profile `dev`; thiếu ở môi trường khác thì không khởi động) | Khóa ký JWT, ≥ 32 byte |
 | `FRONTEND_URL` | `http://localhost:5173` | Liên kết trong email |
 | `CORS_ALLOWED_ORIGINS` | = `FRONTEND_URL` | Origin được phép, phân cách dấu phẩy |
