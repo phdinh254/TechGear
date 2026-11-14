@@ -132,6 +132,18 @@ class XacThucIT extends KiemThuTaiKhoan {
     }
 
     @Test
+    void emailQuaDaiBiTuChoiTruocKhiVaoBoDemSoLan() throws Exception {
+        String dai = "a".repeat(200) + "@vi-du.vn";
+        mvc.perform(post("/api/auth/dang-nhap").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"matKhau\":\"matkhau123\"}".formatted(dai)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.loi.email").exists());
+        mvc.perform(post("/api/auth/quen-mat-khau").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\"}".formatted(dai)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void tokenCuConTrongTrinhDuyetKhongChanDangNhap() throws Exception {
         String email = emailMoi();
         dangKy(email);

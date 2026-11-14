@@ -105,6 +105,8 @@ cd source/backend
 mvn spring-boot:run         # tự bật profile dev (kết nối CSDL ở trên, khóa JWT dùng cho máy cá nhân)
 ```
 - Swagger UI: `http://localhost:8080/swagger-ui.html` (bấm **Authorize**, dán token nhận được khi đăng nhập).
+- Tài khoản mẫu (chỉ profile dev): `admin@techgear.vn` / `Admin@123` (quản trị), `khach@techgear.vn` / `Khach@123` (khách hàng).
+- Chưa cấu hình `MAIL_USERNAME` thì liên kết đặt lại mật khẩu được ghi ra log của backend thay vì gửi email.
 - Biến môi trường khi triển khai: xem `source/backend/.env.example` (bắt buộc `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
 
 Kiểm thử:
@@ -127,9 +129,9 @@ Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env`
 
 ## Danh sách API
 
-Đang viết lại. Backend mới giữ nguyên các API mà frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`,
-`/api/auth/toi`, `/api/danh-muc`, `/api/thuong-hieu`, `/api/san-pham`, `/api/san-pham/noi-bat`, `/api/san-pham/{slug}`).
-Đặc tả đầy đủ sẽ nằm ở `docs/thiet-ke/dac-ta-api.md`.
+Đặc tả đầy đủ (dữ liệu gửi lên, trả về, mã lỗi): `docs/thiet-ke/dac-ta-api.md`. Backend mới giữ nguyên các API mà
+frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/auth/toi`, `/api/danh-muc`, `/api/thuong-hieu`,
+`/api/san-pham`, `/api/san-pham/noi-bat`, `/api/san-pham/{slug}`). Đã có: tài khoản (`/api/auth/**`, `/api/tai-khoan/**`).
 
 ## Tiến độ viết lại backend
 
@@ -138,7 +140,7 @@ Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env`
 | 0. Dọn sạch | Xóa backend, script CSDL MySQL và tài liệu thiết kế cũ | Xong |
 | 1. Thiết kế | Đặc tả yêu cầu, ERD PostgreSQL, kiến trúc, danh sách API | Xong |
 | 2. Nền tảng | Spring Boot 4, Docker Compose, Flyway, bảo mật JWT, xử lý lỗi, Swagger, upload | Xong |
-| 3. Tài khoản | Đăng ký, đăng nhập, hồ sơ, mật khẩu, sổ địa chỉ | Chưa |
+| 3. Tài khoản | Đăng ký, đăng nhập, hồ sơ, mật khẩu, sổ địa chỉ | Xong |
 | 4. Sản phẩm | Danh mục, thương hiệu, tìm kiếm/lọc, chi tiết, banner, cài đặt | Chưa |
 | 5. Giỏ hàng | Giỏ hàng trên server, gộp giỏ, yêu thích | Chưa |
 | 6. Đặt hàng | Mã giảm giá, phí vận chuyển, tồn kho, đơn hàng, hủy, tra cứu | Chưa |
