@@ -1,5 +1,6 @@
 package com.techgear.taikhoan;
 
+import com.techgear.chung.ThongBao;
 import com.techgear.chung.baomat.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 class AuthController {
 
     private final TaiKhoanService taiKhoanService;
+    private final DatLaiMatKhauService datLaiMatKhauService;
 
     @PostMapping("/dang-ky")
     @ResponseStatus(HttpStatus.CREATED)
@@ -30,6 +32,18 @@ class AuthController {
     @PostMapping("/dang-nhap")
     XacThucResponse dangNhap(@Valid @RequestBody DangNhapRequest req, HttpServletRequest http) {
         return taiKhoanService.dangNhap(req, http.getRemoteAddr());
+    }
+
+    @PostMapping("/quen-mat-khau")
+    ThongBao quenMatKhau(@Valid @RequestBody QuenMatKhauRequest req, HttpServletRequest http) {
+        datLaiMatKhauService.quenMatKhau(req.email(), http.getRemoteAddr());
+        return new ThongBao("Nếu email đã đăng ký, liên kết đặt lại mật khẩu đã được gửi");
+    }
+
+    @PostMapping("/dat-lai-mat-khau")
+    ThongBao datLaiMatKhau(@Valid @RequestBody DatLaiMatKhauRequest req) {
+        datLaiMatKhauService.datLaiMatKhau(req);
+        return new ThongBao("Đặt lại mật khẩu thành công, vui lòng đăng nhập");
     }
 
     @GetMapping("/toi")

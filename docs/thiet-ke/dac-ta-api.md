@@ -80,7 +80,7 @@ so sánh không phân biệt hoa thường và lưu chữ thường. Sai quy t�
 | `POST /auth/dang-ky` | `{ hoTen, email, matKhau, soDienThoai? }` (trường thừa như `nhapLai` bị bỏ qua; `soDienThoai` rỗng = không có) | 201 `XacThuc` | 409 "Email đã được sử dụng" |
 | `POST /auth/dang-nhap` | `{ email, matKhau }` | 200 `XacThuc` | 401 "Email hoặc mật khẩu không đúng" (một thông báo cho mọi trường hợp sai); 403 "Tài khoản đã bị khóa" (chỉ khi mật khẩu đúng); 429 sau 5 lần sai / 15 phút cho cùng email + IP |
 | `GET /auth/toi` | – | 200 `NguoiDung` | 401 |
-| `POST /auth/quen-mat-khau` | `{ email }` | 200 `ThongBao` "Nếu email đã đăng ký, liên kết đặt lại mật khẩu đã được gửi" (giống nhau dù email có tồn tại hay không) | 429 khi cùng email gửi lại trong 60 giây hoặc một IP gửi quá 5 lần / 15 phút |
+| `POST /auth/quen-mat-khau` | `{ email }` | 200 `ThongBao` "Nếu email đã đăng ký, liên kết đặt lại mật khẩu đã được gửi" (giống nhau dù email có tồn tại hay không) | 429 khi cùng email gửi lại trong 60 giây hoặc một IP gửi quá 10 lần / 15 phút |
 | `POST /auth/dat-lai-mat-khau` | `{ ma, matKhauMoi }` | 200 `ThongBao` "Đặt lại mật khẩu thành công, vui lòng đăng nhập" | 400 "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn" |
 | `GET /tai-khoan` | – | 200 `NguoiDung` | |
 | `PUT /tai-khoan` | `{ hoTen, soDienThoai?, gioiTinh?, ngaySinh? }` (ghi đè cả 4 trường; `ngaySinh` phải trong quá khứ) | 200 `NguoiDung` | |
