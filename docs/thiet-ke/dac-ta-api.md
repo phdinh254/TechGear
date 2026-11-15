@@ -403,6 +403,16 @@ MaGiamGiaQT { id, ma, moTa?, loaiGiam, giaTriGiam, donToiThieu, giamToiDa?, tong
               batDauLuc, ketThucLuc, kichHoat }
 ```
 
+#### Chi tiết API quản trị: thống kê (9.5)
+
+Mọi số liệu tính theo **ngày đặt hàng** (giờ Việt Nam); doanh thu = tổng `tongTien` (gồm phí ship) của đơn `hoan_thanh`.
+
+| API | Tham số | Trả về | Lỗi |
+|---|---|---|---|
+| `GET /admin/thong-ke/doanh-thu` | `tu`, `den` (`yyyy-MM-dd`, bắt buộc), `theo` = `ngay` (≤ 366 ngày) \| `thang` (≤ 60 tháng) | `[{ moc: "2026-11-15" \| "2026-11", doanhThu, soDon }]` đủ mọi mốc trong khoảng (mốc không có đơn = 0) | 400 khoảng sai / quá dài |
+| `GET /admin/thong-ke/don-hang` | `tu?`, `den?` | `{ tongDon, theoTrangThai: { cho_xac_nhan, da_xac_nhan, dang_giao, hoan_thanh, da_huy }, doanhThu }` | 400 |
+| `GET /admin/thong-ke/ban-chay` | `tu?`, `den?`, `gioiHan` (1–50, mặc định 10) | `[{ sanPhamId?, tenSanPham, soLuongBan, doanhThu }]` theo số lượng trong đơn `hoan_thanh` (doanh thu = Σ thành tiền dòng) | 400 |
+
 ## 4. Biến môi trường
 | Biến | Mặc định (profile `dev`) | Ý nghĩa |
 |---|---|---|
