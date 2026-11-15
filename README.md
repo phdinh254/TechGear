@@ -144,6 +144,7 @@ mvn spring-boot:run         # tự bật profile dev (kết nối CSDL ở trên
 - Swagger UI: `http://localhost:8080/swagger-ui.html` (bấm **Authorize**, dán token nhận được khi đăng nhập).
 - Tài khoản mẫu (chỉ profile dev): `admin@techgear.vn` / `Admin@123` (quản trị), `khach@techgear.vn` / `Khach@123` (khách hàng).
 - Mã giảm giá mẫu (chỉ profile dev): `GIAM10`, `GIAM50K`, `MOILAN1` (mỗi khách 1 lần), `HETHAN` (đã hết hạn).
+- VNPay: dev dùng mã website và khóa giả (đủ để test IPN bằng Postman). Thanh toán thật trên sandbox: đặt `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` do sandbox.vnpayment.vn cấp.
 - Chưa cấu hình `MAIL_USERNAME` thì liên kết đặt lại mật khẩu được ghi ra log của backend thay vì gửi email.
 - Biến môi trường khi triển khai: xem `source/backend/.env.example` (bắt buộc `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
 
@@ -170,7 +171,7 @@ Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env`
 Đặc tả đầy đủ (dữ liệu gửi lên, trả về, mã lỗi): `docs/thiet-ke/dac-ta-api.md`. Backend mới giữ nguyên các API mà
 frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/auth/toi`, `/api/danh-muc`, `/api/thuong-hieu`,
 `/api/san-pham`, `/api/san-pham/noi-bat`, `/api/san-pham/{slug}`). Đã có: tài khoản (`/api/auth/**`, `/api/tai-khoan/**`), sản phẩm và cửa hàng (`/api/danh-muc`, `/api/thuong-hieu`,
-`/api/san-pham/**`, `/api/banner`, `/api/cai-dat`), giỏ hàng và yêu thích (`/api/gio-hang/**`, `/api/yeu-thich/**`), đơn hàng (`/api/don-hang/**`).
+`/api/san-pham/**`, `/api/banner`, `/api/cai-dat`), giỏ hàng và yêu thích (`/api/gio-hang/**`, `/api/yeu-thich/**`), đơn hàng (`/api/don-hang/**`), thanh toán VNPay (`/api/thanh-toan/vnpay/**`).
 
 ## Tiến độ viết lại backend
 
@@ -183,7 +184,7 @@ frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/a
 | 4. Sản phẩm | Danh mục, thương hiệu, tìm kiếm/lọc, chi tiết, banner, cài đặt | Xong |
 | 5. Giỏ hàng | Giỏ hàng trên server, gộp giỏ, yêu thích | Xong |
 | 6. Đặt hàng | Mã giảm giá, phí vận chuyển, tồn kho, đơn hàng, hủy, tra cứu | Xong |
-| 7. Thanh toán | VNPay (sandbox) | Chưa |
+| 7. Thanh toán | VNPay (sandbox) | Xong |
 | 8. Đánh giá | Đánh giá sản phẩm đã mua, chờ duyệt | Chưa |
 | 9. Quản trị | Sản phẩm, kho, đơn hàng, khuyến mãi, người dùng, thống kê | Chưa |
 | 10. Dữ liệu mẫu | Dữ liệu mẫu đầy đủ + file `database/DB_TechGear.sql` | Chưa |

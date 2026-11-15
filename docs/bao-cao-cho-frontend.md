@@ -1,6 +1,6 @@
 # Báo cáo backend cho người làm frontend
 
-Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 6) · Nhánh: `hoanglong`
+Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 7) · Nhánh: `hoanglong`
 
 Tài liệu này tóm tắt những gì backend mới đã có, chỗ nào khác backend cũ, và việc frontend cần làm. Mỗi phase backend
 xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên, trả về, mã lỗi) nằm ở
@@ -29,7 +29,8 @@ cd source/backend && mvn spring-boot:run
 | Banner, cấu hình cửa hàng | Xong (Phase 4) | API mới, frontend chưa có giao diện |
 | Giỏ hàng trên server, gộp giỏ khi đăng nhập, yêu thích | Xong (Phase 5) | API mới, frontend chưa dùng (giỏ hiện lưu `localStorage`, vẫn chạy bình thường) |
 | Tính thử, đặt hàng (đăng nhập + vãng lai), mã giảm giá, đơn của tôi, hủy, tra cứu | Xong (Phase 6) | API mới; nút "Đặt hàng" ở trang giỏ đang tắt, có thể nối ngay |
-| Thanh toán VNPay, đánh giá, quản trị | Phase 7–9 | Chưa (đơn chọn `vnpay` đã đặt được nhưng chưa có trang thanh toán) |
+| Thanh toán VNPay (sandbox) | Xong (Phase 7) | API mới; frontend cần thêm route `/thanh-toan/ket-qua` |
+| Đánh giá, quản trị | Phase 8–9 | Chưa |
 
 ## 3. Quy ước chung (áp dụng mọi API)
 
@@ -213,13 +214,43 @@ phuongThucThanhToan: "cod" | "vnpay", ghiChu? }`. Lỗi từng ô trả trong `l
 - Trạng thái nên hiển thị: `cho_xac_nhan` Chờ xác nhận, `da_xac_nhan` Đã xác nhận, `dang_giao` Đang giao,
   `hoan_thanh` Hoàn thành, `da_huy` Đã hủy; thanh toán: `chua_thanh_toan`, `da_thanh_toan`, `da_hoan_tien`.
 
-## 8. Kiểm thử phía backend
+## 8. Phase 7 – Thanh toán VNPay
+
+Chi tiết: mục "Chi tiết thanh toán VNPay" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md) (làm theo tài liệu VNPay 2.1.0).
+
+### 8.1 Việc của frontend
+
+| Bước | Làm gì |
+|---|---|
+| Sau khi đặt đơn `vnpay` (201), hoặc ở trang chi tiết đơn khi `phuongThucThanhToan = vnpay`, `trangThaiThanhToan = chua_thanh_toan`, `trangThai = cho_xac_nhan` | Gọi `POST /thanh-toan/vnpay/{maDonHang}` (không cần token) → nhận `{ duongDan }` → `window.location.href = duongDan` |
+| Thêm route **`/thanh-toan/ket-qua`** (VNPay chuyển khách về đây kèm `?vnp_...`) | Gọi `GET /thanh-toan/vnpay/ket-qua` + **nguyên** `window.location.search`, hiện `thongBao`. `hopLe = false`: dữ liệu bị sửa, báo lỗi |
+| `thanhCong = true` mà `trangThaiThanhToan` vẫn `chua_thanh_toan` | IPN của VNPay chưa tới (thường vài giây): hiện "Đang xác nhận thanh toán", gọi lại sau 2–3 giây hoặc mở chi tiết đơn |
+| Thanh toán thất bại / khách hủy trên VNPay | Gọi lại `POST /thanh-toan/vnpay/{maDonHang}` để có liên kết mới (mỗi lần một mã giao dịch mới) |
+
+### 8.2 Hành vi cần biết
+
+- Liên kết thanh toán hết hạn 30 phút sau lúc đặt đơn. Quá 35 phút chưa trả, hệ thống **tự hủy đơn** (hoàn kho, trả lượt mã)
+  và lịch sử đơn ghi "Quá 30 phút chưa thanh toán VNPay, hệ thống tự hủy". Nên hiện đồng hồ đếm ngược 30 phút.
+- 409 khi tạo liên kết: "Đơn hàng không thanh toán qua VNPay", "Đơn hàng đã được thanh toán", "Đơn hàng không còn chờ thanh toán",
+  "Đơn hàng đã quá hạn thanh toán". 503 "Chưa cấu hình VNPay" khi backend chưa có mã website VNPay.
+- Chỉ IPN (VNPay gọi thẳng backend) mới đổi trạng thái thanh toán; trang kết quả chỉ đọc. Vì vậy sửa query string trên trình
+  duyệt không làm đơn thành "đã thanh toán".
+
+### 8.3 Thử trên máy
+
+- Dev mặc định dùng mã website và khóa **giả**: trang VNPay sẽ báo lỗi. Muốn thanh toán thật trên sandbox: đăng ký tài khoản
+  tại sandbox.vnpayment.vn, chạy backend với `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` được cấp (thẻ test do VNPay cung cấp trong
+  email đăng ký).
+- IPN cần địa chỉ HTTPS công khai (khai báo trong cổng quản lý của VNPay), nên trên máy cá nhân VNPay không gọi được IPN về
+  `localhost`. Để thử trọn luồng không cần VNPay: thư mục Postman "05 Thanh toán" giả lập IPN đã ký bằng khóa dev.
+
+## 9. Kiểm thử phía backend
 
 Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
-để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request).
+để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request).
 
-## 9. Liên hệ
+## 10. Liên hệ
 
 Backend trả sai hình dạng dữ liệu hoặc thiếu trường frontend cần: báo kèm request (URL, body) và response nhận được.
 Phần frontend do bạn quyết định. Backend không sửa gì trong `source/frontend`.
