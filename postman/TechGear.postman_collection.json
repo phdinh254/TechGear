@@ -3313,6 +3313,362 @@
           }
         }
       ]
+    },
+    {
+      "name": "06 Đánh giá",
+      "item": [
+        {
+          "name": "Đăng ký khách mới cho đánh giá (lưu tokenDG)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('emailDG', 'danhgia-' + Date.now() + '@vi-du.vn');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tokenDG', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/dang-ky",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"hoTen\": \"Khách đánh giá\", \"email\": \"{{emailDG}}\", \"matKhau\": \"matkhau123\"}"
+            }
+          }
+        },
+        {
+          "name": "Chi tiết sản phẩm có soDanhGia (lưu sản phẩm)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const sp = pm.response.json();",
+                  "pm.test('Có soDanhGia; diemTrungBinh chỉ có khi soDanhGia > 0', () => {",
+                  "    pm.expect(sp.soDanhGia).to.be.a('number');",
+                  "    if (sp.soDanhGia === 0) pm.expect(sp).to.not.have.property('diemTrungBinh');",
+                  "    else pm.expect(sp.diemTrungBinh).to.be.within(1, 5);",
+                  "});",
+                  "pm.collectionVariables.set('spDG', sp.id);",
+                  "pm.collectionVariables.set('btDG', sp.bienThes[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/kinh-cuong-luc-baseus-iphone-16"
+          }
+        },
+        {
+          "name": "Đánh giá công khai của sản phẩm (phân trang)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Trang đánh giá', () => {",
+                  "    const t = pm.response.json(); pm.expect(t).to.have.all.keys('noiDung', 'trang', 'kichThuoc', 'tongSoPhanTu', 'tongSoTrang');",
+                  "    pm.expect(t.kichThuoc).to.eql(10);",
+                  "    t.noiDung.forEach(d => pm.expect(d).to.include.keys('id', 'hoTen', 'soSao', 'ngayTao'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/kinh-cuong-luc-baseus-iphone-16/danh-gia"
+          }
+        },
+        {
+          "name": "Đánh giá của sản phẩm không tồn tại → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Không tìm thấy sản phẩm\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/khong-ton-tai-xyz/danh-gia"
+          }
+        },
+        {
+          "name": "Có thể viết – khách mới chưa có đơn hoàn thành",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Rỗng', () => pm.expect(pm.response.json()).to.eql([]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDG}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/danh-gia/co-the-viet"
+          }
+        },
+        {
+          "name": "Đặt đơn (lưu maDonDG)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('maDonDG', pm.response.json().maDonHang);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDG}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDG}}, \"soLuong\": 1}], \"tenNguoiNhan\": \"Khách Postman\", \"soDienThoai\": \"0912345678\", \"tinhThanh\": \"Thành phố Hồ Chí Minh\", \"phuongXa\": \"Phường Sài Gòn\", \"diaChiChiTiet\": \"1 Lê Lợi\", \"phuongThucThanhToan\": \"cod\"}"
+            }
+          }
+        },
+        {
+          "name": "Viết đánh giá khi đơn chưa hoàn thành → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Chỉ đánh giá được đơn đã hoàn thành\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDG}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/danh-gia",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"maDonHang\": \"{{maDonDG}}\", \"sanPhamId\": {{spDG}}, \"soSao\": 5, \"noiDung\": \"Tốt\"}"
+            }
+          }
+        },
+        {
+          "name": "Viết đánh giá sản phẩm không có trong đơn → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Sản phẩm không có trong đơn hàng\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDG}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/danh-gia",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"maDonHang\": \"{{maDonDG}}\", \"sanPhamId\": 999999999, \"soSao\": 5}"
+            }
+          }
+        },
+        {
+          "name": "Viết đánh giá đơn của người khác → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Không tìm thấy đơn hàng\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/danh-gia",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"maDonHang\": \"{{maDonDG}}\", \"sanPhamId\": {{spDG}}, \"soSao\": 5}"
+            }
+          }
+        },
+        {
+          "name": "Viết đánh giá 6 sao → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Lỗi theo trường', () => pm.expect(pm.response.json().loi.soSao).to.eql('Số sao từ 1 đến 5'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDG}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/danh-gia",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"maDonHang\": \"{{maDonDG}}\", \"sanPhamId\": {{spDG}}, \"soSao\": 6}"
+            }
+          }
+        },
+        {
+          "name": "Viết đánh giá chưa đăng nhập → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/danh-gia",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"maDonHang\": \"{{maDonDG}}\", \"sanPhamId\": {{spDG}}, \"soSao\": 5}"
+            }
+          }
+        },
+        {
+          "name": "Hủy đơn để hoàn kho",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDG}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/{{maDonDG}}/huy"
+          }
+        }
+      ]
     }
   ],
   "variable": [
@@ -3454,6 +3810,26 @@
     },
     {
       "key": "ipnQuerySai",
+      "value": ""
+    },
+    {
+      "key": "emailDG",
+      "value": ""
+    },
+    {
+      "key": "tokenDG",
+      "value": ""
+    },
+    {
+      "key": "spDG",
+      "value": ""
+    },
+    {
+      "key": "btDG",
+      "value": ""
+    },
+    {
+      "key": "maDonDG",
       "value": ""
     }
   ]
