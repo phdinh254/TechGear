@@ -381,6 +381,28 @@ Thay đổi tồn kho khóa dòng biến thể (cùng cơ chế với đặt hà
   (hoàn tiền thủ công, không gọi API VNPay).
 - Đơn chuyển `hoan_thanh` thì khách viết được đánh giá các sản phẩm trong đơn.
 
+#### Chi tiết API quản trị: mã giảm giá, banner, cài đặt, người dùng, đánh giá (9.4)
+
+| API | Gửi lên | Trả về | Lỗi riêng |
+|---|---|---|---|
+| `GET /admin/ma-giam-gia` | `tuKhoa?`, `kichHoat?`, `trang`, `kichThuoc` (1–50, mặc định 20) | trang `MaGiamGiaQT`, mới tạo trước | |
+| `POST` · `PUT /admin/ma-giam-gia/{id}` | `{ ma (A-Z 0-9 _ -, ≤ 50, lưu chữ hoa), moTa?, loaiGiam: phan_tram\|so_tien, giaTriGiam (> 0; % ≤ 100), donToiThieu?, giamToiDa?, tongLuotDung?, luotDungMoiNguoi?, batDauLuc, ketThucLuc, kichHoat? }` | 201 / 200 `MaGiamGiaQT` | 409 "Mã giảm giá đã tồn tại"; 400 "Thời gian kết thúc phải sau thời gian bắt đầu" / "Giảm theo phần trăm tối đa 100" / "Tổng lượt không được nhỏ hơn số lượt đã dùng" |
+| `DELETE /admin/ma-giam-gia/{id}` | – | 204 (xóa mềm; đơn cũ vẫn giữ) | |
+| `GET /admin/banner` | – | `[{ id, tieuDe?, hinhAnh, lienKet?, thuTu, hienThi, batDauLuc?, ketThucLuc? }]` theo `thuTu` | |
+| `POST` · `PUT /admin/banner/{id}` · `DELETE` | `{ tieuDe?, hinhAnh, lienKet? (bắt đầu bằng / hoặc http(s)://), thuTu?, hienThi?, batDauLuc?, ketThucLuc? }` | 201 / 200 / 204 | 400 thời gian |
+| `GET /admin/cai-dat` | – | `[{ khoa, giaTri, moTa? }]` | |
+| `PUT /admin/cai-dat` | `{ "khoa": "giá trị", ... }` (chỉ các khóa có sẵn; `phi_van_chuyen`, `mien_phi_van_chuyen_tu` là số nguyên ≥ 0) | 200 như GET | 400 "Khóa cấu hình không hợp lệ: x" / "phi_van_chuyen phải là số nguyên không âm" |
+| `GET /admin/nguoi-dung` | `tuKhoa?` (tên không dấu, email, SĐT), `vaiTro?`, `trangThai?`, `trang`, `kichThuoc` | trang `{ id, hoTen, email, soDienThoai?, vaiTro, trangThai, soDonHang, ngayTao }` | |
+| `PATCH /admin/nguoi-dung/{id}/trang-thai` | `{ trangThai: hoat_dong\|bi_khoa }` | 200 dòng người dùng; khóa thì mọi token của người đó bị từ chối ngay (401) | 400 "Không thể tự khóa tài khoản của mình"; 404 |
+| `GET /admin/danh-gia` | `trangThai?`, `sanPhamId?`, `soSao?`, `trang`, `kichThuoc` | trang `{ id, sanPhamId, tenSanPham, hoTen, email, maDonHang, soSao, noiDung?, trangThai, ngayTao }`, mới nhất trước | |
+| `PATCH /admin/danh-gia/{id}` | `{ trangThai: cho_duyet\|da_duyet\|da_an }` | 200 dòng đánh giá | 404 |
+| `DELETE /admin/danh-gia/{id}` | – | 204 (xóa hẳn; khách viết lại được) | 404 |
+
+```text
+MaGiamGiaQT { id, ma, moTa?, loaiGiam, giaTriGiam, donToiThieu, giamToiDa?, tongLuotDung?, luotDungMoiNguoi?, daDung,
+              batDauLuc, ketThucLuc, kichHoat }
+```
+
 ## 4. Biến môi trường
 | Biến | Mặc định (profile `dev`) | Ý nghĩa |
 |---|---|---|
