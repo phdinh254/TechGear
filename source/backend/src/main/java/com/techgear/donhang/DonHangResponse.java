@@ -29,7 +29,7 @@ public final class DonHangResponse {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record LichSu(String trangThai, String ghiChu, OffsetDateTime thoiGian) {
+    public record LichSu(String trangThai, String ghiChu, OffsetDateTime thoiGian, String nguoiThucHien) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

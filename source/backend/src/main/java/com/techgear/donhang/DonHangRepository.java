@@ -136,6 +136,12 @@ class DonHangRepository {
                 .param("id", id).param("moc", moc).query(DonKhoa.class).optional();
     }
 
+    /** Khóa dòng đơn theo mã (quản trị). */
+    Optional<DonKhoa> khoaDon(String maDonHang) {
+        return jdbc.sql("SELECT id, trang_thai, ma_giam_gia_id FROM don_hang WHERE ma_don_hang = upper(:ma) FOR UPDATE")
+                .param("ma", maDonHang).query(DonKhoa.class).optional();
+    }
+
     record DongHoan(Long bienTheId, int soLuong) {
     }
 
@@ -202,8 +208,12 @@ class DonHangRepository {
                                long phiVanChuyen, long tongTien, java.time.OffsetDateTime ngayDat) {
     }
 
-    /** Chi tiết đơn; {@code choPhepHuy} = người xem là chủ đơn đã đăng nhập. */
     DonHangResponse.ChiTiet chiTiet(Long donHangId, boolean choPhepHuy) {
+        return chiTiet(donHangId, choPhepHuy, false);
+    }
+
+    /** Chi tiết đơn; {@code choPhepHuy} = người xem là chủ đơn đã đăng nhập; {@code quanTri}: lịch sử kèm người thực hiện. */
+    DonHangResponse.ChiTiet chiTiet(Long donHangId, boolean choPhepHuy, boolean quanTri) {
         ThongTinDon d = jdbc.sql("""
                         SELECT dh.ma_don_hang, dh.trang_thai, dh.trang_thai_thanh_toan, dh.phuong_thuc_thanh_toan,
                                dh.ten_nguoi_nhan, dh.email, dh.so_dien_thoai, dh.dia_chi_giao_hang, dh.ghi_chu,
@@ -222,10 +232,12 @@ class DonHangRepository {
                         """)
                 .param("id", donHangId).query(DonHangResponse.Dong.class).list();
         List<DonHangResponse.LichSu> lichSu = jdbc.sql("""
-                        SELECT trang_thai, ghi_chu, created_at AS thoi_gian FROM lich_su_don_hang
-                        WHERE don_hang_id = :id ORDER BY created_at, id
+                        SELECT ls.trang_thai, ls.ghi_chu, ls.created_at AS thoi_gian,
+                               CASE WHEN :quanTri THEN nd.ho_ten END AS nguoi_thuc_hien
+                        FROM lich_su_don_hang ls LEFT JOIN nguoi_dung nd ON nd.id = ls.nguoi_thuc_hien_id
+                        WHERE ls.don_hang_id = :id ORDER BY ls.created_at, ls.id
                         """)
-                .param("id", donHangId).query(DonHangResponse.LichSu.class).list();
+                .param("id", donHangId).param("quanTri", quanTri).query(DonHangResponse.LichSu.class).list();
         boolean coTheHuy = choPhepHuy && TrangThaiDonHang.cho_xac_nhan.name().equals(d.trangThai());
         return new DonHangResponse.ChiTiet(d.maDonHang(), d.trangThai(), d.trangThaiThanhToan(),
                 d.phuongThucThanhToan(), d.tenNguoiNhan(), d.email(), d.soDienThoai(), d.diaChiGiaoHang(), d.ghiChu(),

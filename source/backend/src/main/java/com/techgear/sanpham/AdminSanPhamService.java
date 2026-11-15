@@ -40,7 +40,7 @@ public class AdminSanPhamService {
         Map<String, Object> ts = new HashMap<>();
         if (tuKhoa != null && !tuKhoa.isBlank()) {
             where.append(" AND lower(unaccent(sp.ten)) LIKE '%' || lower(unaccent(:tuKhoa)) || '%'");
-            ts.put("tuKhoa", SanPhamRepository.thoatLike(tuKhoa.trim()));
+            ts.put("tuKhoa", HienThi.thoatLike(tuKhoa.trim()));
         }
         if (danhMucId != null) {
             where.append(" AND sp.danh_muc_id = :dm");

@@ -43,6 +43,11 @@ public final class HienThi {
              LIMIT 1)
             """;
 
+    /** Tìm nguyên văn: % _ \ trong từ khóa không phải ký tự đại diện của LIKE. */
+    public static String thoatLike(String s) {
+        return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+    }
+
     private HienThi() {
     }
 }

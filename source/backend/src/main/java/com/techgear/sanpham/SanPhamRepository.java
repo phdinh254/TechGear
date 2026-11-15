@@ -43,7 +43,7 @@ class SanPhamRepository {
         for (int i = 0; i < dk.tuKhoas().size(); i++) {
             where.append(" AND lower(unaccent(sp.ten || ' ' || coalesce(th.ten, ''))) LIKE '%' || lower(unaccent(:tu")
                     .append(i).append(")) || '%'");
-            thamSo.put("tu" + i, thoatLike(dk.tuKhoas().get(i)));
+            thamSo.put("tu" + i, HienThi.thoatLike(dk.tuKhoas().get(i)));
         }
         if (dk.danhMuc() != null) {
             where.append(" AND (dm.slug = :danhMuc OR dmc.slug = :danhMuc)");
@@ -170,10 +170,5 @@ class SanPhamRepository {
                             Arrays.asList((Long[]) mang.getArray()));
                 })
                 .list();
-    }
-
-    /** Tìm nguyên văn: % _ \ trong từ khóa không phải ký tự đại diện của LIKE. */
-    static String thoatLike(String s) {
-        return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 }

@@ -364,6 +364,23 @@ SanPhamQT { id, ten, slug, danhMucId, thuongHieuId?, moTaNgan?, moTa?, baoHanhTh
 
 Thay đổi tồn kho khóa dòng biến thể (cùng cơ chế với đặt hàng) nên nhập kho và đặt hàng cùng lúc không làm sai số.
 
+#### Chi tiết API quản trị: đơn hàng (9.3)
+
+| API | Gửi lên | Trả về | Lỗi riêng |
+|---|---|---|---|
+| `GET /admin/don-hang` | `tuKhoa?` (mã đơn, tên, SĐT, email – không phân biệt hoa thường), `trangThai?`, `trangThaiThanhToan?`, `phuongThucThanhToan?`, `tuNgay?`, `denNgay?` (`yyyy-MM-dd`, giờ VN, gồm cả hai ngày), `trang`, `kichThuoc` (1–50, mặc định 20) | trang `{ maDonHang, tenNguoiNhan, email, soDienThoai, tongTien, trangThai, trangThaiThanhToan, phuongThucThanhToan, soLuongSanPham, khachVangLai, ngayDat }`, mới nhất trước | 400 `tuNgay > denNgay` |
+| `GET /admin/don-hang/{maDonHang}` | – | `{ don: DonHang, ghiChuQuanTri?, nguoiDungId?, trangThaiTiepTheo: [...], thanhToans: [{ maThamChieu, soTien, trangThai, maGiaoDich?, thanhToanLuc?, ngayTao }] }`; `don.lichSu[]` có thêm `nguoiThucHien?` | 404 |
+| `PATCH /admin/don-hang/{maDonHang}/trang-thai` | `{ trangThai, ghiChu? }` | 200 như trên | 409 "Không chuyển được đơn từ \"X\" sang \"Y\"" / "Đơn VNPay chưa thanh toán, chưa xác nhận được" |
+| `PATCH /admin/don-hang/{maDonHang}/thanh-toan` | `{ trangThaiThanhToan }` | 200 như trên | 409 "Không cập nhật được trạng thái thanh toán" |
+| `PATCH /admin/don-hang/{maDonHang}/ghi-chu` | `{ ghiChuQuanTri? }` (≤ 500, rỗng = xóa) | 200 như trên | |
+
+- Chuyển trạng thái theo sơ đồ trạng thái đơn: `cho_xac_nhan → da_xac_nhan → dang_giao → hoan_thanh`; hủy được từ
+  `cho_xac_nhan`, `da_xac_nhan`. Hủy: hoàn kho, trả lượt mã (như khách hủy), ghi lịch sử kèm ghi chú.
+- Đơn VNPay chưa thanh toán không xác nhận được (chỉ hủy được). Đơn COD chuyển `hoan_thanh` thì tự thành `da_thanh_toan`.
+- Thanh toán chỉ đổi được: COD `chua_thanh_toan → da_thanh_toan` (đơn chưa hủy), và `da_thanh_toan → da_hoan_tien` khi đơn đã hủy
+  (hoàn tiền thủ công, không gọi API VNPay).
+- Đơn chuyển `hoan_thanh` thì khách viết được đánh giá các sản phẩm trong đơn.
+
 ## 4. Biến môi trường
 | Biến | Mặc định (profile `dev`) | Ý nghĩa |
 |---|---|---|
