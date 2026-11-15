@@ -171,6 +171,7 @@ Tồn kho trong giỏ chỉ để báo sớm. Đặt hàng (Phase 6) mới là c
 
 ## 7. Phase 6 – Đặt hàng và đơn hàng
 
+Sơ đồ: [đặt hàng](thiet-ke/12_hd_dat_hang.drawio.png), [hủy đơn](thiet-ke/13_hd_huy_don.drawio.png), [tuần tự đặt hàng](thiet-ke/14_td_dat_hang.drawio.png), [trạng thái đơn](thiet-ke/15_tt_don_hang.drawio.png).
 Hình dạng dữ liệu, cách tính tiền, thông báo lỗi mã giảm giá: mục "Chi tiết API đặt hàng, đơn hàng" trong
 [`dac-ta-api.md`](thiet-ke/dac-ta-api.md). Mã giảm giá mẫu (dev): `GIAM10` (10%, tối đa 100.000đ, đơn từ 200.000đ),
 `GIAM50K` (50.000đ, đơn từ 500.000đ), `MOILAN1` (20.000đ, mỗi khách 1 lần), `HETHAN` (đã hết hạn).

@@ -78,6 +78,20 @@ Tuần tự đăng nhập và kiểm tra JWT:
 |:---:|:---:|
 | [![Thêm vào giỏ](docs/thiet-ke/10_hd_them_vao_gio.drawio.png)](docs/thiet-ke/10_hd_them_vao_gio.drawio.png) | [![Gộp giỏ hàng](docs/thiet-ke/11_hd_gop_gio_hang.drawio.png)](docs/thiet-ke/11_hd_gop_gio_hang.drawio.png) |
 
+### 7. Đặt hàng và đơn hàng
+
+| Đặt hàng | Hủy đơn |
+|:---:|:---:|
+| [![Đặt hàng](docs/thiet-ke/12_hd_dat_hang.drawio.png)](docs/thiet-ke/12_hd_dat_hang.drawio.png) | [![Hủy đơn](docs/thiet-ke/13_hd_huy_don.drawio.png)](docs/thiet-ke/13_hd_huy_don.drawio.png) |
+
+Tuần tự đặt hàng (khóa biến thể và mã giảm giá trong một giao dịch):
+
+[![Tuần tự đặt hàng](docs/thiet-ke/14_td_dat_hang.drawio.png)](docs/thiet-ke/14_td_dat_hang.drawio.png)
+
+Trạng thái đơn hàng:
+
+[![Trạng thái đơn hàng](docs/thiet-ke/15_tt_don_hang.drawio.png)](docs/thiet-ke/15_tt_don_hang.drawio.png)
+
 ## Sơ đồ use case
 
 Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png`, `.svg`). Tác nhân và quy ước quan hệ: xem [`docs/so-do-use-case/README.md`](docs/so-do-use-case/README.md).
