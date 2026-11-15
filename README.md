@@ -38,6 +38,7 @@ Nằm trong `docs/thiet-ke/`, mỗi sơ đồ có `.drawio` (mở bằng [draw.i
 | [`dac-ta-yeu-cau.md`](docs/thiet-ke/dac-ta-yeu-cau.md) | Đặc tả yêu cầu: tác nhân, module, quy tắc nghiệp vụ, phi chức năng, kiểm thử |
 | [`tu-dien-du-lieu.md`](docs/thiet-ke/tu-dien-du-lieu.md) | Từ điển dữ liệu 23 bảng PostgreSQL |
 | [`dac-ta-api.md`](docs/thiet-ke/dac-ta-api.md) | Đặc tả API: quy ước, định dạng lỗi, danh sách API |
+| [`bao-cao-cho-frontend.md`](docs/bao-cao-cho-frontend.md) | Báo cáo cho người làm frontend: API đã có, thay đổi so với bản cũ, việc frontend cần làm |
 
 ### 1. Kiến trúc tổng thể
 
@@ -54,6 +55,16 @@ Nằm trong `docs/thiet-ke/`, mỗi sơ đồ có `.drawio` (mở bằng [draw.i
 12 module (`com.techgear.<module>`) và quan hệ phụ thuộc.
 
 [![Sơ đồ gói](docs/thiet-ke/03_so_do_goi.drawio.png)](docs/thiet-ke/03_so_do_goi.drawio.png)
+
+### 4. Tài khoản: hoạt động và tuần tự
+
+| Đăng ký | Đăng nhập | Quên mật khẩu |
+|:---:|:---:|:---:|
+| [![Đăng ký](docs/thiet-ke/04_hd_dang_ky.drawio.png)](docs/thiet-ke/04_hd_dang_ky.drawio.png) | [![Đăng nhập](docs/thiet-ke/05_hd_dang_nhap.drawio.png)](docs/thiet-ke/05_hd_dang_nhap.drawio.png) | [![Quên mật khẩu](docs/thiet-ke/06_hd_quen_mat_khau.drawio.png)](docs/thiet-ke/06_hd_quen_mat_khau.drawio.png) |
+
+Tuần tự đăng nhập và kiểm tra JWT:
+
+[![Tuần tự đăng nhập JWT](docs/thiet-ke/07_td_dang_nhap_jwt.drawio.png)](docs/thiet-ke/07_td_dang_nhap_jwt.drawio.png)
 
 ## Sơ đồ use case
 
