@@ -80,6 +80,7 @@ Hình dạng dữ liệu và mã lỗi của từng API: xem mục "Chi tiết A
 
 ## 5. Phase 4 – Danh mục, thương hiệu, sản phẩm, cửa hàng
 
+Sơ đồ luồng: [tìm kiếm, lọc](thiet-ke/08_hd_tim_kiem_san_pham.drawio.png), [xem chi tiết, chọn biến thể](thiet-ke/09_hd_xem_chi_tiet_san_pham.drawio.png).
 Hình dạng dữ liệu: mục "Chi tiết API sản phẩm, cửa hàng" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md).
 Dữ liệu mẫu dev có 13 danh mục (4 cha, 9 con), 9 thương hiệu, 17 sản phẩm có màu sắc/phiên bản, 8 sản phẩm nổi bật.
 **Chưa có ảnh** (thẻ sản phẩm hiện "Chưa có ảnh") và chưa có banner; ảnh mẫu bổ sung ở Phase 10.
