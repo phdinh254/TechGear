@@ -72,6 +72,12 @@ Tuần tự đăng nhập và kiểm tra JWT:
 |:---:|:---:|
 | [![Tìm kiếm sản phẩm](docs/thiet-ke/08_hd_tim_kiem_san_pham.drawio.png)](docs/thiet-ke/08_hd_tim_kiem_san_pham.drawio.png) | [![Xem chi tiết sản phẩm](docs/thiet-ke/09_hd_xem_chi_tiet_san_pham.drawio.png)](docs/thiet-ke/09_hd_xem_chi_tiet_san_pham.drawio.png) |
 
+### 6. Giỏ hàng
+
+| Thêm vào giỏ | Gộp giỏ khi đăng nhập |
+|:---:|:---:|
+| [![Thêm vào giỏ](docs/thiet-ke/10_hd_them_vao_gio.drawio.png)](docs/thiet-ke/10_hd_them_vao_gio.drawio.png) | [![Gộp giỏ hàng](docs/thiet-ke/11_hd_gop_gio_hang.drawio.png)](docs/thiet-ke/11_hd_gop_gio_hang.drawio.png) |
+
 ## Sơ đồ use case
 
 Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png`, `.svg`). Tác nhân và quy ước quan hệ: xem [`docs/so-do-use-case/README.md`](docs/so-do-use-case/README.md).

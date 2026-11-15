@@ -127,6 +127,7 @@ trên trình duyệt (trình duyệt tự động chưa kết nối), nhờ bạ
 
 ## 6. Phase 5 – Giỏ hàng và yêu thích
 
+Sơ đồ luồng: [thêm vào giỏ](thiet-ke/10_hd_them_vao_gio.drawio.png), [gộp giỏ khi đăng nhập](thiet-ke/11_hd_gop_gio_hang.drawio.png).
 Hình dạng dữ liệu, mã lỗi: mục "Chi tiết API giỏ hàng, yêu thích" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md).
 Tất cả cần đăng nhập. Giỏ hiện tại trong `localStorage` vẫn chạy như cũ; dùng giỏ server hay không là do bạn quyết định.
 
