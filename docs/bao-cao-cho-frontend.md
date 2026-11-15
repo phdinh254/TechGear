@@ -216,6 +216,7 @@ phuongThucThanhToan: "cod" | "vnpay", ghiChu? }`. Lỗi từng ô trả trong `l
 
 ## 8. Phase 7 – Thanh toán VNPay
 
+Sơ đồ: [tuần tự thanh toán](thiet-ke/16_td_thanh_toan_vnpay.drawio.png), [trạng thái thanh toán](thiet-ke/17_tt_thanh_toan.drawio.png).
 Chi tiết: mục "Chi tiết thanh toán VNPay" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md) (làm theo tài liệu VNPay 2.1.0).
 
 ### 8.1 Việc của frontend

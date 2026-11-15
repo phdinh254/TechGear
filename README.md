@@ -92,6 +92,14 @@ Trạng thái đơn hàng:
 
 [![Trạng thái đơn hàng](docs/thiet-ke/15_tt_don_hang.drawio.png)](docs/thiet-ke/15_tt_don_hang.drawio.png)
 
+### 8. Thanh toán VNPay
+
+[![Tuần tự thanh toán VNPay](docs/thiet-ke/16_td_thanh_toan_vnpay.drawio.png)](docs/thiet-ke/16_td_thanh_toan_vnpay.drawio.png)
+
+Trạng thái thanh toán của đơn:
+
+[![Trạng thái thanh toán](docs/thiet-ke/17_tt_thanh_toan.drawio.png)](docs/thiet-ke/17_tt_thanh_toan.drawio.png)
+
 ## Sơ đồ use case
 
 Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png`, `.svg`). Tác nhân và quy ước quan hệ: xem [`docs/so-do-use-case/README.md`](docs/so-do-use-case/README.md).
