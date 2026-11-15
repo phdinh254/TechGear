@@ -8,6 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +43,19 @@ public class SanPhamService {
     @Transactional(readOnly = true)
     public List<SanPhamTomTat> noiBat() {
         return sanPhamRepository.noiBat(SO_SAN_PHAM_NOI_BAT);
+    }
+
+    /** Thẻ của các sản phẩm đang hiển thị, giữ thứ tự {@code ids}; sản phẩm đã ẩn bị bỏ qua. */
+    @Transactional(readOnly = true)
+    public List<SanPhamTomTat> tomTatTheoThuTu(List<Long> ids) {
+        Map<Long, SanPhamTomTat> theoId = sanPhamRepository.theoIds(ids).stream()
+                .collect(Collectors.toMap(SanPhamTomTat::id, Function.identity()));
+        return ids.stream().map(theoId::get).filter(Objects::nonNull).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean dangHienThi(Long sanPhamId) {
+        return sanPhamRepository.dangHienThi(sanPhamId);
     }
 
     /** Chi tiết sản phẩm đang hiển thị; mỗi lần xem tăng lượt xem 1. */

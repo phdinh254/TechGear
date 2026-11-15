@@ -14,7 +14,7 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
 
     boolean existsByEmail(String email);
 
-    /** Khóa dòng người dùng (SELECT ... FOR UPDATE) để tuần tự hóa các thao tác trên sổ địa chỉ của họ. */
+    /** Khóa dòng người dùng (SELECT ... FOR UPDATE) để tuần tự hóa các thao tác trên sổ địa chỉ, giỏ hàng, yêu thích của họ. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select n from NguoiDung n where n.id = :id")
     Optional<NguoiDung> khoaTheoId(Long id);

@@ -20,20 +20,8 @@ class SanPhamRepository {
 
     private final JdbcClient jdbc;
 
-    private static final String TU_BANG = """
-            FROM san_pham sp
-            JOIN danh_muc dm ON dm.id = sp.danh_muc_id
-            LEFT JOIN danh_muc dmc ON dmc.id = dm.danh_muc_cha_id
-            LEFT JOIN thuong_hieu th ON th.id = sp.thuong_hieu_id
-            """;
-
-    /** Sản phẩm hiển thị: đang bật, danh mục (và cha) đang bật, có ít nhất một biến thể đang bán. */
-    private static final String DANG_HIEN_THI = """
-            sp.hien_thi AND sp.deleted_at IS NULL
-            AND dm.hien_thi AND dm.deleted_at IS NULL
-            AND (dmc.id IS NULL OR (dmc.hien_thi AND dmc.deleted_at IS NULL))
-            AND EXISTS (SELECT 1 FROM bien_the bt WHERE bt.san_pham_id = sp.id AND bt.hien_thi AND bt.deleted_at IS NULL)
-            """;
+    private static final String TU_BANG = HienThi.TU_BANG;
+    private static final String DANG_HIEN_THI = HienThi.SAN_PHAM_DANG_HIEN_THI;
 
     private static final String COT_THE = """
             SELECT sp.id, sp.ten, sp.slug, sp.gia_ban, sp.gia_goc, th.ten AS ten_thuong_hieu,
@@ -88,6 +76,19 @@ class SanPhamRepository {
         return jdbc.sql(COT_THE + TU_BANG + " WHERE " + DANG_HIEN_THI
                         + " AND sp.noi_bat ORDER BY sp.luot_xem DESC, sp.id DESC LIMIT :gioiHan")
                 .param("gioiHan", gioiHan).query(SanPhamTomTat.class).list();
+    }
+
+    List<SanPhamTomTat> theoIds(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(COT_THE + TU_BANG + " WHERE " + DANG_HIEN_THI + " AND sp.id IN (:ids)")
+                .param("ids", ids).query(SanPhamTomTat.class).list();
+    }
+
+    boolean dangHienThi(Long id) {
+        return jdbc.sql("SELECT EXISTS (SELECT 1 " + TU_BANG + " WHERE " + DANG_HIEN_THI + " AND sp.id = :id)")
+                .param("id", id).query(Boolean.class).single();
     }
 
     record ThongTinChung(Long id, String ten, String slug, String moTaNgan, String moTa, long giaBan, Long giaGoc,

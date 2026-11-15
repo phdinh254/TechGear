@@ -153,6 +153,30 @@ Sản phẩm được hiển thị khi: đang bật, chưa xóa, danh mục (và
 | GET | `/yeu-thich` | ĐN | Danh sách yêu thích |
 | PUT, DELETE | `/yeu-thich/{sanPhamId}` | ĐN | Thêm / bỏ yêu thích |
 
+#### Chi tiết API giỏ hàng, yêu thích
+
+```text
+DongGioHang  { bienTheId, sanPhamId, sanPhamSlug, ten, phanLoai?, anh?, sku, giaBan, giaGoc?, soLuong, tonKho, conBan }
+GioHang      { dongs: DongGioHang[], tongSoLuong, tamTinh }
+```
+Tên trường dòng giỏ trùng dòng giỏ `localStorage` của frontend (`bienTheId, sanPhamSlug, ten, phanLoai, giaBan, anh,
+soLuong, tonKho`). `giaBan`, `tonKho` là giá trị **hiện tại**. `phanLoai` = các giá trị tùy chọn nối bằng " / " (VD "Đen").
+`anh` = ảnh gắn với màu của biến thể, không có thì ảnh chính. `conBan = false` khi biến thể/sản phẩm/danh mục đã tắt hoặc xóa:
+dòng vẫn hiện để khách biết, không tính vào `tongSoLuong`, `tamTinh`. `tamTinh` = Σ `giaBan × soLuong` các dòng còn bán.
+Dòng mới thêm đứng đầu. Mỗi giỏ tối đa 50 dòng; số lượng mỗi dòng 1–999 và không vượt tồn kho lúc thêm/sửa
+(đặt hàng ở Phase 6 kiểm tra tồn kho lần cuối).
+
+| API | Gửi lên | Trả về | Lỗi riêng |
+|---|---|---|---|
+| `GET /gio-hang` | – | 200 `GioHang` | |
+| `POST /gio-hang` | `{ bienTheId, soLuong }` (cộng dồn nếu đã có) | 200 `GioHang` | 404 "Phiên bản sản phẩm không còn bán"; 409 "Sản phẩm đã hết hàng" / "Chỉ còn N sản phẩm trong kho" (tính cả số đã có trong giỏ); 400 "Giỏ hàng tối đa 50 sản phẩm" |
+| `PUT /gio-hang/{bienTheId}` | `{ soLuong }` (đặt lại số lượng) | 200 `GioHang` | 404 "Sản phẩm không có trong giỏ hàng" / "Phiên bản sản phẩm không còn bán"; 409 như trên |
+| `DELETE /gio-hang/{bienTheId}` | – | 200 `GioHang` (không có dòng đó cũng 200) | |
+| `POST /gio-hang/gop` | `[{ bienTheId, soLuong }]` (≤ 100 phần tử): giỏ tạm của trình duyệt khi đăng nhập | 200 `GioHang` | Không báo lỗi từng dòng: cộng dồn, cắt theo tồn kho, bỏ dòng không còn bán/hết hàng/vượt 50 dòng |
+| `GET /yeu-thich` | – | 200 `SanPhamTomTat[]`, yêu thích sau đứng trước; sản phẩm đã ẩn không hiện | |
+| `PUT /yeu-thich/{sanPhamId}` | – | 204 (đã có cũng 204) | 404 "Không tìm thấy sản phẩm"; 400 "Danh sách yêu thích tối đa 100 sản phẩm" |
+| `DELETE /yeu-thich/{sanPhamId}` | – | 204 (không có cũng 204) | |
+
 ### 3.4 Đặt hàng & đơn hàng (`donhang`, `khuyenmai`) – Phase 6
 | PT | Đường dẫn | Quyền | Mô tả |
 |---|---|---|---|
