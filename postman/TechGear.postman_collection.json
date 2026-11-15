@@ -2102,6 +2102,750 @@
           }
         }
       ]
+    },
+    {
+      "name": "04 Đơn hàng",
+      "item": [
+        {
+          "name": "Đăng ký khách mới cho đơn hàng (lưu tokenDon)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('emailDon', 'don-' + Date.now() + '@vi-du.vn');",
+                  "pm.collectionVariables.set('emailVangLai', 'vanglai-' + Date.now() + '@vi-du.vn');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tokenDon', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/dang-ky",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"hoTen\": \"Khách đơn hàng\", \"email\": \"{{emailDon}}\", \"matKhau\": \"matkhau123\"}"
+            }
+          }
+        },
+        {
+          "name": "Lấy biến thể mẫu (kinh-cuong-luc-baseus-iphone-16)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json().bienThes[0];",
+                  "pm.test('Còn ít nhất 5 cái', () => pm.expect(b.soLuongTon).to.be.at.least(5));",
+                  "pm.collectionVariables.set('btDon', b.id);",
+                  "pm.collectionVariables.set('giaDon', b.giaBan);",
+                  "pm.collectionVariables.set('tonDon', b.soLuongTon);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/kinh-cuong-luc-baseus-iphone-16"
+          }
+        },
+        {
+          "name": "Tính thử – không mã, dưới ngưỡng miễn phí ship",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const t = pm.response.json(); const gia = Number(pm.collectionVariables.get('giaDon'));",
+                  "pm.test('Tạm tính, phí ship 30.000đ, tổng', () => {",
+                  "    pm.expect(t.tamTinh).to.eql(gia); pm.expect(t.tienGiamGia).to.eql(0);",
+                  "    pm.expect(t.phiVanChuyen).to.eql(30000); pm.expect(t.tongTien).to.eql(gia + 30000);",
+                  "    pm.expect(t.dongs[0]).to.include.keys('tenSanPham', 'sku', 'donGia', 'soLuong', 'thanhTien');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/tinh-thu",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 1}]}"
+            }
+          }
+        },
+        {
+          "name": "Tính thử – GIAM10 (10%)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const t = pm.response.json(); const tam = 2 * Number(pm.collectionVariables.get('giaDon'));",
+                  "pm.test('Giảm 10% làm tròn xuống, tổng đúng công thức', () => {",
+                  "    pm.expect(t.maGiamGia).to.eql('GIAM10');",
+                  "    pm.expect(t.tienGiamGia).to.eql(Math.min(Math.floor(tam / 10), 100000));",
+                  "    pm.expect(t.tongTien).to.eql(t.tamTinh - t.tienGiamGia + t.phiVanChuyen);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/tinh-thu",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 2}], \"maGiamGia\": \"giam10\"}"
+            }
+          }
+        },
+        {
+          "name": "Tính thử – mã hết hạn → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Mã giảm giá đã hết hạn\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/tinh-thu",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 1}], \"maGiamGia\": \"HETHAN\"}"
+            }
+          }
+        },
+        {
+          "name": "Tính thử – chưa đủ đơn tối thiểu → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Đơn hàng tối thiểu 500.000đ để dùng mã này\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/tinh-thu",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 1}], \"maGiamGia\": \"GIAM50K\"}"
+            }
+          }
+        },
+        {
+          "name": "Tính thử – mã không tồn tại → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Mã giảm giá không tồn tại\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/tinh-thu",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 1}], \"maGiamGia\": \"KHONGCO\"}"
+            }
+          }
+        },
+        {
+          "name": "Tính thử – vượt tồn kho → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));",
+                  "pm.test('Nêu rõ sản phẩm và số còn lại', () => pm.expect(pm.response.json().thongBao).to.include('chỉ còn'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/tinh-thu",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 999}]}"
+            }
+          }
+        },
+        {
+          "name": "Đặt hàng – đăng nhập, mã MOILAN1 (lưu maDon1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.test('Đúng hình dạng đơn', () => {",
+                  "    const d = pm.response.json();",
+                  "    pm.expect(d).to.include.keys('maDonHang', 'trangThai', 'trangThaiThanhToan', 'phuongThucThanhToan', 'email',",
+                  "        'diaChiGiaoHang', 'tamTinh', 'tienGiamGia', 'phiVanChuyen', 'tongTien', 'ngayDat', 'coTheHuy', 'dongs', 'lichSu');",
+                  "    pm.expect(d.maDonHang).to.match(/^DH\\d{6}[A-Z2-9]{6}$/);",
+                  "    pm.expect(d.tongTien).to.eql(d.tamTinh - d.tienGiamGia + d.phiVanChuyen);",
+                  "});",
+                  "const d = pm.response.json();",
+                  "pm.test('Chờ xác nhận, email tài khoản, giảm 20.000đ, hủy được', () => {",
+                  "    pm.expect(d.trangThai).to.eql('cho_xac_nhan');",
+                  "    pm.expect(d.email).to.eql(pm.collectionVariables.get('emailDon'));",
+                  "    pm.expect(d.tienGiamGia).to.eql(20000); pm.expect(d.coTheHuy).to.be.true;",
+                  "    pm.expect(d.lichSu[0].trangThai).to.eql('cho_xac_nhan');",
+                  "});",
+                  "pm.collectionVariables.set('maDon1', d.maDonHang);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDon}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 1}], \"tenNguoiNhan\": \"Khách Postman\", \"soDienThoai\": \"0912345678\", \"tinhThanh\": \"Thành phố Hồ Chí Minh\", \"phuongXa\": \"Phường Sài Gòn\", \"diaChiChiTiet\": \"1 Lê Lợi\", \"phuongThucThanhToan\": \"cod\", \"maGiamGia\": \"MOILAN1\", \"ghiChu\": \"Postman\"}"
+            }
+          }
+        },
+        {
+          "name": "Tồn kho giảm 1 sau khi đặt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tồn kho = ban đầu − 1', () => pm.expect(pm.response.json().bienThes.find(b => b.id == pm.collectionVariables.get('btDon')).soLuongTon).to.eql(Number(pm.collectionVariables.get('tonDon')) - 1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/kinh-cuong-luc-baseus-iphone-16"
+          }
+        },
+        {
+          "name": "Đặt hàng – dùng lại MOILAN1 → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Bạn đã dùng hết lượt của mã giảm giá này\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDon}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 1}], \"tenNguoiNhan\": \"Khách Postman\", \"soDienThoai\": \"0912345678\", \"tinhThanh\": \"Thành phố Hồ Chí Minh\", \"phuongXa\": \"Phường Sài Gòn\", \"diaChiChiTiet\": \"1 Lê Lợi\", \"phuongThucThanhToan\": \"cod\", \"maGiamGia\": \"MOILAN1\"}"
+            }
+          }
+        },
+        {
+          "name": "Đơn của tôi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Có đúng 1 đơn vừa đặt', () => {",
+                  "    const t = pm.response.json(); pm.expect(t.tongSoPhanTu).to.eql(1);",
+                  "    pm.expect(t.noiDung[0].maDonHang).to.eql(pm.collectionVariables.get('maDon1'));",
+                  "    pm.expect(t.noiDung[0]).to.include.keys('tongTien', 'soLuongSanPham', 'tenSanPhamDau', 'ngayDat');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDon}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang"
+          }
+        },
+        {
+          "name": "Chi tiết đơn của mình",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng hình dạng đơn', () => {",
+                  "    const d = pm.response.json();",
+                  "    pm.expect(d).to.include.keys('maDonHang', 'trangThai', 'trangThaiThanhToan', 'phuongThucThanhToan', 'email',",
+                  "        'diaChiGiaoHang', 'tamTinh', 'tienGiamGia', 'phiVanChuyen', 'tongTien', 'ngayDat', 'coTheHuy', 'dongs', 'lichSu');",
+                  "    pm.expect(d.maDonHang).to.match(/^DH\\d{6}[A-Z2-9]{6}$/);",
+                  "    pm.expect(d.tongTien).to.eql(d.tamTinh - d.tienGiamGia + d.phiVanChuyen);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDon}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/{{maDon1}}"
+          }
+        },
+        {
+          "name": "Chi tiết đơn của người khác → 404 (IDOR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Không tìm thấy đơn hàng\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/{{maDon1}}"
+          }
+        },
+        {
+          "name": "Hủy đơn – hoàn kho",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đã hủy, lịch sử có lý do', () => {",
+                  "    const d = pm.response.json(); pm.expect(d.trangThai).to.eql('da_huy'); pm.expect(d.coTheHuy).to.be.false;",
+                  "    pm.expect(d.lichSu.map(l => l.trangThai)).to.eql(['cho_xac_nhan', 'da_huy']);",
+                  "    pm.expect(d.lichSu[1].ghiChu).to.eql('Đổi ý');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDon}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/{{maDon1}}/huy",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"lyDo\": \"Đổi ý\"}"
+            }
+          }
+        },
+        {
+          "name": "Tồn kho trở lại như ban đầu",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tồn kho = ban đầu', () => pm.expect(pm.response.json().bienThes.find(b => b.id == pm.collectionVariables.get('btDon')).soLuongTon).to.eql(Number(pm.collectionVariables.get('tonDon'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/kinh-cuong-luc-baseus-iphone-16"
+          }
+        },
+        {
+          "name": "Hủy lần 2 → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Chỉ hủy được đơn đang chờ xác nhận\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDon}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/{{maDon1}}/huy"
+          }
+        },
+        {
+          "name": "Đặt lại với MOILAN1 sau khi hủy (lượt đã trả) – lưu maDon2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('maDon2', pm.response.json().maDonHang);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDon}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 1}], \"tenNguoiNhan\": \"Khách Postman\", \"soDienThoai\": \"0912345678\", \"tinhThanh\": \"Thành phố Hồ Chí Minh\", \"phuongXa\": \"Phường Sài Gòn\", \"diaChiChiTiet\": \"1 Lê Lợi\", \"phuongThucThanhToan\": \"cod\", \"maGiamGia\": \"MOILAN1\"}"
+            }
+          }
+        },
+        {
+          "name": "Hủy maDon2 để hoàn kho",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDon}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/{{maDon2}}/huy"
+          }
+        },
+        {
+          "name": "Đặt hàng vãng lai – kèm token cũ hỏng vẫn được (lưu maDonVangLai)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('emailVangLaiHoa', pm.collectionVariables.get('emailVangLai').toUpperCase());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.test('Đúng hình dạng đơn', () => {",
+                  "    const d = pm.response.json();",
+                  "    pm.expect(d).to.include.keys('maDonHang', 'trangThai', 'trangThaiThanhToan', 'phuongThucThanhToan', 'email',",
+                  "        'diaChiGiaoHang', 'tamTinh', 'tienGiamGia', 'phiVanChuyen', 'tongTien', 'ngayDat', 'coTheHuy', 'dongs', 'lichSu');",
+                  "    pm.expect(d.maDonHang).to.match(/^DH\\d{6}[A-Z2-9]{6}$/);",
+                  "    pm.expect(d.tongTien).to.eql(d.tamTinh - d.tienGiamGia + d.phiVanChuyen);",
+                  "});",
+                  "pm.test('Email chữ thường, khách vãng lai không hủy qua API', () => {",
+                  "    pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get('emailVangLai'));",
+                  "    pm.expect(pm.response.json().coTheHuy).to.be.false;",
+                  "});",
+                  "pm.collectionVariables.set('maDonVangLai', pm.response.json().maDonHang);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/vang-lai",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 1}], \"tenNguoiNhan\": \"Khách Postman\", \"soDienThoai\": \"0912345678\", \"tinhThanh\": \"Thành phố Hồ Chí Minh\", \"phuongXa\": \"Phường Sài Gòn\", \"diaChiChiTiet\": \"1 Lê Lợi\", \"phuongThucThanhToan\": \"cod\", \"email\": \"{{emailVangLaiHoa}}\"}"
+            }
+          }
+        },
+        {
+          "name": "Tra cứu đơn vãng lai (mã + email không phân biệt hoa thường)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng đơn', () => pm.expect(pm.response.json().maDonHang).to.eql(pm.collectionVariables.get('maDonVangLai')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/tra-cuu",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"maDonHang\": \"{{maDonVangLai}}\", \"email\": \"{{emailVangLaiHoa}}\"}"
+            }
+          }
+        },
+        {
+          "name": "Tra cứu sai email → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Không tìm thấy đơn hàng\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/tra-cuu",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"maDonHang\": \"{{maDonVangLai}}\", \"email\": \"sai@vi-du.vn\"}"
+            }
+          }
+        },
+        {
+          "name": "Đặt hàng không đăng nhập ở API khách hàng → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btDon}}, \"soLuong\": 1}], \"tenNguoiNhan\": \"Khách Postman\", \"soDienThoai\": \"0912345678\", \"tinhThanh\": \"Thành phố Hồ Chí Minh\", \"phuongXa\": \"Phường Sài Gòn\", \"diaChiChiTiet\": \"1 Lê Lợi\", \"phuongThucThanhToan\": \"cod\"}"
+            }
+          }
+        },
+        {
+          "name": "Đặt hàng – chưa chọn sản phẩm → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Lỗi theo trường', () => pm.expect(pm.response.json().loi.dongs).to.eql('Chưa chọn sản phẩm nào'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenDon}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [], \"tenNguoiNhan\": \"Khách Postman\", \"soDienThoai\": \"0912345678\", \"tinhThanh\": \"Thành phố Hồ Chí Minh\", \"phuongXa\": \"Phường Sài Gòn\", \"diaChiChiTiet\": \"1 Lê Lợi\", \"phuongThucThanhToan\": \"cod\"}"
+            }
+          }
+        }
+      ]
     }
   ],
   "variable": [
@@ -2167,6 +2911,46 @@
     },
     {
       "key": "bt2",
+      "value": ""
+    },
+    {
+      "key": "emailDon",
+      "value": ""
+    },
+    {
+      "key": "tokenDon",
+      "value": ""
+    },
+    {
+      "key": "btDon",
+      "value": ""
+    },
+    {
+      "key": "giaDon",
+      "value": ""
+    },
+    {
+      "key": "tonDon",
+      "value": ""
+    },
+    {
+      "key": "maDon1",
+      "value": ""
+    },
+    {
+      "key": "maDon2",
+      "value": ""
+    },
+    {
+      "key": "emailVangLai",
+      "value": ""
+    },
+    {
+      "key": "emailVangLaiHoa",
+      "value": ""
+    },
+    {
+      "key": "maDonVangLai",
       "value": ""
     }
   ]
