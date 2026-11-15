@@ -105,10 +105,43 @@ Email gửi sau khi giao dịch lưu thành công, không chặn phản hồi; c
 | GET | `/thuong-hieu` | CK | Thương hiệu đang hiển thị |
 | GET | `/san-pham` | CK | Tìm kiếm: `tuKhoa`, `danhMuc` (slug), `thuongHieu` (nhiều slug, phân cách dấu phẩy), `giaTu`, `giaDen`, `sapXep` (`moi_nhat` \| `gia_tang` \| `gia_giam` \| `pho_bien`), `trang`, `kichThuoc` (1–48) |
 | GET | `/san-pham/noi-bat` | CK | 8 sản phẩm nổi bật |
-| GET | `/san-pham/{slug}` | CK | Chi tiết (tăng lượt xem), kèm `diemTrungBinh`, `soDanhGia` |
-| GET | `/san-pham/{slug}/danh-gia` | CK | Đánh giá đã duyệt, phân trang |
+| GET | `/san-pham/{slug}` | CK | Chi tiết (tăng lượt xem) |
 | GET | `/banner` | CK | Banner đang hiển thị |
 | GET | `/cai-dat` | CK | Cấu hình cửa hàng `{ khoa: giaTri }` |
+
+Điểm đánh giá (`diemTrungBinh`, `soDanhGia` trong chi tiết) và `GET /san-pham/{slug}/danh-gia` chuyển sang Phase 8:
+bảng `danh_gia` có khóa ngoại tới `don_hang` (Phase 6) nên chưa tạo được ở Phase 4.
+
+#### Chi tiết API sản phẩm, cửa hàng
+
+```text
+DanhMuc         { id, ten, slug, moTa?, hinhAnh?, danhMucCons: DanhMuc[] }   (cấp con có danhMucCons rỗng)
+ThuongHieu      { id, ten, slug, logo? }
+SanPhamTomTat   { id, ten, slug, giaBan, giaGoc?, anhChinh?, tenThuongHieu?, conHang }
+SanPhamChiTiet  { id, ten, slug, moTaNgan?, moTa?, giaBan, giaGoc?, baoHanhThang, conHang,
+                  danhMuc { id, ten, slug }, thuongHieu? { id, ten, slug },
+                  hinhAnhs [{ id, duongDan, moTa?, giaTriTuyChonId?, laAnhChinh }],
+                  thongSos [{ ten, giaTri }],
+                  tuyChons [{ id, ten, loai, giaTris [{ id, giaTri, maMau? }] }],
+                  bienThes [{ id, sku, giaBan, giaGoc?, soLuongTon, giaTriIds: number[] }] }
+Banner          { id, tieuDe?, hinhAnh, lienKet? }
+```
+`?` = không có trong JSON khi trống. Mảng luôn có (có thể rỗng).
+
+Sản phẩm được hiển thị khi: đang bật, chưa xóa, danh mục (và danh mục cha nếu có) đang bật và chưa xóa, có ít nhất một biến thể
+đang bật và chưa xóa. Thương hiệu bị ẩn chỉ biến mất khỏi danh sách thương hiệu, sản phẩm của nó vẫn hiển thị.
+`giaBan`/`giaGoc` của sản phẩm = giá biến thể đang bán rẻ nhất. `conHang` = có biến thể đang bán còn tồn kho.
+`anhChinh` = ảnh chính, không có thì ảnh đầu tiên theo thứ tự.
+
+| API | Tham số / trả về | Lỗi |
+|---|---|---|
+| `GET /danh-muc` | Cây 2 cấp, sắp theo `thuTu` rồi `id`. Danh mục cha bị ẩn thì cả nhánh bị ẩn | |
+| `GET /thuong-hieu` | `ThuongHieu[]` sắp theo tên | |
+| `GET /san-pham` | `tuKhoa` (≤ 100 ký tự; không phân biệt hoa thường và dấu, nhiều từ thì sản phẩm phải chứa đủ các từ; tìm trong tên sản phẩm và tên thương hiệu), `danhMuc` (slug; slug danh mục cha gồm cả danh mục con), `thuongHieu` (slug, nhiều slug cách nhau dấu phẩy), `giaTu`, `giaDen` (≥ 0; có biến thể đang bán với giá trong khoảng), `sapXep` (`moi_nhat` mặc định \| `gia_tang` \| `gia_giam` \| `pho_bien` = lượt xem), `trang` (≥ 0), `kichThuoc` (1–48, mặc định 12) → trang `SanPhamTomTat`. Cùng giá trị sắp xếp thì xếp theo `id` giảm dần nên hai trang liền nhau không trùng | 400 khi tham số sai kiểu, ngoài khoảng, `giaTu > giaDen` hoặc `sapXep` lạ (`loi` theo tham số hoặc `thongBao` "Tham số 'x' không hợp lệ") |
+| `GET /san-pham/noi-bat` | Tối đa 8 `SanPhamTomTat` được đánh dấu nổi bật, nhiều lượt xem trước | |
+| `GET /san-pham/{slug}` | `SanPhamChiTiet`; chỉ gồm biến thể đang bán; ảnh chính đứng đầu `hinhAnhs`; mỗi lần gọi tăng `luot_xem` 1 | 404 "Không tìm thấy sản phẩm" |
+| `GET /banner` | `Banner[]` đang bật và trong khung giờ (mốc trống = không giới hạn), sắp theo `thuTu` | |
+| `GET /cai-dat` | `{ ten_cua_hang, hotline, email_lien_he, phi_van_chuyen, mien_phi_van_chuyen_tu }` (giá trị dạng chuỗi) | |
 
 ### 3.3 Giỏ hàng & yêu thích (`giohang`) – Phase 5
 | PT | Đường dẫn | Quyền | Mô tả |

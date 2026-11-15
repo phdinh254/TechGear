@@ -53,7 +53,8 @@ public class BaoMatConfig {
 
     /** GET không cần đăng nhập. */
     static final String[] CONG_KHAI_GET = {
-            "/uploads/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
+            "/uploads/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
+            "/api/danh-muc", "/api/thuong-hieu", "/api/san-pham", "/api/san-pham/**", "/api/banner", "/api/cai-dat"
     };
     /** POST không cần đăng nhập. */
     static final String[] CONG_KHAI_POST = {
