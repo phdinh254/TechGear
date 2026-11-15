@@ -11,6 +11,7 @@ import com.techgear.taikhoan.NguoiDungRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -38,6 +39,7 @@ public class DonHangService {
     private static final SecureRandom NGAU_NHIEN = new SecureRandom();
     private static final int GIOI_HAN_IP = 10;
     private static final Duration CUA_SO_IP = Duration.ofMinutes(15);
+    static final Duration HUY_VNPAY_SAU = Duration.ofMinutes(35);
 
     private final DonHangRepository donHangRepository;
     private final KhuyenMaiService khuyenMaiService;
@@ -45,6 +47,7 @@ public class DonHangService {
     private final NguoiDungRepository nguoiDungRepository;
     private final GioiHanSoLan gioiHanSoLan;
     private final Clock clock;
+    private final TransactionTemplate giaoDich;
 
     private record BangGia(List<DonHangResponse.Dong> dongs, KhuyenMaiService.KetQua giam, long tamTinh,
                            long tienGiamGia, long phiVanChuyen, long tongTien) {
@@ -116,6 +119,25 @@ public class DonHangService {
             throw khongTimThay();
         }
         return donHangRepository.chiTiet(id, false);
+    }
+
+    /**
+     * Hủy các đơn VNPay chưa thanh toán sau 35 phút (liên kết hết hạn ở phút 30, thêm 5 phút cho giao dịch đang dở).
+     * Mỗi đơn một giao dịch riêng để thứ tự khóa (biến thể → mã giảm giá) giống lúc đặt hàng, không khóa chéo.
+     */
+    public int huyDonVnPayQuaHan() {
+        java.time.OffsetDateTime moc = java.time.OffsetDateTime.now(clock).minus(HUY_VNPAY_SAU);
+        int soDon = 0;
+        for (Long id : donHangRepository.donVnPayQuaHan(moc)) {
+            Boolean daHuy = giaoDich.execute(t -> donHangRepository.khoaDonVnPayQuaHan(id, moc).map(don -> {
+                huy(don, null, "Quá 30 phút chưa thanh toán VNPay, hệ thống tự hủy");
+                return true;
+            }).orElse(false));
+            if (Boolean.TRUE.equals(daHuy)) {
+                soDon++;
+            }
+        }
+        return soDon;
     }
 
     /** Hủy đơn đã khóa: hoàn kho, trả lượt mã giảm giá, ghi lịch sử (dùng chung cho khách, quản trị, hết hạn VNPay). */

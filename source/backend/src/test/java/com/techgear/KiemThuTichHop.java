@@ -16,7 +16,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Transactional
 @TestPropertySource(properties = {
         "app.jwt.khoa-bi-mat=khoa-kiem-thu-tich-hop-du-dai-32-ky-tu-0123456789",
-        "app.upload.thu-muc=target/uploads-it"
+        "app.upload.thu-muc=target/uploads-it",
+        "app.vnpay.tmn-code=TESTCODE",
+        "app.vnpay.hash-secret=khoa-kiem-thu-vnpay"
 })
 public abstract class KiemThuTichHop {
 

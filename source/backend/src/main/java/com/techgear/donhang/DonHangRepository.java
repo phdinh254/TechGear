@@ -114,6 +114,28 @@ class DonHangRepository {
                 .param("ma", maDonHang).param("nd", nguoiDungId).query(DonKhoa.class).optional();
     }
 
+    /** Id các đơn VNPay chưa thanh toán đặt trước {@code moc} (chưa khóa). */
+    List<Long> donVnPayQuaHan(java.time.OffsetDateTime moc) {
+        return jdbc.sql("""
+                        SELECT id FROM don_hang
+                        WHERE phuong_thuc_thanh_toan = 'vnpay' AND trang_thai = 'cho_xac_nhan'
+                          AND trang_thai_thanh_toan = 'chua_thanh_toan' AND created_at < :moc
+                        ORDER BY id LIMIT 100
+                        """)
+                .param("moc", moc).query(Long.class).list();
+    }
+
+    /** Khóa lại một đơn quá hạn, kiểm lại điều kiện; bỏ qua nếu IPN/khách đang giữ khóa đơn. */
+    Optional<DonKhoa> khoaDonVnPayQuaHan(Long id, java.time.OffsetDateTime moc) {
+        return jdbc.sql("""
+                        SELECT id, trang_thai, ma_giam_gia_id FROM don_hang
+                        WHERE id = :id AND phuong_thuc_thanh_toan = 'vnpay' AND trang_thai = 'cho_xac_nhan'
+                          AND trang_thai_thanh_toan = 'chua_thanh_toan' AND created_at < :moc
+                        FOR UPDATE SKIP LOCKED
+                        """)
+                .param("id", id).param("moc", moc).query(DonKhoa.class).optional();
+    }
+
     record DongHoan(Long bienTheId, int soLuong) {
     }
 

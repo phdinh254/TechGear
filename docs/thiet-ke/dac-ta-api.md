@@ -237,9 +237,30 @@ sau 30 phút làm ở Phase 7.
 ### 3.5 Thanh toán (`thanhtoan`) – Phase 7
 | PT | Đường dẫn | Quyền | Mô tả |
 |---|---|---|---|
-| POST | `/thanh-toan/vnpay/{maDonHang}` | CK/ĐN | Tạo URL thanh toán VNPay |
+| POST | `/thanh-toan/vnpay/{maDonHang}` | CK | Tạo URL thanh toán VNPay |
 | GET | `/thanh-toan/vnpay/ket-qua` | CK | Return URL: đọc kết quả để hiển thị (không đổi trạng thái) |
 | GET | `/thanh-toan/vnpay/ipn` | VNPay | IPN: kiểm chữ ký, cập nhật thanh toán; trả `{ RspCode, Message }` theo chuẩn VNPay |
+
+#### Chi tiết thanh toán VNPay
+
+Theo tài liệu VNPay chính thức, phiên bản 2.1.0: <https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html>.
+
+- Chữ ký `vnp_SecureHash` = HMAC-SHA512 (khóa `VNPAY_HASH_SECRET`) của chuỗi `ten=giá_trị_mã_hóa` nối bằng `&`, các tham số
+  `vnp_*` xếp tăng dần theo tên, giá trị mã hóa URL kiểu `URLEncoder` (US-ASCII, dấu cách thành `+`); khi kiểm bỏ
+  `vnp_SecureHash`, `vnp_SecureHashType`. Như mẫu Java của VNPay.
+- URL thanh toán: `vnp_Amount` = tổng tiền × 100, `vnp_CurrCode` VND, `vnp_Locale` vn, `vnp_OrderType` other,
+  `vnp_OrderInfo` "Thanh toan don hang <mã>" (không dấu), `vnp_TxnRef` = mã tham chiếu mới mỗi lần tạo (mã đơn + 2 chữ số),
+  `vnp_CreateDate`/`vnp_ExpireDate` `yyyyMMddHHmmss` giờ GMT+7; liên kết hết hạn lúc đặt hàng + 30 phút.
+- Thanh toán thành công khi **cả** `vnp_ResponseCode` và `vnp_TransactionStatus` = "00".
+- Chỉ IPN cập nhật CSDL; Return URL chỉ kiểm chữ ký và đọc trạng thái để hiển thị.
+- Đơn VNPay chưa thanh toán: liên kết hết hạn sau 30 phút; hệ thống tự hủy đơn (hoàn kho, trả lượt mã) sau **35 phút**
+  (5 phút cho giao dịch đang dở trên VNPay).
+
+| API | Gửi lên | Trả về | Lỗi riêng |
+|---|---|---|---|
+| `POST /thanh-toan/vnpay/{maDonHang}` | – (mã đơn khó đoán; trả hộ đơn người khác không gây hại) | 200 `{ duongDan }`: frontend chuyển trình duyệt tới đây | 404 "Không tìm thấy đơn hàng"; 409 "Đơn hàng không thanh toán qua VNPay" / "Đơn hàng đã được thanh toán" / "Đơn hàng không còn chờ thanh toán" / "Đơn hàng đã quá hạn thanh toán"; 503 "Chưa cấu hình VNPay" |
+| `GET /thanh-toan/vnpay/ket-qua?<toàn bộ tham số VNPay trả về>` | Frontend chuyển nguyên query string từ trang `VNPAY_RETURN_URL` | 200 `{ hopLe, thanhCong, maDonHang?, trangThaiThanhToan?, thongBao }`: `hopLe` = chữ ký đúng; `thanhCong` theo mã VNPay; `trangThaiThanhToan` đọc từ CSDL (có thể còn `chua_thanh_toan` vài giây nếu IPN đến sau) | |
+| `GET /thanh-toan/vnpay/ipn` | VNPay gọi | 200 `{ RspCode, Message }`: `00` Confirm Success · `01` Order not found · `02` Order already confirmed · `04` Invalid amount · `97` Invalid signature · `99` Unknow error | Kiểm theo thứ tự: chữ ký → tìm giao dịch theo `vnp_TxnRef` → số tiền → còn chờ xử lý → cập nhật. Gửi lại IPN đã xử lý trả `02`, không ghi lần hai |
 
 ### 3.6 Đánh giá (`danhgia`) – Phase 8
 | PT | Đường dẫn | Quyền | Mô tả |
@@ -277,5 +298,7 @@ sau 30 phút làm ở Phase 7.
 | `FRONTEND_URL` | `http://localhost:5173` | Liên kết trong email |
 | `CORS_ALLOWED_ORIGINS` | = `FRONTEND_URL` | Origin được phép, phân cách dấu phẩy |
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | Gmail SMTP, rỗng | Chưa có `MAIL_USERNAME` thì ghi liên kết ra log |
-| `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`, `VNPAY_PAY_URL`, `VNPAY_RETURN_URL` | rỗng, sandbox | Cấu hình VNPay (Phase 7) |
+| `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` | rỗng (dev: giá trị giả để test IPN bằng Postman) | Mã website và khóa bí mật VNPay sandbox (đăng ký tại sandbox.vnpayment.vn) |
+| `VNPAY_PAY_URL` | `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html` | Cổng thanh toán |
+| `VNPAY_RETURN_URL` | `FRONTEND_URL/thanh-toan/ket-qua` | Trang frontend VNPay chuyển khách về |
 | `UPLOAD_DIR` | `uploads` | Thư mục lưu ảnh |

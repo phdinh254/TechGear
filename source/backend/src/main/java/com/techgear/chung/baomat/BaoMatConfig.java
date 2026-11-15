@@ -54,12 +54,13 @@ public class BaoMatConfig {
     /** GET không cần đăng nhập. */
     static final String[] CONG_KHAI_GET = {
             "/uploads/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
-            "/api/danh-muc", "/api/thuong-hieu", "/api/san-pham", "/api/san-pham/**", "/api/banner", "/api/cai-dat"
+            "/api/danh-muc", "/api/thuong-hieu", "/api/san-pham", "/api/san-pham/**", "/api/banner", "/api/cai-dat",
+            "/api/thanh-toan/vnpay/ipn", "/api/thanh-toan/vnpay/ket-qua"
     };
     /** POST không cần đăng nhập. */
     static final String[] CONG_KHAI_POST = {
             "/api/auth/dang-ky", "/api/auth/dang-nhap", "/api/auth/quen-mat-khau", "/api/auth/dat-lai-mat-khau",
-            "/api/don-hang/tinh-thu", "/api/don-hang/vang-lai", "/api/don-hang/tra-cuu"
+            "/api/don-hang/tinh-thu", "/api/don-hang/vang-lai", "/api/don-hang/tra-cuu", "/api/thanh-toan/vnpay/*"
     };
 
     private final SecretKey khoaJwt;
