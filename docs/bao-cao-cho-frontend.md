@@ -1,6 +1,6 @@
 # Báo cáo backend cho người làm frontend
 
-Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 · Nhánh: `hoanglong`
+Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 4) · Nhánh: `hoanglong`
 
 Tài liệu này tóm tắt những gì backend mới đã có, chỗ nào khác backend cũ, và việc frontend cần làm. Mỗi phase backend
 xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên, trả về, mã lỗi) nằm ở
@@ -25,7 +25,8 @@ cd source/backend && mvn spring-boot:run
 |---|---|---|
 | Tài khoản: đăng ký, đăng nhập, `/auth/toi` | Xong (Phase 3) | Được, giữ nguyên hợp đồng cũ |
 | Hồ sơ, đổi mật khẩu, ảnh đại diện, quên/đặt lại mật khẩu, sổ địa chỉ | Xong (Phase 3) | API mới, frontend chưa có giao diện |
-| Danh mục, thương hiệu, sản phẩm | Phase 4, chưa làm | Hiện chưa chạy: trang chủ và danh sách sản phẩm sẽ báo lỗi cho tới khi xong Phase 4 |
+| Danh mục, thương hiệu, tìm kiếm, nổi bật, chi tiết sản phẩm | Xong (Phase 4) | Được, giữ nguyên hợp đồng cũ: trang chủ, danh sách, chi tiết chạy lại |
+| Banner, cấu hình cửa hàng | Xong (Phase 4) | API mới, frontend chưa có giao diện |
 | Giỏ hàng server, đặt hàng, VNPay, đánh giá, quản trị | Phase 5–9 | Chưa |
 
 ## 3. Quy ước chung (áp dụng mọi API)
@@ -77,13 +78,58 @@ Hình dạng dữ liệu và mã lỗi của từng API: xem mục "Chi tiết A
    `window.dispatchEvent(new Event('techgear:dang-xuat'))`), `AuthProvider` nghe sự kiện đó và gọi `dangXuat()`.
 2. **Nhãn mật khẩu ở form đăng ký** (xem 4.1).
 
-## 5. Kiểm thử phía backend
+## 5. Phase 4 – Danh mục, thương hiệu, sản phẩm, cửa hàng
+
+Hình dạng dữ liệu: mục "Chi tiết API sản phẩm, cửa hàng" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md).
+Dữ liệu mẫu dev có 13 danh mục (4 cha, 9 con), 9 thương hiệu, 17 sản phẩm có màu sắc/phiên bản, 8 sản phẩm nổi bật.
+**Chưa có ảnh** (thẻ sản phẩm hiện "Chưa có ảnh") và chưa có banner; ảnh mẫu bổ sung ở Phase 10.
+
+### 5.1 Frontend hiện tại chạy được, không phải sửa
+
+Đã gọi thử đúng các request mà `HomePage`, `ProductListPage`, `ProductDetailPage` gửi (có header `Origin` của Vite và token
+cũ trong `localStorage`): trả đủ các trường frontend đọc, CORS cho phép, token cũ không làm lỗi. Mình chưa mở giao diện
+trên trình duyệt (trình duyệt tự động chưa kết nối), nhờ bạn mở thử một lượt.
+
+### 5.2 Hành vi cần biết
+
+| Chủ đề | Backend làm gì |
+|---|---|
+| Từ khóa | Không phân biệt hoa thường và dấu ("sac" ra "Sạc"). Nhiều từ thì sản phẩm phải chứa đủ các từ. Tìm trong tên sản phẩm **và** tên thương hiệu ("anker sac") |
+| Danh mục | `danhMuc=<slug cha>` gồm cả sản phẩm của danh mục con |
+| Thương hiệu | Lọc được nhiều thương hiệu: `thuongHieu=anker,ugreen`. Ô chọn một thương hiệu hiện tại vẫn đúng |
+| Khoảng giá | So với giá **từng biến thể** đang bán. Sản phẩm 200k–800k khớp khoảng 700k–900k nhưng thẻ vẫn hiện giá thấp nhất 200k |
+| Sắp xếp | `moi_nhat` (mặc định), `gia_tang`, `gia_giam`, `pho_bien` (lượt xem). Bằng nhau thì theo id nên hai trang liền nhau không trùng |
+| Phân trang | `kichThuoc` 1–48 (frontend đang gửi 12). Tham số sai (VD `kichThuoc=100`, `giaTu=abc`, `giaTu > giaDen`) trả 400 kèm `thongBao`, trang danh sách sẽ hiện thông báo đó |
+| Sản phẩm bị ẩn | Sản phẩm tắt, đã xóa, nằm trong danh mục bị ẩn, hoặc không còn biến thể đang bán: không có trong danh sách, chi tiết trả 404 "Không tìm thấy sản phẩm" |
+| `conHang` | Có ít nhất một biến thể đang bán còn tồn kho. Trang chi tiết cũng có `conHang` |
+| Lượt xem | Mỗi lần gọi chi tiết tăng 1 (dùng cho "Phổ biến" và nổi bật). React StrictMode ở chế độ dev gọi `useEffect` 2 lần nên mỗi lần mở trang tăng 2, bản build không bị |
+
+### 5.3 Trường mới có thể dùng thêm (không bắt buộc)
+
+| Trường | Dùng để |
+|---|---|
+| `hinhAnhs[].giaTriTuyChonId` | Ảnh gắn với một màu: khi khách chọn màu, chuyển ảnh đang xem sang ảnh có `giaTriTuyChonId` bằng id màu đó |
+| `hinhAnhs[].laAnhChinh` | Ảnh chính (luôn đứng đầu mảng) |
+| `tuyChons[].loai` | `mau_sac` \| `dung_luong` \| `phien_ban` \| `khac` – VD chỉ hiện ô màu khi `mau_sac` |
+| `thuongHieu.slug`, `danhMuc.id` trong chi tiết | Tạo liên kết "Xem thêm sản phẩm của thương hiệu" |
+| `GET /banner` | `[{ id, tieuDe?, hinhAnh, lienKet? }]` đã lọc theo khung giờ, cho slider trang chủ (ảnh ghép bằng `duongDanAnh`) |
+| `GET /cai-dat` | `{ ten_cua_hang, hotline, email_lien_he, phi_van_chuyen, mien_phi_van_chuyen_tu }` (chuỗi) cho footer và trang giỏ hàng |
+
+### 5.4 Chưa có ở Phase 4
+
+- Điểm đánh giá (`diemTrungBinh`, `soDanhGia`) và danh sách đánh giá: chuyển sang Phase 8 (cần bảng đơn hàng trước).
+- `moTa` là HTML, frontend đang hiện bằng `dangerouslySetInnerHTML`. Dữ liệu mẫu an toàn; backend sẽ lọc HTML khi quản trị
+  lưu mô tả ở Phase 9.
+- Giỏ hàng `localStorage` lưu sẵn `giaBan`, `tonKho` lúc bấm thêm, nên có thể cũ khi giá/tồn kho đổi. Phase 5 có giỏ hàng
+  trên server trả giá và tồn kho hiện tại.
+
+## 6. Kiểm thử phía backend
 
 Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
-để xem request và response mẫu của từng API. Thư mục "01 Tài khoản" có 29 request.
+để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request).
 
-## 6. Liên hệ
+## 7. Liên hệ
 
 Backend trả sai hình dạng dữ liệu hoặc thiếu trường frontend cần: báo kèm request (URL, body) và response nhận được.
 Phần frontend do bạn quyết định. Backend không sửa gì trong `source/frontend`.
