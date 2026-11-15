@@ -1,6 +1,6 @@
 # Báo cáo backend cho người làm frontend
 
-Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 8) · Nhánh: `hoanglong`
+Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 9) · Nhánh: `hoanglong`
 
 Tài liệu này tóm tắt những gì backend mới đã có, chỗ nào khác backend cũ, và việc frontend cần làm. Mỗi phase backend
 xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên, trả về, mã lỗi) nằm ở
@@ -31,7 +31,7 @@ cd source/backend && mvn spring-boot:run
 | Tính thử, đặt hàng (đăng nhập + vãng lai), mã giảm giá, đơn của tôi, hủy, tra cứu | Xong (Phase 6) | API mới; nút "Đặt hàng" ở trang giỏ đang tắt, có thể nối ngay |
 | Thanh toán VNPay (sandbox) | Xong (Phase 7) | API mới; frontend cần thêm route `/thanh-toan/ket-qua` |
 | Đánh giá: viết, xem đánh giá đã duyệt, điểm trung bình ở chi tiết sản phẩm | Xong (Phase 8) | API mới; trường mới ở chi tiết sản phẩm không làm hỏng trang hiện tại |
-| Quản trị (duyệt đánh giá, đơn hàng, sản phẩm...) | Phase 9 | Chưa |
+| Trang quản trị: danh mục, thương hiệu, sản phẩm, kho, đơn hàng, mã giảm giá, banner, cài đặt, người dùng, đánh giá, thống kê | Xong (Phase 9) | API mới; frontend chưa có trang quản trị (`laQuanTri` trong `AuthContext` đã có sẵn để ẩn/hiện menu) |
 
 ## 3. Quy ước chung (áp dụng mọi API)
 
@@ -264,13 +264,49 @@ Lỗi: 404 "Không tìm thấy đơn hàng" / "Sản phẩm không có trong đ�
 
 Hiện chưa có đơn nào "hoàn thành" trong dữ liệu mẫu (chỉ quản trị chuyển được, Phase 9), nên `co-the-viet` đang trả rỗng.
 
-## 10. Kiểm thử phía backend
+## 10. Phase 9 – Trang quản trị
+
+Chi tiết từng API: các mục "Chi tiết API quản trị" (9.1 → 9.5) trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md).
+Đăng nhập bằng `admin@techgear.vn` / `Admin@123` (dev). Mọi `/api/admin/**`: chưa đăng nhập 401, khách hàng 403.
+
+### 10.1 Các trang gợi ý
+
+| Trang | API chính | Ghi chú cho giao diện |
+|---|---|---|
+| Danh mục | `GET/POST/PUT/DELETE /admin/danh-muc` | Danh sách phẳng có `danhMucChaId` (tự dựng cây); chỉ 2 cấp. Xóa bị chặn (409) khi còn danh mục con hoặc sản phẩm: hiện `thongBao` |
+| Thương hiệu | `/admin/thuong-hieu` | Logo: tải qua `POST /admin/upload?thuMuc=thuong-hieu` (multipart `file`) rồi gửi `duongDan` nhận được |
+| Sản phẩm – danh sách | `GET /admin/san-pham?tuKhoa=&danhMucId=&thuongHieuId=&hienThi=` | Gồm cả sản phẩm đang ẩn; có `tongTon`, `soBienThe` |
+| Sản phẩm – sửa | `GET /admin/san-pham/{id}` rồi các API con: tùy chọn, ảnh, biến thể | **Mọi API con trả lại cả sản phẩm** (`SanPhamQT`), đặt thẳng vào state. Thứ tự tạo: thông tin chung → tùy chọn → biến thể → ảnh. Sản phẩm chưa có biến thể đang bán thì không hiện ở trang khách |
+| Kho | `POST /admin/bien-the/{id}/nhap-kho`, `/dieu-chinh` (bắt buộc lý do), `GET /admin/kho/lich-su`, `GET /admin/kho/sap-het` | Trang tổng quan nên có ô "Sắp hết hàng" |
+| Đơn hàng | `GET /admin/don-hang` (tìm, lọc), `GET /admin/don-hang/{ma}`, `PATCH .../trang-thai`, `.../thanh-toan`, `.../ghi-chu` | Chi tiết có `trangThaiTiepTheo`: chỉ hiện các nút chuyển trạng thái trong danh sách này. `don.lichSu[].nguoiThucHien` chỉ có ở API quản trị |
+| Mã giảm giá | `/admin/ma-giam-gia` | `batDauLuc`, `ketThucLuc` dạng ISO có múi giờ, VD `2026-11-20T00:00:00+07:00` |
+| Banner | `/admin/banner` | `lienKet` phải bắt đầu bằng `/` hoặc `http(s)://` |
+| Cài đặt | `GET/PUT /admin/cai-dat` | `PUT` nhận `{ "khoa": "giá trị" }`, chỉ khóa có sẵn |
+| Người dùng | `GET /admin/nguoi-dung`, `PATCH .../{id}/trang-thai` | Khóa thì người đó bị đăng xuất ngay ở lần gọi API kế tiếp; không tự khóa được chính mình |
+| Đánh giá | `GET /admin/danh-gia?trangThai=cho_duyet`, `PATCH /admin/danh-gia/{id}`, `DELETE` | Duyệt mới hiện công khai và tính điểm |
+| Thống kê | `GET /admin/thong-ke/doanh-thu?tu=&den=&theo=ngay\|thang`, `/don-hang`, `/ban-chay` | Doanh thu trả đủ mọi ngày/tháng trong khoảng (0 nếu không có đơn) – vẽ biểu đồ trực tiếp |
+
+### 10.2 Hành vi cần biết
+
+- Mô tả sản phẩm (HTML) được backend **lọc** khi lưu: `<script>`, `onclick`, `javascript:`… bị bỏ, nên trang khách hiện bằng
+  `dangerouslySetInnerHTML` là an toàn. Trình soạn thảo nên chỉ dùng thẻ thường (đoạn, tiêu đề, danh sách, bảng, đậm, nghiêng,
+  liên kết, ảnh).
+- Slug để trống thì backend tự sinh từ tên không dấu; sửa tên mà để trống slug thì slug đổi theo (đổi đường dẫn trang khách).
+  Muốn giữ đường dẫn cũ thì gửi lại `slug` hiện tại.
+- Xóa danh mục, thương hiệu, sản phẩm, biến thể, mã giảm giá là xóa mềm: biến mất khỏi danh sách, đơn cũ vẫn xem được.
+- SKU, mã giảm giá lưu chữ hoa. Giá hiển thị của sản phẩm tự cập nhật theo biến thể rẻ nhất, không cần gửi.
+- Đơn VNPay chưa thanh toán không xác nhận được (chỉ hủy). Đơn COD chuyển "hoàn thành" thì tự thành "đã thanh toán".
+  Hoàn tiền chỉ đánh dấu được sau khi đơn đã thanh toán bị hủy.
+
+Sơ đồ: [quản trị xử lý đơn](thiet-ke/19_hd_qt_xu_ly_don_hang.drawio.png), [quản trị thêm sản phẩm](thiet-ke/20_hd_qt_them_san_pham.drawio.png).
+
+## 11. Kiểm thử phía backend
 
 Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
-để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request), "06 Đánh giá" (12 request).
+để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request), "06 Đánh giá" (12 request), "07 Quản trị" (50 request, chạy một vòng từ tạo sản phẩm tới đơn hoàn thành, đánh giá được duyệt, thống kê).
 
-## 11. Liên hệ
+## 12. Liên hệ
 
 Backend trả sai hình dạng dữ liệu hoặc thiếu trường frontend cần: báo kèm request (URL, body) và response nhận được.
 Phần frontend do bạn quyết định. Backend không sửa gì trong `source/frontend`.
