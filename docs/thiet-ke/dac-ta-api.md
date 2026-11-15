@@ -293,6 +293,8 @@ DanhGiaCK  { id, hoTen, soSao, noiDung?, ngayTao }                        (công
 | GET, POST · PUT, DELETE | `/admin/danh-muc` · `/admin/danh-muc/{id}` | Danh mục |
 | GET, POST · PUT, DELETE | `/admin/thuong-hieu` · `/admin/thuong-hieu/{id}` | Thương hiệu |
 | GET, POST · GET, PUT, DELETE | `/admin/san-pham` · `/admin/san-pham/{id}` | Sản phẩm (kèm thông số, tùy chọn, ảnh) |
+| POST · PUT, DELETE | `/admin/san-pham/{id}/tuy-chon` · `/admin/tuy-chon/{id}` | Tùy chọn và giá trị |
+| POST · PUT, DELETE | `/admin/san-pham/{id}/hinh-anh` · `/admin/hinh-anh/{id}` | Ảnh sản phẩm |
 | POST · PUT, DELETE | `/admin/san-pham/{id}/bien-the` · `/admin/bien-the/{id}` | Biến thể |
 | POST | `/admin/bien-the/{id}/nhap-kho` · `/admin/bien-the/{id}/dieu-chinh` | Nhập kho / điều chỉnh tồn kho |
 | GET | `/admin/kho/lich-su` · `/admin/kho/sap-het` | Lịch sử kho / biến thể sắp hết |
@@ -307,6 +309,60 @@ DanhGiaCK  { id, hoTen, soSao, noiDung?, ngayTao }                        (công
 | GET · PATCH, DELETE | `/admin/danh-gia` · `/admin/danh-gia/{id}` | Đánh giá / duyệt – ẩn, xóa |
 | GET | `/admin/thong-ke/doanh-thu?tu=&den=&theo=ngay\|thang` | Doanh thu |
 | GET | `/admin/thong-ke/don-hang` · `/admin/thong-ke/ban-chay` | Đơn theo trạng thái / sản phẩm bán chạy |
+
+#### Quy ước chung của API quản trị
+- Mọi `/api/admin/**`: chưa đăng nhập 401, không phải quản trị 403 "Bạn không có quyền thực hiện thao tác này".
+- Xóa danh mục, thương hiệu, sản phẩm, biến thể, mã giảm giá là **xóa mềm** (`deleted_at`): đơn cũ vẫn tham chiếu được; slug/SKU/mã
+  đã xóa được dùng lại. Danh sách quản trị gồm cả mục đang ẩn, không gồm mục đã xóa. Không tìm thấy (hoặc đã xóa) → 404.
+- `slug` để trống thì tự sinh từ tên (bỏ dấu, `đ` → `d`, chữ thường, ký tự khác chữ số thành `-`; trùng thì thêm `-2`, `-3`…).
+  Slug tự nhập phải dạng `a-z0-9-` và không trùng (409 "Slug đã được dùng").
+
+#### Chi tiết API quản trị: danh mục, thương hiệu, sản phẩm (9.1)
+
+| API | Gửi lên | Trả về | Lỗi riêng |
+|---|---|---|---|
+| `GET /admin/danh-muc` | – | `[{ id, ten, slug, moTa?, hinhAnh?, thuTu, hienThi, danhMucChaId?, soDanhMucCon, soSanPham }]` theo `thuTu` | |
+| `POST /admin/danh-muc` · `PUT /admin/danh-muc/{id}` | `{ ten, slug?, moTa?, hinhAnh?, thuTu?, hienThi?, danhMucChaId? }` | 201 / 200 danh mục | 400 "Danh mục cha phải là danh mục cấp 1" (2 cấp; danh mục đang có con không thành con được; không chọn chính nó) |
+| `DELETE /admin/danh-muc/{id}` | – | 204 | 409 "Danh mục còn danh mục con" / "Danh mục còn sản phẩm" |
+| `GET /admin/thuong-hieu` | – | `[{ id, ten, slug, logo?, moTa?, hienThi, soSanPham }]` theo tên | |
+| `POST` · `PUT /admin/thuong-hieu/{id}` | `{ ten, slug?, logo?, moTa?, hienThi? }` | 201 / 200 | |
+| `DELETE /admin/thuong-hieu/{id}` | – | 204 | 409 "Thương hiệu còn sản phẩm" |
+| `GET /admin/san-pham` | `tuKhoa?` (không dấu), `danhMucId?`, `thuongHieuId?`, `hienThi?`, `trang`, `kichThuoc` (1–50, mặc định 20) | trang `{ id, ten, slug, anhChinh?, tenDanhMuc, tenThuongHieu?, giaBan, tongTon, soBienThe, hienThi, noiBat, luotXem, ngayTao }`, mới nhất trước | |
+| `GET /admin/san-pham/{id}` | – | `SanPhamQT` (dưới) | 404 |
+| `POST /admin/san-pham` · `PUT /admin/san-pham/{id}` | `{ ten, slug?, danhMucId, thuongHieuId?, moTaNgan?, moTa? (HTML), baoHanhThang?, noiBat?, hienThi?, thongSos?: [{ ten, giaTri }] }` – `thongSos` thay toàn bộ | 201 / 200 `SanPhamQT` | 400 danh mục/thương hiệu không tồn tại |
+| `DELETE /admin/san-pham/{id}` | – | 204 (xóa mềm sản phẩm và các biến thể) | |
+| `POST /admin/san-pham/{id}/tuy-chon` | `{ ten, loai, giaTris: [{ giaTri, maMau? }] }` | 201 `SanPhamQT` | 409 "Tùy chọn đã tồn tại" / "Sản phẩm đã có biến thể, xóa biến thể trước khi thêm tùy chọn" (biến thể cũ sẽ thiếu giá trị) |
+| `PUT /admin/tuy-chon/{id}` | `{ ten, loai, giaTris: [{ id?, giaTri, maMau? }] }` – có `id` là sửa, không có là thêm, thiếu là xóa | 200 `SanPhamQT` | 409 "Giá trị \"Đen\" đang được dùng ở biến thể" |
+| `DELETE /admin/tuy-chon/{id}` | – | 200 `SanPhamQT` | 409 như trên |
+| `POST /admin/san-pham/{id}/hinh-anh` · `PUT /admin/hinh-anh/{id}` | `{ duongDan, moTa?, giaTriTuyChonId?, laAnhChinh?, thuTu? }` (`duongDan` lấy từ `POST /admin/upload`) | 201 / 200 `SanPhamQT` | 400 giá trị tùy chọn không thuộc sản phẩm |
+| `DELETE /admin/hinh-anh/{id}` | – | 200 `SanPhamQT` | |
+| `POST /admin/san-pham/{id}/bien-the` | `{ sku, giaBan, giaGoc?, soLuongTon?, nguongCanhBao?, hienThi?, giaTriIds: [] }` – đúng một giá trị cho mỗi tùy chọn | 201 `SanPhamQT` | 400 "Mỗi tùy chọn phải chọn đúng một giá trị"; 409 "SKU đã được dùng" / "Đã có biến thể với tổ hợp này" |
+| `PUT /admin/bien-the/{id}` | `{ sku, giaBan, giaGoc?, nguongCanhBao?, hienThi? }` (tồn kho đổi qua API kho) | 200 `SanPhamQT` | như trên |
+| `DELETE /admin/bien-the/{id}` | – | 200 `SanPhamQT` (xóa mềm) | |
+
+```text
+SanPhamQT { id, ten, slug, danhMucId, thuongHieuId?, moTaNgan?, moTa?, baoHanhThang, noiBat, hienThi, giaBan, giaGoc?,
+            thongSos [{ ten, giaTri }], tuyChons [{ id, ten, loai, giaTris [{ id, giaTri, maMau? }] }],
+            hinhAnhs [{ id, duongDan, moTa?, giaTriTuyChonId?, laAnhChinh, thuTu }],
+            bienThes [{ id, sku, giaBan, giaGoc?, soLuongTon, nguongCanhBao, hienThi, giaTriIds }] }   (biến thể chưa xóa, kể cả đang ẩn)
+```
+- `moTa` được lọc HTML khi lưu (jsoup, danh sách thẻ an toàn: đoạn, tiêu đề, danh sách, bảng, đậm/nghiêng, liên kết, ảnh http(s));
+  `<script>`, thuộc tính `on*`, `javascript:` bị bỏ. Frontend hiện bằng `dangerouslySetInnerHTML` nên bắt buộc.
+- `giaGoc` (nếu có) ≥ `giaBan`. Giá hiển thị của sản phẩm (`giaBan`, `giaGoc`) tự cập nhật = biến thể đang bán rẻ nhất
+  sau mỗi lần thêm/sửa/xóa biến thể.
+- Biến thể mới có `soLuongTon` > 0 thì ghi lịch sử kho loại `khoi_tao`. SKU lưu chữ hoa, không phân biệt hoa thường khi kiểm trùng.
+- Thứ tự kiểm biến thể: giá (400) → SKU trùng (409) → tổ hợp giá trị (400/409).
+
+#### Chi tiết API quản trị: kho (9.2)
+
+| API | Gửi lên | Trả về | Lỗi riêng |
+|---|---|---|---|
+| `POST /admin/bien-the/{id}/nhap-kho` | `{ soLuong (1–100000), ghiChu? }` | 200 `{ bienTheId, soLuongTon }` + lịch sử `nhap_kho` | 404 |
+| `POST /admin/bien-the/{id}/dieu-chinh` | `{ soLuongMoi (≥ 0), ghiChu }` (bắt buộc lý do) | 200 như trên + lịch sử `dieu_chinh` (chênh lệch) | 400 "Số lượng mới bằng tồn kho hiện tại" |
+| `GET /admin/kho/lich-su` | `bienTheId?`, `loai?`, `trang`, `kichThuoc` (1–100, mặc định 20) | trang `{ id, bienTheId, sku, tenSanPham, loai, soLuongThayDoi, soLuongSau, ghiChu?, maDonHang?, nguoiThucHien?, thoiGian }`, mới nhất trước | |
+| `GET /admin/kho/sap-het` | – | `[{ bienTheId, sanPhamId, tenSanPham, sku, phanLoai?, soLuongTon, nguongCanhBao }]` biến thể chưa xóa có tồn ≤ ngưỡng, ít hàng trước | |
+
+Thay đổi tồn kho khóa dòng biến thể (cùng cơ chế với đặt hàng) nên nhập kho và đặt hàng cùng lúc không làm sai số.
 
 ## 4. Biến môi trường
 | Biến | Mặc định (profile `dev`) | Ý nghĩa |
