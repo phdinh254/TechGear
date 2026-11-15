@@ -248,6 +248,7 @@ Chi tiết: mục "Chi tiết thanh toán VNPay" trong [`dac-ta-api.md`](thiet-k
 
 ## 9. Phase 8 – Đánh giá sản phẩm
 
+Sơ đồ: [viết đánh giá](thiet-ke/18_hd_viet_danh_gia.drawio.png).
 Hình dạng dữ liệu: mục "Chi tiết API đánh giá" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md).
 
 | Màn hình gợi ý | API | Ghi chú |

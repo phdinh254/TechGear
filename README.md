@@ -100,6 +100,10 @@ Trạng thái thanh toán của đơn:
 
 [![Trạng thái thanh toán](docs/thiet-ke/17_tt_thanh_toan.drawio.png)](docs/thiet-ke/17_tt_thanh_toan.drawio.png)
 
+### 9. Đánh giá sản phẩm
+
+[![Viết đánh giá](docs/thiet-ke/18_hd_viet_danh_gia.drawio.png)](docs/thiet-ke/18_hd_viet_danh_gia.drawio.png)
+
 ## Sơ đồ use case
 
 Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png`, `.svg`). Tác nhân và quy ước quan hệ: xem [`docs/so-do-use-case/README.md`](docs/so-do-use-case/README.md).
