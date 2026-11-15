@@ -1,6 +1,6 @@
 # Báo cáo backend cho người làm frontend
 
-Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 7) · Nhánh: `hoanglong`
+Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 8) · Nhánh: `hoanglong`
 
 Tài liệu này tóm tắt những gì backend mới đã có, chỗ nào khác backend cũ, và việc frontend cần làm. Mỗi phase backend
 xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên, trả về, mã lỗi) nằm ở
@@ -30,7 +30,8 @@ cd source/backend && mvn spring-boot:run
 | Giỏ hàng trên server, gộp giỏ khi đăng nhập, yêu thích | Xong (Phase 5) | API mới, frontend chưa dùng (giỏ hiện lưu `localStorage`, vẫn chạy bình thường) |
 | Tính thử, đặt hàng (đăng nhập + vãng lai), mã giảm giá, đơn của tôi, hủy, tra cứu | Xong (Phase 6) | API mới; nút "Đặt hàng" ở trang giỏ đang tắt, có thể nối ngay |
 | Thanh toán VNPay (sandbox) | Xong (Phase 7) | API mới; frontend cần thêm route `/thanh-toan/ket-qua` |
-| Đánh giá, quản trị | Phase 8–9 | Chưa |
+| Đánh giá: viết, xem đánh giá đã duyệt, điểm trung bình ở chi tiết sản phẩm | Xong (Phase 8) | API mới; trường mới ở chi tiết sản phẩm không làm hỏng trang hiện tại |
+| Quản trị (duyệt đánh giá, đơn hàng, sản phẩm...) | Phase 9 | Chưa |
 
 ## 3. Quy ước chung (áp dụng mọi API)
 
@@ -245,13 +246,30 @@ Chi tiết: mục "Chi tiết thanh toán VNPay" trong [`dac-ta-api.md`](thiet-k
 - IPN cần địa chỉ HTTPS công khai (khai báo trong cổng quản lý của VNPay), nên trên máy cá nhân VNPay không gọi được IPN về
   `localhost`. Để thử trọn luồng không cần VNPay: thư mục Postman "05 Thanh toán" giả lập IPN đã ký bằng khóa dev.
 
-## 9. Kiểm thử phía backend
+## 9. Phase 8 – Đánh giá sản phẩm
+
+Hình dạng dữ liệu: mục "Chi tiết API đánh giá" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md).
+
+| Màn hình gợi ý | API | Ghi chú |
+|---|---|---|
+| Trang chi tiết sản phẩm: dòng sao | `GET /san-pham/{slug}` có thêm `soDanhGia`, `diemTrungBinh` | `diemTrungBinh` làm tròn 1 chữ số, **không có** trong JSON khi chưa có đánh giá đã duyệt (hiện "Chưa có đánh giá") |
+| Trang chi tiết: danh sách đánh giá | `GET /san-pham/{slug}/danh-gia?trang=&kichThuoc=` | Chỉ đánh giá đã duyệt, mới nhất trước, mặc định 10/trang. Mỗi đánh giá: `hoTen`, `soSao`, `noiDung?`, `ngayTao` |
+| Tài khoản: "Đánh giá sản phẩm đã mua" | `GET /danh-gia/co-the-viet` | Các sản phẩm trong đơn **đã hoàn thành** chưa đánh giá: `maDonHang`, `sanPhamId`, `tenSanPham`, `hinhAnh?`, `sanPhamSlug` |
+| Form đánh giá | `POST /danh-gia` `{ maDonHang, sanPhamId, soSao, noiDung? }` | 201: đánh giá ở trạng thái `cho_duyet`, chưa hiện công khai cho tới khi quản trị duyệt (Phase 9) – nên báo "Cảm ơn, đánh giá đang chờ duyệt" |
+
+Lỗi: 404 "Không tìm thấy đơn hàng" / "Sản phẩm không có trong đơn hàng"; 409 "Chỉ đánh giá được đơn đã hoàn thành" /
+"Bạn đã đánh giá sản phẩm này trong đơn hàng này"; 400 `loi.soSao` "Số sao từ 1 đến 5", `loi.noiDung` (tối đa 2000 ký tự).
+`noiDung` là chữ thuần: hiển thị như văn bản (React tự thoát ký tự), không dùng `dangerouslySetInnerHTML`.
+
+Hiện chưa có đơn nào "hoàn thành" trong dữ liệu mẫu (chỉ quản trị chuyển được, Phase 9), nên `co-the-viet` đang trả rỗng.
+
+## 10. Kiểm thử phía backend
 
 Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
-để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request).
+để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request), "06 Đánh giá" (12 request).
 
-## 10. Liên hệ
+## 11. Liên hệ
 
 Backend trả sai hình dạng dữ liệu hoặc thiếu trường frontend cần: báo kèm request (URL, body) và response nhận được.
 Phần frontend do bạn quyết định. Backend không sửa gì trong `source/frontend`.
