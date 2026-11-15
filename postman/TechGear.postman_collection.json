@@ -2846,6 +2846,473 @@
           }
         }
       ]
+    },
+    {
+      "name": "05 Thanh toán",
+      "item": [
+        {
+          "name": "Đăng ký khách mới cho thanh toán (lưu tokenTT)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('emailTT', 'vnpay-' + Date.now() + '@vi-du.vn');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tokenTT', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/dang-ky",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"hoTen\": \"Khách VNPay\", \"email\": \"{{emailTT}}\", \"matKhau\": \"matkhau123\"}"
+            }
+          }
+        },
+        {
+          "name": "Lấy biến thể mẫu (kinh-cuong-luc-baseus-iphone-16)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('btTT', pm.response.json().bienThes[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/kinh-cuong-luc-baseus-iphone-16"
+          }
+        },
+        {
+          "name": "Đặt hàng chọn VNPay (lưu maDonTT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.test('Chưa thanh toán', () => pm.expect(pm.response.json().trangThaiThanhToan).to.eql('chua_thanh_toan'));",
+                  "pm.collectionVariables.set('maDonTT', pm.response.json().maDonHang);",
+                  "pm.collectionVariables.set('tongTienTT', pm.response.json().tongTien);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenTT}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dongs\": [{\"bienTheId\": {{btTT}}, \"soLuong\": 1}], \"tenNguoiNhan\": \"Khách Postman\", \"soDienThoai\": \"0912345678\", \"tinhThanh\": \"Thành phố Hồ Chí Minh\", \"phuongXa\": \"Phường Sài Gòn\", \"diaChiChiTiet\": \"1 Lê Lợi\", \"phuongThucThanhToan\": \"vnpay\"}"
+            }
+          }
+        },
+        {
+          "name": "Tạo URL thanh toán – tham số đúng, chữ ký kiểm được",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const enc = v => encodeURIComponent(v).replace(/[!'()~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase()).replace(/%20/g, '+');",
+                  "const ky = (ts, khoa) => {",
+                  "    const keys = Object.keys(ts).filter(k => k.startsWith('vnp_') && k !== 'vnp_SecureHash' && k !== 'vnp_SecureHashType' && ts[k] !== '').sort();",
+                  "    const hash = CryptoJS.HmacSHA512(keys.map(k => k + '=' + enc(ts[k])).join('&'), khoa).toString(CryptoJS.enc.Hex);",
+                  "    return { hash, query: keys.map(k => enc(k) + '=' + enc(ts[k])).join('&') + '&vnp_SecureHash=' + hash };",
+                  "};",
+                  "const url = pm.response.json().duongDan;",
+                  "const p = {};",
+                  "url.split('?')[1].split('&').forEach(kv => { const [k, v] = kv.split('='); p[decodeURIComponent(k)] = decodeURIComponent(v.replace(/\\+/g, ' ')); });",
+                  "pm.test('Cổng sandbox, phiên bản 2.1.0, số tiền × 100, mã tham chiếu = mã đơn + 01', () => {",
+                  "    pm.expect(url).to.match(/^https:\\/\\/sandbox\\.vnpayment\\.vn\\/paymentv2\\/vpcpay\\.html\\?/);",
+                  "    pm.expect(p.vnp_Version).to.eql('2.1.0'); pm.expect(p.vnp_Command).to.eql('pay'); pm.expect(p.vnp_CurrCode).to.eql('VND');",
+                  "    pm.expect(p.vnp_Amount).to.eql(String(pm.collectionVariables.get('tongTienTT') * 100));",
+                  "    pm.expect(p.vnp_TxnRef).to.eql(pm.collectionVariables.get('maDonTT') + '01');",
+                  "    pm.expect(p.vnp_CreateDate).to.match(/^\\d{14}$/); pm.expect(p.vnp_ExpireDate).to.match(/^\\d{14}$/);",
+                  "});",
+                  "pm.test('Chữ ký tự tính bằng khóa dev khớp vnp_SecureHash', () => pm.expect(ky(p, pm.collectionVariables.get('vnpayKhoaDev')).hash).to.eql(p.vnp_SecureHash));",
+                  "pm.collectionVariables.set('vnpUrl', JSON.stringify(p));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/{{maDonTT}}"
+          }
+        },
+        {
+          "name": "IPN – sai chữ ký → 97",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const enc = v => encodeURIComponent(v).replace(/[!'()~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase()).replace(/%20/g, '+');",
+                  "const ky = (ts, khoa) => {",
+                  "    const keys = Object.keys(ts).filter(k => k.startsWith('vnp_') && k !== 'vnp_SecureHash' && k !== 'vnp_SecureHashType' && ts[k] !== '').sort();",
+                  "    const hash = CryptoJS.HmacSHA512(keys.map(k => k + '=' + enc(ts[k])).join('&'), khoa).toString(CryptoJS.enc.Hex);",
+                  "    return { hash, query: keys.map(k => enc(k) + '=' + enc(ts[k])).join('&') + '&vnp_SecureHash=' + hash };",
+                  "};",
+                  "const p = JSON.parse(pm.collectionVariables.get('vnpUrl'));",
+                  "const ts = { vnp_TmnCode: p.vnp_TmnCode, vnp_Amount: p.vnp_Amount, vnp_BankCode: 'NCB', vnp_CardType: 'ATM',",
+                  "    vnp_OrderInfo: p.vnp_OrderInfo, vnp_PayDate: '20261115103000', vnp_ResponseCode: '00',",
+                  "    vnp_TransactionNo: String(Date.now() % 100000000), vnp_TransactionStatus: '00', vnp_TxnRef: p.vnp_TxnRef };",
+                  "",
+                  "pm.collectionVariables.set('ipnQuery', ky(ts, 'khoa-sai').query);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('RspCode 97', () => pm.expect(pm.response.json()).to.eql({ RspCode: '97', Message: 'Invalid signature' }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/ipn?{{ipnQuery}}"
+          }
+        },
+        {
+          "name": "IPN – sai số tiền → 04",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const enc = v => encodeURIComponent(v).replace(/[!'()~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase()).replace(/%20/g, '+');",
+                  "const ky = (ts, khoa) => {",
+                  "    const keys = Object.keys(ts).filter(k => k.startsWith('vnp_') && k !== 'vnp_SecureHash' && k !== 'vnp_SecureHashType' && ts[k] !== '').sort();",
+                  "    const hash = CryptoJS.HmacSHA512(keys.map(k => k + '=' + enc(ts[k])).join('&'), khoa).toString(CryptoJS.enc.Hex);",
+                  "    return { hash, query: keys.map(k => enc(k) + '=' + enc(ts[k])).join('&') + '&vnp_SecureHash=' + hash };",
+                  "};",
+                  "const p = JSON.parse(pm.collectionVariables.get('vnpUrl'));",
+                  "const ts = { vnp_TmnCode: p.vnp_TmnCode, vnp_Amount: p.vnp_Amount, vnp_BankCode: 'NCB', vnp_CardType: 'ATM',",
+                  "    vnp_OrderInfo: p.vnp_OrderInfo, vnp_PayDate: '20261115103000', vnp_ResponseCode: '00',",
+                  "    vnp_TransactionNo: String(Date.now() % 100000000), vnp_TransactionStatus: '00', vnp_TxnRef: p.vnp_TxnRef };",
+                  "ts.vnp_Amount = '100';",
+                  "pm.collectionVariables.set('ipnQuery', ky(ts, pm.collectionVariables.get('vnpayKhoaDev')).query);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('RspCode 04', () => pm.expect(pm.response.json()).to.eql({ RspCode: '04', Message: 'Invalid amount' }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/ipn?{{ipnQuery}}"
+          }
+        },
+        {
+          "name": "IPN – mã tham chiếu không có → 01",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const enc = v => encodeURIComponent(v).replace(/[!'()~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase()).replace(/%20/g, '+');",
+                  "const ky = (ts, khoa) => {",
+                  "    const keys = Object.keys(ts).filter(k => k.startsWith('vnp_') && k !== 'vnp_SecureHash' && k !== 'vnp_SecureHashType' && ts[k] !== '').sort();",
+                  "    const hash = CryptoJS.HmacSHA512(keys.map(k => k + '=' + enc(ts[k])).join('&'), khoa).toString(CryptoJS.enc.Hex);",
+                  "    return { hash, query: keys.map(k => enc(k) + '=' + enc(ts[k])).join('&') + '&vnp_SecureHash=' + hash };",
+                  "};",
+                  "const p = JSON.parse(pm.collectionVariables.get('vnpUrl'));",
+                  "const ts = { vnp_TmnCode: p.vnp_TmnCode, vnp_Amount: p.vnp_Amount, vnp_BankCode: 'NCB', vnp_CardType: 'ATM',",
+                  "    vnp_OrderInfo: p.vnp_OrderInfo, vnp_PayDate: '20261115103000', vnp_ResponseCode: '00',",
+                  "    vnp_TransactionNo: String(Date.now() % 100000000), vnp_TransactionStatus: '00', vnp_TxnRef: p.vnp_TxnRef };",
+                  "ts.vnp_TxnRef = 'DH000000XXXXXX01';",
+                  "pm.collectionVariables.set('ipnQuery', ky(ts, pm.collectionVariables.get('vnpayKhoaDev')).query);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('RspCode 01', () => pm.expect(pm.response.json()).to.eql({ RspCode: '01', Message: 'Order not found' }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/ipn?{{ipnQuery}}"
+          }
+        },
+        {
+          "name": "IPN – thanh toán thành công → 00",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const enc = v => encodeURIComponent(v).replace(/[!'()~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase()).replace(/%20/g, '+');",
+                  "const ky = (ts, khoa) => {",
+                  "    const keys = Object.keys(ts).filter(k => k.startsWith('vnp_') && k !== 'vnp_SecureHash' && k !== 'vnp_SecureHashType' && ts[k] !== '').sort();",
+                  "    const hash = CryptoJS.HmacSHA512(keys.map(k => k + '=' + enc(ts[k])).join('&'), khoa).toString(CryptoJS.enc.Hex);",
+                  "    return { hash, query: keys.map(k => enc(k) + '=' + enc(ts[k])).join('&') + '&vnp_SecureHash=' + hash };",
+                  "};",
+                  "const p = JSON.parse(pm.collectionVariables.get('vnpUrl'));",
+                  "const ts = { vnp_TmnCode: p.vnp_TmnCode, vnp_Amount: p.vnp_Amount, vnp_BankCode: 'NCB', vnp_CardType: 'ATM',",
+                  "    vnp_OrderInfo: p.vnp_OrderInfo, vnp_PayDate: '20261115103000', vnp_ResponseCode: '00',",
+                  "    vnp_TransactionNo: String(Date.now() % 100000000), vnp_TransactionStatus: '00', vnp_TxnRef: p.vnp_TxnRef };",
+                  "",
+                  "pm.collectionVariables.set('ipnQuery', ky(ts, pm.collectionVariables.get('vnpayKhoaDev')).query);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('RspCode 00', () => pm.expect(pm.response.json()).to.eql({ RspCode: '00', Message: 'Confirm Success' }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/ipn?{{ipnQuery}}"
+          }
+        },
+        {
+          "name": "IPN – VNPay gửi lại lần 2 → 02, không ghi thêm",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('RspCode 02', () => pm.expect(pm.response.json()).to.eql({ RspCode: '02', Message: 'Order already confirmed' }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/ipn?{{ipnQuery}}"
+          }
+        },
+        {
+          "name": "Trang kết quả – chỉ đọc, chữ ký đúng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Hợp lệ, thành công, CSDL đã thanh toán', () => {",
+                  "    const k = pm.response.json(); pm.expect(k.hopLe).to.be.true; pm.expect(k.thanhCong).to.be.true;",
+                  "    pm.expect(k.maDonHang).to.eql(pm.collectionVariables.get('maDonTT'));",
+                  "    pm.expect(k.trangThaiThanhToan).to.eql('da_thanh_toan');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/ket-qua?{{ipnQuery}}"
+          }
+        },
+        {
+          "name": "Trang kết quả – chữ ký sai",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const enc = v => encodeURIComponent(v).replace(/[!'()~]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase()).replace(/%20/g, '+');",
+                  "const ky = (ts, khoa) => {",
+                  "    const keys = Object.keys(ts).filter(k => k.startsWith('vnp_') && k !== 'vnp_SecureHash' && k !== 'vnp_SecureHashType' && ts[k] !== '').sort();",
+                  "    const hash = CryptoJS.HmacSHA512(keys.map(k => k + '=' + enc(ts[k])).join('&'), khoa).toString(CryptoJS.enc.Hex);",
+                  "    return { hash, query: keys.map(k => enc(k) + '=' + enc(ts[k])).join('&') + '&vnp_SecureHash=' + hash };",
+                  "};",
+                  "const p = JSON.parse(pm.collectionVariables.get('vnpUrl'));",
+                  "const ts = { vnp_TmnCode: p.vnp_TmnCode, vnp_Amount: p.vnp_Amount, vnp_BankCode: 'NCB', vnp_CardType: 'ATM',",
+                  "    vnp_OrderInfo: p.vnp_OrderInfo, vnp_PayDate: '20261115103000', vnp_ResponseCode: '00',",
+                  "    vnp_TransactionNo: String(Date.now() % 100000000), vnp_TransactionStatus: '00', vnp_TxnRef: p.vnp_TxnRef };",
+                  "",
+                  "pm.collectionVariables.set('ipnQuerySai', ky(ts, 'khoa-sai').query);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Không hợp lệ', () => { pm.expect(pm.response.json().hopLe).to.be.false; pm.expect(pm.response.json().thanhCong).to.be.false; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/ket-qua?{{ipnQuerySai}}"
+          }
+        },
+        {
+          "name": "Đơn đã thanh toán",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('da_thanh_toan', () => pm.expect(pm.response.json().trangThaiThanhToan).to.eql('da_thanh_toan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenTT}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/{{maDonTT}}"
+          }
+        },
+        {
+          "name": "Tạo URL cho đơn đã thanh toán → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql('Đơn hàng đã được thanh toán'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/{{maDonTT}}"
+          }
+        },
+        {
+          "name": "Tạo URL cho đơn không tồn tại → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/thanh-toan/vnpay/DH000000XXXXXX"
+          }
+        },
+        {
+          "name": "Hủy đơn để hoàn kho (dữ liệu mẫu không cạn khi chạy lặp)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenTT}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/don-hang/{{maDonTT}}/huy"
+          }
+        }
+      ]
     }
   ],
   "variable": [
@@ -2951,6 +3418,42 @@
     },
     {
       "key": "maDonVangLai",
+      "value": ""
+    },
+    {
+      "key": "vnpayKhoaDev",
+      "value": "techgear-dev-vnpay-khong-phai-khoa-that"
+    },
+    {
+      "key": "emailTT",
+      "value": ""
+    },
+    {
+      "key": "tokenTT",
+      "value": ""
+    },
+    {
+      "key": "btTT",
+      "value": ""
+    },
+    {
+      "key": "maDonTT",
+      "value": ""
+    },
+    {
+      "key": "tongTienTT",
+      "value": ""
+    },
+    {
+      "key": "vnpUrl",
+      "value": ""
+    },
+    {
+      "key": "ipnQuery",
+      "value": ""
+    },
+    {
+      "key": "ipnQuerySai",
       "value": ""
     }
   ]
