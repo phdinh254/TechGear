@@ -1129,6 +1129,372 @@
           }
         }
       ]
+    },
+    {
+      "name": "02 Sản phẩm",
+      "item": [
+        {
+          "name": "Danh mục – cây 2 cấp (lưu slug danh mục cha)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const ds = pm.response.json();",
+                  "pm.test('Mỗi danh mục có danhMucCons là mảng', () => {",
+                  "    pm.expect(ds).to.be.an('array').and.not.empty;",
+                  "    ds.forEach(d => { pm.expect(d).to.include.keys('id', 'ten', 'slug'); pm.expect(d.danhMucCons).to.be.an('array'); });",
+                  "});",
+                  "pm.collectionVariables.set('danhMucCha', ds.find(d => d.danhMucCons.length > 0).slug);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/danh-muc"
+          }
+        },
+        {
+          "name": "Thương hiệu – danh sách (lưu slug)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const ds = pm.response.json();",
+                  "pm.test('Có id, ten, slug', () => ds.forEach(t => pm.expect(t).to.include.keys('id', 'ten', 'slug')));",
+                  "pm.collectionVariables.set('thuongHieu', ds[0].slug);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/thuong-hieu"
+          }
+        },
+        {
+          "name": "Sản phẩm – trang đầu, kèm token cũ hỏng vẫn 200 (lưu slug)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng hợp đồng phân trang', () => pm.expect(pm.response.json()).to.have.all.keys('noiDung', 'trang', 'kichThuoc', 'tongSoPhanTu', 'tongSoTrang'));",
+                  "pm.test('Thẻ sản phẩm có id, ten, slug, giaBan, conHang', () => pm.response.json().noiDung.forEach(sp =>",
+                  "    pm.expect(sp).to.include.keys('id', 'ten', 'slug', 'giaBan', 'conHang')));",
+                  "pm.test('Mặc định trang 0, 12 mục', () => { pm.expect(pm.response.json().trang).to.eql(0); pm.expect(pm.response.json().kichThuoc).to.eql(12); });",
+                  "pm.collectionVariables.set('slugSanPham', pm.response.json().noiDung[0].slug);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer token.cu.da.het.han"
+              }
+            ],
+            "url": "{{baseUrl}}/api/san-pham?kichThuoc=12"
+          }
+        },
+        {
+          "name": "Sản phẩm – từ khóa không dấu 'sac' tìm ra 'Sạc'",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const boDau = s => s.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();",
+                  "const ds = pm.response.json().noiDung;",
+                  "pm.test('Có kết quả, tên chứa \"Sạc\"', () => {",
+                  "    pm.expect(ds).to.not.be.empty;",
+                  "    pm.expect(ds.some(sp => sp.ten.includes('Sạc') || sp.ten.includes('sạc'))).to.be.true;",
+                  "});",
+                  "pm.test('Mọi kết quả chứa \"sac\" khi bỏ dấu (tên hoặc thương hiệu)', () => ds.forEach(sp =>",
+                  "    pm.expect(boDau(sp.ten + ' ' + (sp.tenThuongHieu || ''))).to.include('sac')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham?tuKhoa=sac"
+          }
+        },
+        {
+          "name": "Sản phẩm – lọc danh mục cha gồm cả danh mục con",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng hợp đồng phân trang', () => pm.expect(pm.response.json()).to.have.all.keys('noiDung', 'trang', 'kichThuoc', 'tongSoPhanTu', 'tongSoTrang'));",
+                  "pm.test('Có sản phẩm', () => pm.expect(pm.response.json().tongSoPhanTu).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham?danhMuc={{danhMucCha}}"
+          }
+        },
+        {
+          "name": "Sản phẩm – lọc thương hiệu + khoảng giá, giá tăng dần",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const ds = pm.response.json().noiDung;",
+                  "pm.test('Giá tăng dần', () => ds.forEach((sp, i) => i && pm.expect(sp.giaBan).to.be.at.least(ds[i - 1].giaBan)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham?thuongHieu={{thuongHieu}},sony&giaTu=100000&giaDen=10000000&sapXep=gia_tang"
+          }
+        },
+        {
+          "name": "Sản phẩm – trang 0 cỡ 2 (lưu id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('idTrang0', JSON.stringify(pm.response.json().noiDung.map(sp => sp.id)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham?kichThuoc=2&trang=0&sapXep=gia_tang"
+          }
+        },
+        {
+          "name": "Sản phẩm – trang 1 cỡ 2 không trùng trang 0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const truoc = JSON.parse(pm.collectionVariables.get('idTrang0'));",
+                  "pm.test('Không trùng sản phẩm', () => pm.response.json().noiDung.forEach(sp => pm.expect(truoc).to.not.include(sp.id)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham?kichThuoc=2&trang=1&sapXep=gia_tang"
+          }
+        },
+        {
+          "name": "Sản phẩm – kichThuoc 49 → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Lỗi theo tham số', () => pm.expect(pm.response.json().loi.kichThuoc).to.eql('Kích thước trang từ 1 đến 48'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham?kichThuoc=49"
+          }
+        },
+        {
+          "name": "Sản phẩm – sapXep lạ → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Tham số 'sapXep' không hợp lệ\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham?sapXep=lung_tung"
+          }
+        },
+        {
+          "name": "Sản phẩm – giaTu > giaDen → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql('Giá từ phải nhỏ hơn hoặc bằng giá đến'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham?giaTu=500&giaDen=100"
+          }
+        },
+        {
+          "name": "Sản phẩm nổi bật – tối đa 8",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const ds = pm.response.json();",
+                  "pm.test('Mảng ≤ 8 thẻ', () => { pm.expect(ds).to.be.an('array'); pm.expect(ds.length).to.be.at.most(8); });",
+                  "pm.test('Thẻ đủ trường', () => ds.forEach(sp => pm.expect(sp).to.include.keys('id', 'ten', 'slug', 'giaBan', 'conHang')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/noi-bat"
+          }
+        },
+        {
+          "name": "Sản phẩm – chi tiết đúng hợp đồng frontend",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const sp = pm.response.json();",
+                  "pm.test('Đủ trường trang chi tiết', () => {",
+                  "    pm.expect(sp).to.include.keys('id', 'ten', 'slug', 'giaBan', 'baoHanhThang', 'danhMuc', 'hinhAnhs', 'thongSos', 'tuyChons', 'bienThes');",
+                  "    pm.expect(sp.danhMuc).to.include.keys('ten', 'slug');",
+                  "    ['hinhAnhs', 'thongSos', 'tuyChons', 'bienThes'].forEach(k => pm.expect(sp[k]).to.be.an('array'));",
+                  "});",
+                  "pm.test('Biến thể có sku, giaBan, soLuongTon, giaTriIds', () => {",
+                  "    pm.expect(sp.bienThes).to.not.be.empty;",
+                  "    sp.bienThes.forEach(b => { pm.expect(b).to.include.keys('id', 'sku', 'giaBan', 'soLuongTon'); pm.expect(b.giaTriIds).to.be.an('array'); });",
+                  "});",
+                  "pm.test('Mỗi giá trị trong giaTriIds thuộc một tùy chọn', () => {",
+                  "    const ids = sp.tuyChons.flatMap(tc => tc.giaTris.map(g => g.id));",
+                  "    sp.bienThes.forEach(b => b.giaTriIds.forEach(id => pm.expect(ids).to.include(id)));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/{{slugSanPham}}"
+          }
+        },
+        {
+          "name": "Sản phẩm – slug không tồn tại → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql('Không tìm thấy sản phẩm'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/khong-ton-tai-xyz"
+          }
+        },
+        {
+          "name": "Banner – đang hiển thị",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Là mảng', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/banner"
+          }
+        },
+        {
+          "name": "Cài đặt cửa hàng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đủ khóa công khai', () => pm.expect(pm.response.json()).to.include.keys('ten_cua_hang', 'hotline', 'email_lien_he', 'phi_van_chuyen', 'mien_phi_van_chuyen_tu'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cai-dat"
+          }
+        }
+      ]
     }
   ],
   "variable": [
@@ -1154,6 +1520,22 @@
     },
     {
       "key": "diaChi2",
+      "value": ""
+    },
+    {
+      "key": "danhMucCha",
+      "value": ""
+    },
+    {
+      "key": "thuongHieu",
+      "value": ""
+    },
+    {
+      "key": "slugSanPham",
+      "value": ""
+    },
+    {
+      "key": "idTrang0",
       "value": ""
     }
   ]
