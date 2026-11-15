@@ -58,7 +58,8 @@ public class BaoMatConfig {
     };
     /** POST không cần đăng nhập. */
     static final String[] CONG_KHAI_POST = {
-            "/api/auth/dang-ky", "/api/auth/dang-nhap", "/api/auth/quen-mat-khau", "/api/auth/dat-lai-mat-khau"
+            "/api/auth/dang-ky", "/api/auth/dang-nhap", "/api/auth/quen-mat-khau", "/api/auth/dat-lai-mat-khau",
+            "/api/don-hang/tinh-thu", "/api/don-hang/vang-lai", "/api/don-hang/tra-cuu"
     };
 
     private final SecretKey khoaJwt;

@@ -181,11 +181,58 @@ Dòng mới thêm đứng đầu. Mỗi giỏ tối đa 50 dòng; số lượng 
 | PT | Đường dẫn | Quyền | Mô tả |
 |---|---|---|---|
 | POST | `/don-hang/tinh-thu` | CK | Tạm tính, giảm giá, phí ship, tổng (không lưu) |
-| POST | `/don-hang` | CK/ĐN | Đặt hàng (vãng lai hoặc đã đăng nhập) |
+| POST | `/don-hang` | ĐN | Đặt hàng của khách hàng đã đăng nhập |
+| POST | `/don-hang/vang-lai` | CK | Đặt hàng của khách vãng lai |
 | GET | `/don-hang` | ĐN | Đơn của tôi (lọc `trangThai`, phân trang) |
 | GET | `/don-hang/{maDonHang}` | ĐN | Chi tiết + lịch sử trạng thái |
 | POST | `/don-hang/{maDonHang}/huy` | ĐN | Hủy khi còn `cho_xac_nhan` |
 | POST | `/don-hang/tra-cuu` | CK | Tra cứu bằng `{ maDonHang, email }` (429 khi quá số lần) |
+
+Đặt hàng tách hai API vì đường dẫn công khai bỏ qua token (frontend luôn gắn token cũ): một API "công khai nhưng có token thì
+nhận" sẽ làm khách vãng lai còn token hết hạn bị 401.
+
+#### Chi tiết API đặt hàng, đơn hàng
+
+```text
+DongDat        { bienTheId, soLuong }                                    (1–50 dòng, số lượng 1–999, trùng biến thể thì cộng)
+NguoiNhan      { tenNguoiNhan, soDienThoai, tinhThanh, phuongXa, diaChiChiTiet }
+TinhThu        { dongs: DongTinh[], maGiamGia?, tamTinh, tienGiamGia, phiVanChuyen, tongTien }
+DongTinh       { bienTheId, sanPhamId, sanPhamSlug, tenSanPham, sku, phanLoai?, hinhAnh?, donGia, soLuong, thanhTien }
+DonHangTomTat  { maDonHang, trangThai, trangThaiThanhToan, phuongThucThanhToan, tongTien, soLuongSanPham,
+                 tenSanPhamDau, hinhAnhDau?, ngayDat }
+DonHang        { maDonHang, trangThai, trangThaiThanhToan, phuongThucThanhToan, tenNguoiNhan, email, soDienThoai,
+                 diaChiGiaoHang, ghiChu?, maGiamGia?, tamTinh, tienGiamGia, phiVanChuyen, tongTien, ngayDat, coTheHuy,
+                 dongs: DongTinh[] (sanPhamId/bienTheId/sanPhamSlug có thể thiếu nếu sản phẩm đã bị xóa hẳn),
+                 lichSu: [{ trangThai, ghiChu?, thoiGian }] }
+```
+Giá trị liệt kê: `trangThai` `cho_xac_nhan` | `da_xac_nhan` | `dang_giao` | `hoan_thanh` | `da_huy`;
+`trangThaiThanhToan` `chua_thanh_toan` | `da_thanh_toan` | `da_hoan_tien`; `phuongThucThanhToan` `cod` | `vnpay`.
+
+Cách tính (mọi số tiền tính ở server từ giá hiện tại, không nhận giá từ frontend):
+- `tamTinh` = Σ đơn giá biến thể × số lượng. `tienGiamGia`: mã phần trăm = làm tròn xuống (`tamTinh` × % / 100), không vượt
+  `giamToiDa` nếu có; mã số tiền = giá trị mã; cả hai không vượt `tamTinh`.
+- `phiVanChuyen` = cài đặt `phi_van_chuyen`, bằng 0 khi `tamTinh − tienGiamGia` ≥ `mien_phi_van_chuyen_tu`.
+- `tongTien` = `tamTinh − tienGiamGia + phiVanChuyen` (CSDL cũng kiểm công thức này).
+
+Mã giảm giá (không phân biệt hoa thường) hợp lệ khi: tồn tại, đang bật, trong khung giờ, `tamTinh` ≥ đơn tối thiểu, chưa hết
+tổng lượt, khách chưa hết lượt của mình (đếm đơn chưa hủy theo tài khoản **hoặc** email). Sai thì 400 với một trong các thông báo:
+"Mã giảm giá không tồn tại", "Mã giảm giá đã ngừng áp dụng", "Mã giảm giá chưa đến thời gian sử dụng", "Mã giảm giá đã hết hạn",
+"Đơn hàng tối thiểu 500.000đ để dùng mã này", "Mã giảm giá đã hết lượt sử dụng", "Bạn đã dùng hết lượt của mã giảm giá này".
+
+| API | Gửi lên | Trả về | Lỗi riêng |
+|---|---|---|---|
+| `POST /don-hang/tinh-thu` | `{ dongs, maGiamGia?, email? }` (`email` để kiểm lượt mỗi người) | 200 `TinhThu` (không lưu, không giữ hàng) | Như đặt hàng |
+| `POST /don-hang` | `{ dongs, ...NguoiNhan, maGiamGia?, phuongThucThanhToan, ghiChu? }`; email lấy từ tài khoản | 201 `DonHang`; các biến thể vừa đặt bị xóa khỏi giỏ server | 404 "Phiên bản sản phẩm không còn bán"; 409 "Sản phẩm X (phân loại) chỉ còn N trong kho" / "... đã hết hàng"; 400 mã giảm giá |
+| `POST /don-hang/vang-lai` | như trên + `email` (bắt buộc) | 201 `DonHang` | như trên; 429 khi một IP đặt quá 10 đơn / 15 phút |
+| `GET /don-hang` | `trangThai?`, `trang`, `kichThuoc` (1–50, mặc định 10) | 200 trang `DonHangTomTat`, mới nhất trước | |
+| `GET /don-hang/{maDonHang}` | – | 200 `DonHang` | 404 "Không tìm thấy đơn hàng" (kể cả đơn người khác) |
+| `POST /don-hang/{maDonHang}/huy` | `{ lyDo? }` | 200 `DonHang`: hoàn tồn kho, trả lượt mã giảm giá | 404; 409 "Chỉ hủy được đơn đang chờ xác nhận" |
+| `POST /don-hang/tra-cuu` | `{ maDonHang, email }` | 200 `DonHang` (`coTheHuy` = false) | 404 "Không tìm thấy đơn hàng"; 429 sau 10 lần sai / 15 phút mỗi IP |
+
+Mã đơn: `DH` + `yyMMdd` (giờ Việt Nam) + 6 ký tự ngẫu nhiên trong `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`. Đặt hàng khóa dòng các
+biến thể theo thứ tự id (tránh khóa chéo) và dòng mã giảm giá, trừ kho trong cùng giao dịch, ghi `lich_su_ton_kho` và
+`lich_su_don_hang`. Hai người đặt cùng lúc món chỉ còn 1 thì đúng một người thành công. Đơn VNPay: tạo URL thanh toán và tự hủy
+sau 30 phút làm ở Phase 7.
 
 ### 3.5 Thanh toán (`thanhtoan`) – Phase 7
 | PT | Đường dẫn | Quyền | Mô tả |

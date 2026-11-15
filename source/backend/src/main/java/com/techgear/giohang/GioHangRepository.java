@@ -49,23 +49,11 @@ class GioHangRepository {
 
     /** Các dòng giỏ kèm giá, tồn kho hiện tại; ảnh ưu tiên ảnh gắn với giá trị tùy chọn (màu) của biến thể. */
     List<DongGioHang> dongs(Long nguoiDungId) {
-        return jdbc.sql("""
-                        SELECT g.bien_the_id, sp.id AS san_pham_id, sp.slug AS san_pham_slug, sp.ten,
-                               (SELECT string_agg(gt.gia_tri, ' / ' ORDER BY tc.thu_tu, tc.id)
-                                FROM bien_the_gia_tri btg
-                                JOIN gia_tri_tuy_chon gt ON gt.id = btg.gia_tri_tuy_chon_id
-                                JOIN tuy_chon tc ON tc.id = gt.tuy_chon_id
-                                WHERE btg.bien_the_id = bt.id) AS phan_loai,
-                               (SELECT ha.duong_dan FROM hinh_anh_san_pham ha
-                                WHERE ha.san_pham_id = sp.id
-                                ORDER BY (ha.gia_tri_tuy_chon_id IS NOT NULL AND ha.gia_tri_tuy_chon_id IN
-                                          (SELECT btg.gia_tri_tuy_chon_id FROM bien_the_gia_tri btg
-                                           WHERE btg.bien_the_id = bt.id)) DESC,
-                                         ha.la_anh_chinh DESC, ha.thu_tu, ha.id
-                                LIMIT 1) AS anh,
-                               bt.sku, bt.gia_ban, bt.gia_goc, g.so_luong, bt.so_luong_ton AS ton_kho,
-                               (""" + HienThi.BIEN_THE_DANG_BAN + """
-                               ) AS con_ban
+        return jdbc.sql("SELECT g.bien_the_id, sp.id AS san_pham_id, sp.slug AS san_pham_slug, sp.ten, "
+                        + HienThi.PHAN_LOAI + " AS phan_loai, " + HienThi.ANH_BIEN_THE + " AS anh, "
+                        + "bt.sku, bt.gia_ban, bt.gia_goc, g.so_luong, bt.so_luong_ton AS ton_kho, ("
+                        + HienThi.BIEN_THE_DANG_BAN + """
+                        ) AS con_ban
                         FROM gio_hang g
                         JOIN bien_the bt ON bt.id = g.bien_the_id
                         JOIN san_pham sp ON sp.id = bt.san_pham_id

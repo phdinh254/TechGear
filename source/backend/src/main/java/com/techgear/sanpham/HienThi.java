@@ -24,6 +24,25 @@ public final class HienThi {
     /** Biến thể bí danh {@code bt} đang bán: bản thân đang bật và sản phẩm của nó đang hiển thị. */
     public static final String BIEN_THE_DANG_BAN = "bt.hien_thi AND bt.deleted_at IS NULL AND " + SAN_PHAM_DANG_HIEN_THI;
 
+    /** Các giá trị tùy chọn của biến thể {@code bt} nối bằng " / " (VD "Đen / 2m"); NULL nếu không có tùy chọn. */
+    public static final String PHAN_LOAI = """
+            (SELECT string_agg(gt.gia_tri, ' / ' ORDER BY tc.thu_tu, tc.id)
+             FROM bien_the_gia_tri btg
+             JOIN gia_tri_tuy_chon gt ON gt.id = btg.gia_tri_tuy_chon_id
+             JOIN tuy_chon tc ON tc.id = gt.tuy_chon_id
+             WHERE btg.bien_the_id = bt.id)
+            """;
+
+    /** Ảnh của biến thể {@code bt}: ảnh gắn với giá trị tùy chọn (màu) của nó, không có thì ảnh chính. */
+    public static final String ANH_BIEN_THE = """
+            (SELECT ha.duong_dan FROM hinh_anh_san_pham ha
+             WHERE ha.san_pham_id = bt.san_pham_id
+             ORDER BY (ha.gia_tri_tuy_chon_id IS NOT NULL AND ha.gia_tri_tuy_chon_id IN
+                       (SELECT btg.gia_tri_tuy_chon_id FROM bien_the_gia_tri btg WHERE btg.bien_the_id = bt.id)) DESC,
+                      ha.la_anh_chinh DESC, ha.thu_tu, ha.id
+             LIMIT 1)
+            """;
+
     private HienThi() {
     }
 }

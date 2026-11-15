@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +18,7 @@ class CuaHangController {
 
     private final JdbcClient jdbc;
     private final Clock clock;
+    private final CaiDatService caiDatService;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     record BannerResponse(Long id, String tieuDe, String hinhAnh, String lienKet) {
@@ -40,11 +40,6 @@ class CuaHangController {
 
     @GetMapping("/api/cai-dat")
     Map<String, String> caiDat() {
-        Map<String, String> ketQua = new LinkedHashMap<>();
-        jdbc.sql("SELECT khoa, gia_tri FROM cai_dat ORDER BY khoa")
-                .query(rs -> {
-                    ketQua.put(rs.getString("khoa"), rs.getString("gia_tri"));
-                });
-        return ketQua;
+        return caiDatService.tatCa();
     }
 }
