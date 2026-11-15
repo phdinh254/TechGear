@@ -149,7 +149,7 @@ Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env`
 Đặc tả đầy đủ (dữ liệu gửi lên, trả về, mã lỗi): `docs/thiet-ke/dac-ta-api.md`. Backend mới giữ nguyên các API mà
 frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/auth/toi`, `/api/danh-muc`, `/api/thuong-hieu`,
 `/api/san-pham`, `/api/san-pham/noi-bat`, `/api/san-pham/{slug}`). Đã có: tài khoản (`/api/auth/**`, `/api/tai-khoan/**`), sản phẩm và cửa hàng (`/api/danh-muc`, `/api/thuong-hieu`,
-`/api/san-pham/**`, `/api/banner`, `/api/cai-dat`).
+`/api/san-pham/**`, `/api/banner`, `/api/cai-dat`), giỏ hàng và yêu thích (`/api/gio-hang/**`, `/api/yeu-thich/**`).
 
 ## Tiến độ viết lại backend
 
@@ -160,7 +160,7 @@ frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/a
 | 2. Nền tảng | Spring Boot 4, Docker Compose, Flyway, bảo mật JWT, xử lý lỗi, Swagger, upload | Xong |
 | 3. Tài khoản | Đăng ký, đăng nhập, hồ sơ, mật khẩu, sổ địa chỉ | Xong |
 | 4. Sản phẩm | Danh mục, thương hiệu, tìm kiếm/lọc, chi tiết, banner, cài đặt | Xong |
-| 5. Giỏ hàng | Giỏ hàng trên server, gộp giỏ, yêu thích | Chưa |
+| 5. Giỏ hàng | Giỏ hàng trên server, gộp giỏ, yêu thích | Xong |
 | 6. Đặt hàng | Mã giảm giá, phí vận chuyển, tồn kho, đơn hàng, hủy, tra cứu | Chưa |
 | 7. Thanh toán | VNPay (sandbox) | Chưa |
 | 8. Đánh giá | Đánh giá sản phẩm đã mua, chờ duyệt | Chưa |

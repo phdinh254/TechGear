@@ -1,6 +1,6 @@
 # Báo cáo backend cho người làm frontend
 
-Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 4) · Nhánh: `hoanglong`
+Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 5) · Nhánh: `hoanglong`
 
 Tài liệu này tóm tắt những gì backend mới đã có, chỗ nào khác backend cũ, và việc frontend cần làm. Mỗi phase backend
 xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên, trả về, mã lỗi) nằm ở
@@ -27,7 +27,8 @@ cd source/backend && mvn spring-boot:run
 | Hồ sơ, đổi mật khẩu, ảnh đại diện, quên/đặt lại mật khẩu, sổ địa chỉ | Xong (Phase 3) | API mới, frontend chưa có giao diện |
 | Danh mục, thương hiệu, tìm kiếm, nổi bật, chi tiết sản phẩm | Xong (Phase 4) | Được, giữ nguyên hợp đồng cũ: trang chủ, danh sách, chi tiết chạy lại |
 | Banner, cấu hình cửa hàng | Xong (Phase 4) | API mới, frontend chưa có giao diện |
-| Giỏ hàng server, đặt hàng, VNPay, đánh giá, quản trị | Phase 5–9 | Chưa |
+| Giỏ hàng trên server, gộp giỏ khi đăng nhập, yêu thích | Xong (Phase 5) | API mới, frontend chưa dùng (giỏ hiện lưu `localStorage`, vẫn chạy bình thường) |
+| Đặt hàng, VNPay, đánh giá, quản trị | Phase 6–9 | Chưa |
 
 ## 3. Quy ước chung (áp dụng mọi API)
 
@@ -124,13 +125,55 @@ trên trình duyệt (trình duyệt tự động chưa kết nối), nhờ bạ
 - Giỏ hàng `localStorage` lưu sẵn `giaBan`, `tonKho` lúc bấm thêm, nên có thể cũ khi giá/tồn kho đổi. Phase 5 có giỏ hàng
   trên server trả giá và tồn kho hiện tại.
 
-## 6. Kiểm thử phía backend
+## 6. Phase 5 – Giỏ hàng và yêu thích
+
+Hình dạng dữ liệu, mã lỗi: mục "Chi tiết API giỏ hàng, yêu thích" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md).
+Tất cả cần đăng nhập. Giỏ hiện tại trong `localStorage` vẫn chạy như cũ; dùng giỏ server hay không là do bạn quyết định.
+
+### 6.1 Gợi ý cách nối vào `CartContext`
+
+| Lúc | Gọi | Ghi chú |
+|---|---|---|
+| Chưa đăng nhập | Không gọi | Giữ giỏ `localStorage` như hiện tại |
+| Vừa đăng nhập / đăng ký | `POST /gio-hang/gop` với `[{ bienTheId, soLuong }]` lấy từ giỏ `localStorage` | Trả về cả giỏ đã gộp: đặt thẳng vào state rồi xóa `techgear_cart`. Không báo lỗi từng dòng: dòng ngừng bán hoặc hết hàng bị bỏ, số lượng bị cắt theo tồn kho |
+| Tải lại trang khi đã đăng nhập | `GET /gio-hang` | |
+| Thêm / sửa / xóa khi đã đăng nhập | `POST /gio-hang`, `PUT /gio-hang/{bienTheId}`, `DELETE /gio-hang/{bienTheId}` | Mỗi API trả về **cả giỏ**, không phải gọi lại `GET` |
+| Đăng xuất | Không gọi | Giỏ vẫn nằm trên server, đăng nhập lại là thấy |
+
+Dòng giỏ server dùng **cùng tên trường** với dòng giỏ `localStorage`: `bienTheId, sanPhamSlug, ten, phanLoai, giaBan, anh,
+soLuong, tonKho`. Có thêm `sanPhamId, sku, giaGoc, conBan`. Giỏ có sẵn `tongSoLuong` và `tamTinh`, không phải tự cộng.
+Khác giỏ `localStorage`: `giaBan`, `tonKho` luôn là giá trị hiện tại, nên giá trong giỏ không bị cũ.
+
+### 6.2 Hành vi cần biết
+
+| Tình huống | Backend trả |
+|---|---|
+| Thêm vượt tồn kho (tính cả số đã có trong giỏ) | 409 "Chỉ còn N sản phẩm trong kho"; tồn kho 0 thì 409 "Sản phẩm đã hết hàng" |
+| Phiên bản đã ngừng bán | Thêm/sửa: 404 "Phiên bản sản phẩm không còn bán". Dòng đã có trong giỏ vẫn hiện với `conBan: false` (nên làm mờ, kèm nút xóa) và không tính vào `tamTinh` |
+| Giỏ đủ 50 dòng, thêm phiên bản mới | 400 "Giỏ hàng tối đa 50 sản phẩm" |
+| Số lượng ngoài 1–999 | 400, `loi.soLuong` = "Số lượng từ 1 đến 999" |
+| Thứ tự dòng | Dòng thêm sau đứng trước; sửa số lượng không đổi thứ tự |
+
+Tồn kho trong giỏ chỉ để báo sớm. Đặt hàng (Phase 6) mới là chỗ kiểm tra và trừ kho thật.
+
+### 6.3 Yêu thích
+
+- `PUT /yeu-thich/{sanPhamId}` thêm, `DELETE /yeu-thich/{sanPhamId}` bỏ; cả hai trả 204, gọi lặp lại không lỗi
+  (nút trái tim bấm nhanh hai lần không sao). `sanPhamId` là `id` trong chi tiết sản phẩm hoặc thẻ sản phẩm.
+- `GET /yeu-thich` trả mảng thẻ sản phẩm giống `GET /san-pham/noi-bat`, dùng lại được `ProductCard`. Sản phẩm đã bị ẩn tự
+  biến mất khỏi danh sách.
+- Tối đa 100 sản phẩm (400). Sản phẩm không tồn tại hoặc đang ẩn: 404 "Không tìm thấy sản phẩm".
+- Chưa có API "sản phẩm này đã được yêu thích chưa". Muốn tô màu trái tim ở trang chi tiết thì lấy `GET /yeu-thich` một lần
+  rồi so `id`. Cần API riêng thì báo mình.
+
+
+## 7. Kiểm thử phía backend
 
 Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
-để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request).
+để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request).
 
-## 7. Liên hệ
+## 8. Liên hệ
 
 Backend trả sai hình dạng dữ liệu hoặc thiếu trường frontend cần: báo kèm request (URL, body) và response nhận được.
 Phần frontend do bạn quyết định. Backend không sửa gì trong `source/frontend`.
