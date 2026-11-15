@@ -1495,6 +1495,613 @@
           }
         }
       ]
+    },
+    {
+      "name": "03 Giỏ hàng",
+      "item": [
+        {
+          "name": "Đăng ký khách mới cho giỏ hàng (lưu tokenGio)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('emailGio', 'gio-' + Date.now() + '@vi-du.vn');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tokenGio', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/dang-ky",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"hoTen\": \"Khách giỏ hàng\", \"email\": \"{{emailGio}}\", \"matKhau\": \"matkhau123\"}"
+            }
+          }
+        },
+        {
+          "name": "Lấy biến thể mẫu (loa-jbl-flip-6)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const sp = pm.response.json();",
+                  "const ds = [...sp.bienThes].sort((a, b) => b.soLuongTon - a.soLuongTon);",
+                  "pm.test('Có ít nhất 2 biến thể, biến thể nhiều hàng nhất còn ≥ 3', () => {",
+                  "    pm.expect(ds.length).to.be.at.least(2);",
+                  "    pm.expect(ds[0].soLuongTon).to.be.at.least(3);",
+                  "});",
+                  "pm.collectionVariables.set('sanPhamId', sp.id);",
+                  "pm.collectionVariables.set('bt1', ds[0].id);",
+                  "pm.collectionVariables.set('ton1', ds[0].soLuongTon);",
+                  "pm.collectionVariables.set('bt2', ds[1].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/san-pham/loa-jbl-flip-6"
+          }
+        },
+        {
+          "name": "Giỏ hàng – mới đăng ký thì trống",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng hình dạng giỏ', () => {",
+                  "    const g = pm.response.json();",
+                  "    pm.expect(g).to.have.all.keys('dongs', 'tongSoLuong', 'tamTinh');",
+                  "    g.dongs.forEach(d => pm.expect(d).to.include.keys('bienTheId', 'sanPhamId', 'sanPhamSlug', 'ten', 'sku', 'giaBan', 'soLuong', 'tonKho', 'conBan'));",
+                  "    const tinh = g.dongs.filter(d => d.conBan).reduce((t, d) => t + d.giaBan * d.soLuong, 0);",
+                  "    pm.expect(g.tamTinh).to.eql(tinh);",
+                  "});",
+                  "pm.test('Trống', () => { pm.expect(pm.response.json().dongs).to.be.empty; pm.expect(pm.response.json().tamTinh).to.eql(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang"
+          }
+        },
+        {
+          "name": "Giỏ hàng – thêm 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng hình dạng giỏ', () => {",
+                  "    const g = pm.response.json();",
+                  "    pm.expect(g).to.have.all.keys('dongs', 'tongSoLuong', 'tamTinh');",
+                  "    g.dongs.forEach(d => pm.expect(d).to.include.keys('bienTheId', 'sanPhamId', 'sanPhamSlug', 'ten', 'sku', 'giaBan', 'soLuong', 'tonKho', 'conBan'));",
+                  "    const tinh = g.dongs.filter(d => d.conBan).reduce((t, d) => t + d.giaBan * d.soLuong, 0);",
+                  "    pm.expect(g.tamTinh).to.eql(tinh);",
+                  "});",
+                  "pm.test('Có 1 dòng số lượng 1, còn bán', () => {",
+                  "    const d = pm.response.json().dongs.find(d => d.bienTheId == pm.collectionVariables.get('bt1'));",
+                  "    pm.expect(d.soLuong).to.eql(1); pm.expect(d.conBan).to.be.true;",
+                  "    pm.expect(d.phanLoai).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bienTheId\": {{bt1}}, \"soLuong\": 1}"
+            }
+          }
+        },
+        {
+          "name": "Giỏ hàng – thêm lần nữa thì cộng dồn",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng hình dạng giỏ', () => {",
+                  "    const g = pm.response.json();",
+                  "    pm.expect(g).to.have.all.keys('dongs', 'tongSoLuong', 'tamTinh');",
+                  "    g.dongs.forEach(d => pm.expect(d).to.include.keys('bienTheId', 'sanPhamId', 'sanPhamSlug', 'ten', 'sku', 'giaBan', 'soLuong', 'tonKho', 'conBan'));",
+                  "    const tinh = g.dongs.filter(d => d.conBan).reduce((t, d) => t + d.giaBan * d.soLuong, 0);",
+                  "    pm.expect(g.tamTinh).to.eql(tinh);",
+                  "});",
+                  "pm.test('Số lượng 2', () => pm.expect(pm.response.json().dongs.find(d => d.bienTheId == pm.collectionVariables.get('bt1')).soLuong).to.eql(2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bienTheId\": {{bt1}}, \"soLuong\": 1}"
+            }
+          }
+        },
+        {
+          "name": "Giỏ hàng – vượt tồn kho (tính cả số đã có) → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));",
+                  "pm.test('Thông báo tồn kho', () => pm.expect(pm.response.json().thongBao).to.eql('Chỉ còn ' + pm.collectionVariables.get('ton1') + ' sản phẩm trong kho'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bienTheId\": {{bt1}}, \"soLuong\": {{ton1}}}"
+            }
+          }
+        },
+        {
+          "name": "Giỏ hàng – sửa dòng chưa có → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql('Sản phẩm không có trong giỏ hàng'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang/{{bt2}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"soLuong\": 1}"
+            }
+          }
+        },
+        {
+          "name": "Giỏ hàng – gộp giỏ tạm: cắt theo tồn kho, bỏ biến thể không tồn tại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng hình dạng giỏ', () => {",
+                  "    const g = pm.response.json();",
+                  "    pm.expect(g).to.have.all.keys('dongs', 'tongSoLuong', 'tamTinh');",
+                  "    g.dongs.forEach(d => pm.expect(d).to.include.keys('bienTheId', 'sanPhamId', 'sanPhamSlug', 'ten', 'sku', 'giaBan', 'soLuong', 'tonKho', 'conBan'));",
+                  "    const tinh = g.dongs.filter(d => d.conBan).reduce((t, d) => t + d.giaBan * d.soLuong, 0);",
+                  "    pm.expect(g.tamTinh).to.eql(tinh);",
+                  "});",
+                  "pm.test('bt1 = tồn kho, bt2 = 1, chỉ 2 dòng', () => {",
+                  "    pm.expect(pm.response.json().dongs).to.have.length(2);",
+                  "    pm.expect(pm.response.json().dongs.find(d => d.bienTheId == pm.collectionVariables.get('bt1')).soLuong).to.eql(Number(pm.collectionVariables.get('ton1')));",
+                  "    pm.expect(pm.response.json().dongs.find(d => d.bienTheId == pm.collectionVariables.get('bt2')).soLuong).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang/gop",
+            "body": {
+              "mode": "raw",
+              "raw": "[{\"bienTheId\": {{bt1}}, \"soLuong\": 999}, {\"bienTheId\": {{bt2}}, \"soLuong\": 1}, {\"bienTheId\": 999999999, \"soLuong\": 1}]"
+            }
+          }
+        },
+        {
+          "name": "Giỏ hàng – sửa số lượng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng hình dạng giỏ', () => {",
+                  "    const g = pm.response.json();",
+                  "    pm.expect(g).to.have.all.keys('dongs', 'tongSoLuong', 'tamTinh');",
+                  "    g.dongs.forEach(d => pm.expect(d).to.include.keys('bienTheId', 'sanPhamId', 'sanPhamSlug', 'ten', 'sku', 'giaBan', 'soLuong', 'tonKho', 'conBan'));",
+                  "    const tinh = g.dongs.filter(d => d.conBan).reduce((t, d) => t + d.giaBan * d.soLuong, 0);",
+                  "    pm.expect(g.tamTinh).to.eql(tinh);",
+                  "});",
+                  "pm.test('Tổng số lượng 2', () => pm.expect(pm.response.json().tongSoLuong).to.eql(2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang/{{bt1}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"soLuong\": 1}"
+            }
+          }
+        },
+        {
+          "name": "Giỏ hàng – xóa dòng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đúng hình dạng giỏ', () => {",
+                  "    const g = pm.response.json();",
+                  "    pm.expect(g).to.have.all.keys('dongs', 'tongSoLuong', 'tamTinh');",
+                  "    g.dongs.forEach(d => pm.expect(d).to.include.keys('bienTheId', 'sanPhamId', 'sanPhamSlug', 'ten', 'sku', 'giaBan', 'soLuong', 'tonKho', 'conBan'));",
+                  "    const tinh = g.dongs.filter(d => d.conBan).reduce((t, d) => t + d.giaBan * d.soLuong, 0);",
+                  "    pm.expect(g.tamTinh).to.eql(tinh);",
+                  "});",
+                  "pm.test('Còn 1 dòng', () => pm.expect(pm.response.json().dongs).to.have.length(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang/{{bt2}}"
+          }
+        },
+        {
+          "name": "Giỏ hàng – số lượng 0 → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Lỗi theo trường', () => pm.expect(pm.response.json().loi.soLuong).to.eql('Số lượng từ 1 đến 999'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bienTheId\": {{bt1}}, \"soLuong\": 0}"
+            }
+          }
+        },
+        {
+          "name": "Giỏ hàng – biến thể không tồn tại → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql('Phiên bản sản phẩm không còn bán'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"bienTheId\": 999999999, \"soLuong\": 1}"
+            }
+          }
+        },
+        {
+          "name": "Giỏ hàng – chưa đăng nhập → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/gio-hang"
+          }
+        },
+        {
+          "name": "Yêu thích – thêm",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/yeu-thich/{{sanPhamId}}"
+          }
+        },
+        {
+          "name": "Yêu thích – thêm lại vẫn 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/yeu-thich/{{sanPhamId}}"
+          }
+        },
+        {
+          "name": "Yêu thích – danh sách có sản phẩm vừa thêm",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Có sản phẩm, đủ trường thẻ', () => {",
+                  "    const ds = pm.response.json();",
+                  "    pm.expect(ds).to.have.length(1);",
+                  "    pm.expect(ds[0].id).to.eql(Number(pm.collectionVariables.get('sanPhamId')));",
+                  "    pm.expect(ds[0]).to.include.keys('ten', 'slug', 'giaBan', 'conHang');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/yeu-thich"
+          }
+        },
+        {
+          "name": "Yêu thích – bỏ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/yeu-thich/{{sanPhamId}}"
+          }
+        },
+        {
+          "name": "Yêu thích – danh sách trống",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Trống', () => pm.expect(pm.response.json()).to.be.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/yeu-thich"
+          }
+        },
+        {
+          "name": "Yêu thích – sản phẩm không tồn tại → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql('Không tìm thấy sản phẩm'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/yeu-thich/999999999"
+          }
+        }
+      ]
     }
   ],
   "variable": [
@@ -1536,6 +2143,30 @@
     },
     {
       "key": "idTrang0",
+      "value": ""
+    },
+    {
+      "key": "emailGio",
+      "value": ""
+    },
+    {
+      "key": "tokenGio",
+      "value": ""
+    },
+    {
+      "key": "sanPhamId",
+      "value": ""
+    },
+    {
+      "key": "bt1",
+      "value": ""
+    },
+    {
+      "key": "ton1",
+      "value": ""
+    },
+    {
+      "key": "bt2",
       "value": ""
     }
   ]
