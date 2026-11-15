@@ -266,7 +266,25 @@ Theo tài liệu VNPay chính thức, phiên bản 2.1.0: <https://sandbox.vnpay
 | PT | Đường dẫn | Quyền | Mô tả |
 |---|---|---|---|
 | GET | `/danh-gia/co-the-viet` | ĐN | Các (đơn, sản phẩm) đã hoàn thành chưa đánh giá |
-| POST | `/danh-gia` | ĐN | Viết đánh giá `{ donHangId, sanPhamId, soSao, noiDung }` |
+| POST | `/danh-gia` | ĐN | Viết đánh giá `{ maDonHang, sanPhamId, soSao, noiDung? }` |
+| GET | `/san-pham/{slug}/danh-gia` | CK | Đánh giá đã duyệt của sản phẩm, phân trang (dời từ Phase 4) |
+
+Chi tiết sản phẩm (`GET /san-pham/{slug}`) có thêm `soDanhGia` và `diemTrungBinh` (làm tròn 1 chữ số; không có khi chưa có
+đánh giá đã duyệt). Duyệt / ẩn / xóa đánh giá ở Phase 9.
+
+#### Chi tiết API đánh giá
+
+```text
+CoTheViet  { maDonHang, sanPhamId, sanPhamSlug?, tenSanPham, hinhAnh?, ngayDat }
+DanhGia    { id, sanPhamId, soSao, noiDung?, trangThai: "cho_duyet"|"da_duyet"|"da_an", ngayTao }
+DanhGiaCK  { id, hoTen, soSao, noiDung?, ngayTao }                        (công khai, chỉ đã duyệt)
+```
+
+| API | Gửi lên | Trả về | Lỗi riêng |
+|---|---|---|---|
+| `GET /danh-gia/co-the-viet` | – | 200 `CoTheViet[]`: dòng của đơn đã hoàn thành, sản phẩm còn tồn tại, chưa đánh giá; đơn mới trước | |
+| `POST /danh-gia` | `{ maDonHang, sanPhamId, soSao (1–5), noiDung? (≤ 2000) }` | 201 `DanhGia` (`cho_duyet`, chưa hiện công khai) | 404 "Không tìm thấy đơn hàng" (kể cả đơn người khác) / "Sản phẩm không có trong đơn hàng"; 409 "Chỉ đánh giá được đơn đã hoàn thành" / "Bạn đã đánh giá sản phẩm này trong đơn hàng này" |
+| `GET /san-pham/{slug}/danh-gia` | `trang`, `kichThuoc` (1–50, mặc định 10) | 200 trang `DanhGiaCK`, mới nhất trước | 404 "Không tìm thấy sản phẩm" |
 
 ### 3.7 Quản trị – Phase 9 (tất cả quyền QT)
 | PT | Đường dẫn | Mô tả |

@@ -71,6 +71,6 @@ public class SanPhamService {
                 new SanPhamChiTiet.ThamChieu(sp.dmId(), sp.dmTen(), sp.dmSlug()),
                 sp.thId() == null ? null : new SanPhamChiTiet.ThamChieu(sp.thId(), sp.thTen(), sp.thSlug()),
                 sanPhamRepository.hinhAnhs(sp.id()), sanPhamRepository.thongSos(sp.id()),
-                sanPhamRepository.tuyChons(sp.id()), bienThes);
+                sanPhamRepository.tuyChons(sp.id()), bienThes, sp.soDanhGia(), sp.diemTrungBinh());
     }
 }

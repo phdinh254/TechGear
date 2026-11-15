@@ -92,14 +92,19 @@ class SanPhamRepository {
     }
 
     record ThongTinChung(Long id, String ten, String slug, String moTaNgan, String moTa, long giaBan, Long giaGoc,
-                         int baoHanhThang, Long dmId, String dmTen, String dmSlug, Long thId, String thTen, String thSlug) {
+                         int baoHanhThang, Long dmId, String dmTen, String dmSlug, Long thId, String thTen, String thSlug,
+                         long soDanhGia, Double diemTrungBinh) {
     }
 
     Optional<ThongTinChung> timTheoSlug(String slug) {
         return jdbc.sql("""
                         SELECT sp.id, sp.ten, sp.slug, sp.mo_ta_ngan, sp.mo_ta, sp.gia_ban, sp.gia_goc, sp.bao_hanh_thang,
                                dm.id AS dm_id, dm.ten AS dm_ten, dm.slug AS dm_slug,
-                               th.id AS th_id, th.ten AS th_ten, th.slug AS th_slug
+                               th.id AS th_id, th.ten AS th_ten, th.slug AS th_slug,
+                               (SELECT count(*) FROM danh_gia dg WHERE dg.san_pham_id = sp.id
+                                AND dg.trang_thai = 'da_duyet') AS so_danh_gia,
+                               (SELECT round(avg(dg.so_sao), 1)::float8 FROM danh_gia dg WHERE dg.san_pham_id = sp.id
+                                AND dg.trang_thai = 'da_duyet') AS diem_trung_binh
                         """ + TU_BANG + " WHERE " + DANG_HIEN_THI + " AND sp.slug = :slug")
                 .param("slug", slug).query(ThongTinChung.class).optional();
     }

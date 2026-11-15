@@ -21,7 +21,9 @@ public record SanPhamChiTiet(
         List<HinhAnh> hinhAnhs,
         List<ThongSo> thongSos,
         List<TuyChon> tuyChons,
-        List<BienThe> bienThes
+        List<BienThe> bienThes,
+        long soDanhGia,
+        Double diemTrungBinh
 ) {
     public record ThamChieu(Long id, String ten, String slug) {
     }
