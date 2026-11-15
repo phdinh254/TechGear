@@ -1,6 +1,6 @@
 # Báo cáo backend cho người làm frontend
 
-Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 5) · Nhánh: `hoanglong`
+Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 6) · Nhánh: `hoanglong`
 
 Tài liệu này tóm tắt những gì backend mới đã có, chỗ nào khác backend cũ, và việc frontend cần làm. Mỗi phase backend
 xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên, trả về, mã lỗi) nằm ở
@@ -28,7 +28,8 @@ cd source/backend && mvn spring-boot:run
 | Danh mục, thương hiệu, tìm kiếm, nổi bật, chi tiết sản phẩm | Xong (Phase 4) | Được, giữ nguyên hợp đồng cũ: trang chủ, danh sách, chi tiết chạy lại |
 | Banner, cấu hình cửa hàng | Xong (Phase 4) | API mới, frontend chưa có giao diện |
 | Giỏ hàng trên server, gộp giỏ khi đăng nhập, yêu thích | Xong (Phase 5) | API mới, frontend chưa dùng (giỏ hiện lưu `localStorage`, vẫn chạy bình thường) |
-| Đặt hàng, VNPay, đánh giá, quản trị | Phase 6–9 | Chưa |
+| Tính thử, đặt hàng (đăng nhập + vãng lai), mã giảm giá, đơn của tôi, hủy, tra cứu | Xong (Phase 6) | API mới; nút "Đặt hàng" ở trang giỏ đang tắt, có thể nối ngay |
+| Thanh toán VNPay, đánh giá, quản trị | Phase 7–9 | Chưa (đơn chọn `vnpay` đã đặt được nhưng chưa có trang thanh toán) |
 
 ## 3. Quy ước chung (áp dụng mọi API)
 
@@ -168,13 +169,56 @@ Tồn kho trong giỏ chỉ để báo sớm. Đặt hàng (Phase 6) mới là c
   rồi so `id`. Cần API riêng thì báo mình.
 
 
-## 7. Kiểm thử phía backend
+## 7. Phase 6 – Đặt hàng và đơn hàng
+
+Hình dạng dữ liệu, cách tính tiền, thông báo lỗi mã giảm giá: mục "Chi tiết API đặt hàng, đơn hàng" trong
+[`dac-ta-api.md`](thiet-ke/dac-ta-api.md). Mã giảm giá mẫu (dev): `GIAM10` (10%, tối đa 100.000đ, đơn từ 200.000đ),
+`GIAM50K` (50.000đ, đơn từ 500.000đ), `MOILAN1` (20.000đ, mỗi khách 1 lần), `HETHAN` (đã hết hạn).
+
+### 7.1 Trang thanh toán gợi ý
+
+| Bước | Gọi | Ghi chú |
+|---|---|---|
+| Mở trang / đổi số lượng / nhập mã | `POST /don-hang/tinh-thu` `{ dongs: [{ bienTheId, soLuong }], maGiamGia?, email? }` | Không cần đăng nhập, không giữ hàng. Hiện `tamTinh`, `tienGiamGia`, `phiVanChuyen`, `tongTien` đúng như server sẽ tính. Mã sai trả 400 kèm `thongBao` (hiện ngay dưới ô mã) |
+| Điền người nhận | `GET /tai-khoan/dia-chi` (đã đăng nhập) | Chọn địa chỉ thì điền sẵn các ô; API đặt hàng nhận thẳng các ô, không nhận id địa chỉ |
+| Bấm Đặt hàng, **đã đăng nhập** | `POST /don-hang` | Email lấy từ tài khoản, không cần gửi |
+| Bấm Đặt hàng, **chưa đăng nhập** | `POST /don-hang/vang-lai` | Bắt buộc `email` (để tra cứu đơn). Xong thì xóa giỏ `localStorage` |
+| Sau khi đặt | Trả 201 + cả đơn | Hiện `maDonHang`. Khách đăng nhập: các biến thể vừa đặt đã tự bị xóa khỏi giỏ server, gọi lại `GET /gio-hang` |
+
+Thân đặt hàng: `{ dongs, tenNguoiNhan, soDienThoai, tinhThanh, phuongXa, diaChiChiTiet, email?, maGiamGia?,
+phuongThucThanhToan: "cod" | "vnpay", ghiChu? }`. Lỗi từng ô trả trong `loi` như các form khác.
+
+### 7.2 Hành vi cần biết
+
+| Tình huống | Backend trả |
+|---|---|
+| Giữa lúc tính thử và lúc đặt, giá đổi | Đơn dùng giá **lúc đặt**; tổng trong đơn trả về là con số cuối cùng (nên hiện lại cho khách) |
+| Không đủ hàng | 409 "Sản phẩm Loa JBL Flip 6 (Đỏ) chỉ còn 2 trong kho" hoặc "... đã hết hàng"; không trừ kho dòng nào |
+| Phiên bản ngừng bán | 404 "Phiên bản sản phẩm không còn bán" |
+| Hai người cùng mua món cuối cùng | Đúng một người thành công, người kia nhận 409 hết hàng (đã có test tự động) |
+| Khách vãng lai đặt quá 10 đơn / 15 phút cùng một IP | 429 |
+| Đơn chọn `vnpay` | Đặt được, `trangThaiThanhToan` = `chua_thanh_toan`. Trang chuyển sang VNPay và tự hủy sau 30 phút làm ở Phase 7 |
+
+### 7.3 Đơn của tôi, hủy, tra cứu
+
+- `GET /don-hang?trangThai=&trang=&kichThuoc=` (mặc định 10/trang, mới nhất trước): mỗi đơn có `tenSanPhamDau`,
+  `hinhAnhDau`, `soLuongSanPham` để làm thẻ đơn mà không phải gọi chi tiết.
+- `GET /don-hang/{maDonHang}`: chi tiết + `lichSu` (dòng thời gian trạng thái). Đơn của người khác trả 404.
+- `coTheHuy` = true thì hiện nút Hủy → `POST /don-hang/{maDonHang}/huy` `{ lyDo? }`. Chỉ hủy được khi đang chờ xác nhận
+  (409 nếu không). Hủy xong hàng và lượt mã giảm giá được trả lại.
+- Khách vãng lai: trang "Tra cứu đơn hàng" gọi `POST /don-hang/tra-cuu` `{ maDonHang, email }` (không phân biệt hoa thường).
+  Sai 404; sai quá 10 lần / 15 phút mỗi IP thì 429. Khách vãng lai không tự hủy được (liên hệ cửa hàng).
+- Ngày giờ (`ngayDat`, `lichSu[].thoiGian`) dạng ISO-8601 có `+07:00`.
+- Trạng thái nên hiển thị: `cho_xac_nhan` Chờ xác nhận, `da_xac_nhan` Đã xác nhận, `dang_giao` Đang giao,
+  `hoan_thanh` Hoàn thành, `da_huy` Đã hủy; thanh toán: `chua_thanh_toan`, `da_thanh_toan`, `da_hoan_tien`.
+
+## 8. Kiểm thử phía backend
 
 Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
-để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request).
+để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request).
 
-## 8. Liên hệ
+## 9. Liên hệ
 
 Backend trả sai hình dạng dữ liệu hoặc thiếu trường frontend cần: báo kèm request (URL, body) và response nhận được.
 Phần frontend do bạn quyết định. Backend không sửa gì trong `source/frontend`.
