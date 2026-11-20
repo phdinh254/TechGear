@@ -46,7 +46,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/dang-ky", "/api/auth/dang-nhap",
                                 "/api/auth/quen-mat-khau", "/api/auth/dat-lai-mat-khau").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/dat-hang", "/api/dat-hang/tinh-tien").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/dat-hang", "/api/dat-hang/tinh-tien",
+                                "/api/tra-cuu-don-hang").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/san-pham/**", "/api/danh-muc/**", "/api/thuong-hieu/**",
                                 "/api/ma-giam-gia/**", "/api/banner/**", "/uploads/**").permitAll()

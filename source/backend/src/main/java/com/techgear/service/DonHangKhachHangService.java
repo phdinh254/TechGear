@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 public class DonHangKhachHangService {
@@ -74,6 +76,38 @@ public class DonHangKhachHangService {
         lichSu.setNguoiThucHien(nguoiDung);
         donHang.getLichSus().add(lichSu);
         return DonHangResponse.tu(donHang, true);
+    }
+
+    /**
+     * Khách nhập mã đơn và email hoặc số điện thoại đã dùng khi đặt hàng.
+     * Sai mã hay sai thông tin liên hệ đều trả cùng một thông báo để không lộ mã đơn nào tồn tại.
+     */
+    @Transactional(readOnly = true)
+    public DonHangResponse traCuu(String maDonHang, String lienHe) {
+        DonHang donHang = donHangRepository.findByMaDonHang(maDonHang.trim().toUpperCase(Locale.ROOT))
+                .filter(order -> khopLienHe(order, lienHe))
+                .orElseThrow(() -> ApiException.khongTimThay(
+                        "Không tìm thấy đơn hàng khớp với mã đơn và thông tin liên hệ đã nhập"));
+        return DonHangResponse.tu(donHang, true);
+    }
+
+    static boolean khopLienHe(DonHang donHang, String lienHe) {
+        String giaTri = lienHe.trim();
+        if (giaTri.contains("@")) {
+            return donHang.getEmail() != null && donHang.getEmail().trim().equalsIgnoreCase(giaTri);
+        }
+        String soNhap = chuanHoaSoDienThoai(giaTri);
+        return !soNhap.isEmpty() && soNhap.equals(chuanHoaSoDienThoai(donHang.getSoDienThoai()));
+    }
+
+    /** Bỏ khoảng trắng, dấu chấm, gạch; đổi tiền tố +84 / 84 thành 0. */
+    static String chuanHoaSoDienThoai(String soDienThoai) {
+        if (soDienThoai == null) return "";
+        String so = soDienThoai.replaceAll("[^0-9]", "");
+        if (so.startsWith("84") && so.length() >= 11) {
+            so = "0" + so.substring(2);
+        }
+        return so;
     }
 
     private DonHang timCuaNguoiDung(Long nguoiDungId, String maDonHang) {
