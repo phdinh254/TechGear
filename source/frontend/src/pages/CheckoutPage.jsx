@@ -5,9 +5,26 @@ import checkoutApi from '../api/checkoutApi';
 import { layThongBaoLoi } from '../api/axiosClient';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import Loading from '../components/Loading.jsx';
+import EmptyState from '../components/ui/EmptyState.jsx';
+import Icon from '../components/ui/Icon.jsx';
+import ProductMedia from '../components/ui/ProductMedia.jsx';
+import { SkeletonBlock } from '../components/ui/Skeleton.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { formatTien } from '../utils/format';
+
+function Step({ so, tieuDe, children, phu }) {
+  return (
+    <section className="checkout-step">
+      <header>
+        <span className="step-num">{so}</span>
+        <h2>{tieuDe}</h2>
+        {phu}
+      </header>
+      {children}
+    </section>
+  );
+}
 
 export default function CheckoutPage() {
   const { nguoiDung } = useAuth();
@@ -24,16 +41,39 @@ export default function CheckoutPage() {
     phuongThucThanhToan: 'cod',
   });
   const [diaChis, setDiaChis] = useState([]);
+  const [diaChiChon, setDiaChiChon] = useState('');
   const [tinhTien, setTinhTien] = useState(null);
   const [dangTinh, setDangTinh] = useState(true);
   const [dangDat, setDangDat] = useState(false);
   const [loi, setLoi] = useState('');
+  const [loiMa, setLoiMa] = useState('');
   const [ketQua, setKetQua] = useState(null);
 
   const items = dong.map((item) => ({ bienTheId: item.bienTheId, soLuong: item.soLuong }));
+  const doi = (khoa) => (e) => setForm({ ...form, [khoa]: e.target.value });
+
+  const chonDiaChi = (diaChi) => {
+    setDiaChiChon(String(diaChi.id));
+    setForm((cu) => ({
+      ...cu,
+      tenNguoiNhan: diaChi.tenNguoiNhan,
+      soDienThoai: diaChi.soDienThoai,
+      tinhThanh: diaChi.tinhThanh,
+      phuongXa: diaChi.phuongXa,
+      diaChiChiTiet: diaChi.diaChiChiTiet,
+    }));
+  };
 
   useEffect(() => {
     if (!nguoiDung) return;
+    // Thông tin người dùng có thể tải xong sau lần render đầu (vào thẳng /dat-hang hoặc F5):
+    // chỉ điền vào các ô còn trống để không ghi đè dữ liệu khách đã nhập.
+    setForm((cu) => ({
+      ...cu,
+      tenNguoiNhan: cu.tenNguoiNhan || nguoiDung.hoTen || '',
+      email: cu.email || nguoiDung.email || '',
+      soDienThoai: cu.soDienThoai || nguoiDung.soDienThoai || '',
+    }));
     accountApi.layDiaChi().then((data) => {
       setDiaChis(data);
       const macDinh = data.find((item) => item.laMacDinh) || data[0];
@@ -47,26 +87,30 @@ export default function CheckoutPage() {
       return;
     }
     setDangTinh(true);
-    checkoutApi.tinhTien({ items })
+    checkoutApi.tinhTien({ maGiamGia: tinhTien?.maGiamGia || null, items })
       .then(setTinhTien)
       .catch((error) => setLoi(layThongBaoLoi(error)))
       .finally(() => setDangTinh(false));
   }, [dangDongBo, dong]);
 
-  const chonDiaChi = (diaChi) => setForm((cu) => ({
-    ...cu,
-    tenNguoiNhan: diaChi.tenNguoiNhan,
-    soDienThoai: diaChi.soDienThoai,
-    tinhThanh: diaChi.tinhThanh,
-    phuongXa: diaChi.phuongXa,
-    diaChiChiTiet: diaChi.diaChiChiTiet,
-  }));
-
   const apDungMa = async () => {
-    setLoi('');
+    setLoiMa('');
     setDangTinh(true);
     try {
       setTinhTien(await checkoutApi.tinhTien({ maGiamGia: form.maGiamGia.trim() || null, items }));
+    } catch (error) {
+      setLoiMa(layThongBaoLoi(error));
+    } finally {
+      setDangTinh(false);
+    }
+  };
+
+  const boMa = async () => {
+    setForm({ ...form, maGiamGia: '' });
+    setLoiMa('');
+    setDangTinh(true);
+    try {
+      setTinhTien(await checkoutApi.tinhTien({ maGiamGia: null, items }));
     } catch (error) {
       setLoi(layThongBaoLoi(error));
     } finally {
@@ -91,64 +135,164 @@ export default function CheckoutPage() {
       });
       await xoaHet();
       setKetQua(response);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       setLoi(layThongBaoLoi(error));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setDangDat(false);
     }
   };
 
-  if (dangDongBo) return <Loading />;
+  if (dangDongBo) return <Loading noiDung="Đang chuẩn bị đơn hàng..." />;
+
   if (ketQua) {
     return (
       <div className="order-success">
+        <span className="success-mark"><Icon name="check" size={36} strokeWidth={2.4} /></span>
         <h1>Đặt hàng thành công</h1>
-        <p>Mã đơn hàng của bạn: <strong>{ketQua.maDonHang}</strong></p>
-        <p>Tổng thanh toán: <strong>{formatTien(ketQua.tongTien)}</strong></p>
-        <Link className="btn" to={nguoiDung ? '/tai-khoan' : '/'}>Tiếp tục</Link>
+        <p className="lead">Chúng tôi sẽ liên hệ xác nhận đơn hàng sớm nhất.</p>
+        <dl className="success-info">
+          <div><dt>Mã đơn hàng</dt><dd>{ketQua.maDonHang}</dd></div>
+          <div><dt>Tổng thanh toán</dt><dd>{formatTien(ketQua.tongTien)}</dd></div>
+          <div><dt>Thanh toán</dt><dd>Khi nhận hàng</dd></div>
+        </dl>
+        {!nguoiDung && <p className="muted">Lưu lại mã đơn để tra cứu tình trạng bằng email hoặc số điện thoại.</p>}
+        <div className="success-actions">
+          {nguoiDung ? (
+            <Link className="btn btn-primary btn-lg" to={`/tai-khoan/don-hang/${ketQua.maDonHang}`}>Xem đơn hàng</Link>
+          ) : (
+            <Link className="btn btn-primary btn-lg" to={`/tra-cuu-don-hang?ma=${encodeURIComponent(ketQua.maDonHang)}`}>Tra cứu đơn hàng</Link>
+          )}
+          <Link className="btn btn-outline btn-lg" to="/san-pham">Tiếp tục mua sắm</Link>
+        </div>
       </div>
     );
   }
+
   if (dong.length === 0) {
-    return <div className="state"><p>Giỏ hàng đang trống.</p><Link className="btn" to="/san-pham">Mua sắm ngay</Link></div>;
+    return (
+      <EmptyState icon="bag" tieuDe="Chưa có sản phẩm để thanh toán" moTa="Thêm sản phẩm vào giỏ hàng trước khi đặt hàng.">
+        <Link className="btn btn-primary" to="/san-pham">Mua sắm ngay</Link>
+      </EmptyState>
+    );
   }
 
   return (
-    <form className="checkout-layout" onSubmit={datHang}>
-      <section className="checkout-form">
-        <h1>Thông tin giao hàng</h1>
-        <ErrorMessage>{loi}</ErrorMessage>
-        {diaChis.length > 0 && (
-          <label>Chọn địa chỉ đã lưu<select defaultValue="" onChange={(e) => {
-            const diaChi = diaChis.find((item) => item.id === Number(e.target.value));
-            if (diaChi) chonDiaChi(diaChi);
-          }}><option value="">Nhập địa chỉ khác</option>{diaChis.map((item) => <option key={item.id} value={item.id}>{item.diaChiChiTiet}, {item.phuongXa}, {item.tinhThanh}</option>)}</select></label>
+    <div className="checkout-page">
+      <div className="checkout-top">
+        <Link to="/gio-hang" className="link-arrow"><Icon name="chevronLeft" size={16} /> Quay lại giỏ hàng</Link>
+        <h1 className="page-title">Thanh toán</h1>
+        {!nguoiDung && (
+          <p className="muted">Đã có tài khoản? <Link to="/dang-nhap" state={{ tu: '/dat-hang' }} className="link-button">Đăng nhập</Link> để dùng địa chỉ đã lưu.</p>
         )}
-        <div className="form">
-          <label>Họ tên người nhận<input required maxLength="100" value={form.tenNguoiNhan} onChange={(e) => setForm({ ...form, tenNguoiNhan: e.target.value })} /></label>
-          <label>Email<input type="email" required maxLength="150" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label>Số điện thoại<input type="tel" required pattern="0[0-9]{9}" value={form.soDienThoai} onChange={(e) => setForm({ ...form, soDienThoai: e.target.value })} /></label>
-          <label>Tỉnh/thành<input required maxLength="100" value={form.tinhThanh} onChange={(e) => setForm({ ...form, tinhThanh: e.target.value })} /></label>
-          <label>Phường/xã<input required maxLength="100" value={form.phuongXa} onChange={(e) => setForm({ ...form, phuongXa: e.target.value })} /></label>
-          <label>Địa chỉ chi tiết<input required maxLength="255" value={form.diaChiChiTiet} onChange={(e) => setForm({ ...form, diaChiChiTiet: e.target.value })} /></label>
-          <label>Ghi chú<textarea maxLength="500" rows="3" value={form.ghiChu} onChange={(e) => setForm({ ...form, ghiChu: e.target.value })} /></label>
-        </div>
-      </section>
+      </div>
 
-      <aside className="checkout-summary">
-        <h2>Đơn hàng ({dong.length} sản phẩm)</h2>
-        {dong.map((item) => <div className="checkout-line" key={item.bienTheId}><span>{item.ten} × {item.soLuong}</span><strong>{formatTien(Number(item.giaBan) * item.soLuong)}</strong></div>)}
-        <div className="coupon-row"><input placeholder="Mã giảm giá" maxLength="50" value={form.maGiamGia} onChange={(e) => setForm({ ...form, maGiamGia: e.target.value.toUpperCase() })} /><button type="button" onClick={apDungMa}>Áp dụng</button></div>
-        {dangTinh ? <Loading /> : tinhTien && <div className="totals">
-          <p><span>Tạm tính</span><strong>{formatTien(tinhTien.tamTinh)}</strong></p>
-          <p><span>Giảm giá</span><strong>-{formatTien(tinhTien.tienGiamGia)}</strong></p>
-          <p><span>Phí vận chuyển</span><strong>{formatTien(tinhTien.phiVanChuyen)}</strong></p>
-          <p className="total"><span>Tổng cộng</span><strong>{formatTien(tinhTien.tongTien)}</strong></p>
-          {tinhTien.moTaGiamGia && <p className="success">{tinhTien.moTaGiamGia}</p>}
-        </div>}
-        <fieldset><legend>Thanh toán</legend><label className="checkbox-label"><input type="radio" checked readOnly /> Thanh toán khi nhận hàng (COD)</label><label className="checkbox-label muted"><input type="radio" disabled /> VNPay — chưa cấu hình</label></fieldset>
-        <button className="btn checkout-button" disabled={dangDat || dangTinh || !tinhTien}>{dangDat ? 'Đang đặt hàng...' : 'Xác nhận đặt hàng'}</button>
-      </aside>
-    </form>
+      <form className="checkout-layout" onSubmit={datHang}>
+        <div className="checkout-main">
+          <ErrorMessage>{loi}</ErrorMessage>
+
+          <Step so={1} tieuDe="Thông tin liên hệ">
+            <div className="form-grid">
+              <label className="field span-2">Họ tên người nhận<input required maxLength="100" autoComplete="name" value={form.tenNguoiNhan} onChange={doi('tenNguoiNhan')} /></label>
+              <label className="field">Email<input type="email" required maxLength="150" autoComplete="email" value={form.email} onChange={doi('email')} /></label>
+              <label className="field">Số điện thoại<input type="tel" required pattern="0[0-9]{9}" title="10 chữ số, bắt đầu bằng 0" autoComplete="tel" value={form.soDienThoai} onChange={doi('soDienThoai')} /></label>
+            </div>
+          </Step>
+
+          <Step so={2} tieuDe="Địa chỉ giao hàng">
+            {diaChis.length > 0 && (
+              <div className="address-picker">
+                {diaChis.map((dc) => (
+                  <label key={dc.id} className={`radio-card${diaChiChon === String(dc.id) ? ' is-active' : ''}`}>
+                    <input type="radio" name="dia-chi" checked={diaChiChon === String(dc.id)} onChange={() => chonDiaChi(dc)} />
+                    <span>
+                      <strong>{dc.tenNguoiNhan} · {dc.soDienThoai}{dc.laMacDinh && <span className="badge badge-soft">Mặc định</span>}</strong>
+                      <span className="muted">{dc.diaChiDayDu || `${dc.diaChiChiTiet}, ${dc.phuongXa}, ${dc.tinhThanh}`}</span>
+                    </span>
+                  </label>
+                ))}
+                <label className={`radio-card${diaChiChon === '' ? ' is-active' : ''}`}>
+                  <input type="radio" name="dia-chi" checked={diaChiChon === ''} onChange={() => { setDiaChiChon(''); setForm({ ...form, tinhThanh: '', phuongXa: '', diaChiChiTiet: '' }); }} />
+                  <span><strong>Giao tới địa chỉ khác</strong></span>
+                </label>
+              </div>
+            )}
+            <div className="form-grid">
+              <label className="field">Tỉnh / thành phố<input required maxLength="100" autoComplete="address-level1" value={form.tinhThanh} onChange={doi('tinhThanh')} /></label>
+              <label className="field">Phường / xã<input required maxLength="100" autoComplete="address-level2" value={form.phuongXa} onChange={doi('phuongXa')} /></label>
+              <label className="field span-2">Địa chỉ chi tiết<input required maxLength="255" autoComplete="street-address" placeholder="Số nhà, tên đường" value={form.diaChiChiTiet} onChange={doi('diaChiChiTiet')} /></label>
+              <label className="field span-2"><span>Ghi chú <span className="field-hint">(không bắt buộc)</span></span><textarea maxLength="500" rows="3" placeholder="Ví dụ: giao giờ hành chính" value={form.ghiChu} onChange={doi('ghiChu')} /></label>
+            </div>
+          </Step>
+
+          <Step so={3} tieuDe="Phương thức thanh toán">
+            <div className="payment-options">
+              <label className="radio-card is-active">
+                <input type="radio" name="thanh-toan" checked readOnly />
+                <Icon name="wallet" size={22} />
+                <span><strong>Thanh toán khi nhận hàng (COD)</strong><span className="muted">Kiểm tra hàng rồi thanh toán cho nhân viên giao hàng</span></span>
+              </label>
+              <label className="radio-card is-disabled">
+                <input type="radio" name="thanh-toan" disabled />
+                <Icon name="lock" size={22} />
+                <span><strong>VNPay</strong><span className="muted">Sắp ra mắt</span></span>
+              </label>
+            </div>
+          </Step>
+        </div>
+
+        <aside className="summary checkout-summary">
+          <h2>Đơn hàng <span className="muted">({dong.length} sản phẩm)</span></h2>
+          <ul className="summary-items">
+            {dong.map((item) => (
+              <li key={item.bienTheId}>
+                <span className="summary-thumb">
+                  <ProductMedia src={item.anh} ten={item.ten} size="sm" />
+                  <span className="summary-qty">{item.soLuong}</span>
+                </span>
+                <span className="summary-item-name">
+                  {item.ten}
+                  {item.phanLoai && <small>{item.phanLoai}</small>}
+                </span>
+                <strong>{formatTien(Number(item.giaBan) * item.soLuong)}</strong>
+              </li>
+            ))}
+          </ul>
+
+          {tinhTien?.maGiamGia ? (
+            <div className="coupon-applied">
+              <Icon name="check" size={16} strokeWidth={2.2} />
+              <span><strong>{tinhTien.maGiamGia}</strong>{tinhTien.moTaGiamGia && ` · ${tinhTien.moTaGiamGia}`}</span>
+              <button type="button" className="link-button" onClick={boMa}>Bỏ mã</button>
+            </div>
+          ) : (
+            <div className="coupon">
+              <div className="coupon-row">
+                <input placeholder="Mã giảm giá" maxLength="50" aria-label="Mã giảm giá" value={form.maGiamGia} onChange={(e) => setForm({ ...form, maGiamGia: e.target.value.toUpperCase() })} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); apDungMa(); } }} />
+                <button type="button" className="btn btn-outline" onClick={apDungMa} disabled={!form.maGiamGia.trim() || dangTinh}>Áp dụng</button>
+              </div>
+              {loiMa && <p className="field-error">{loiMa}</p>}
+            </div>
+          )}
+
+          {dangTinh && !tinhTien ? (
+            <SkeletonBlock height={120} />
+          ) : tinhTien && (
+            <dl className={`summary-rows${dangTinh ? ' is-loading' : ''}`}>
+              <div><dt>Tạm tính</dt><dd>{formatTien(tinhTien.tamTinh)}</dd></div>
+              {Number(tinhTien.tienGiamGia) > 0 && <div className="is-discount"><dt>Giảm giá</dt><dd>-{formatTien(tinhTien.tienGiamGia)}</dd></div>}
+              <div><dt>Phí vận chuyển</dt><dd>{Number(tinhTien.phiVanChuyen) === 0 ? 'Miễn phí' : formatTien(tinhTien.phiVanChuyen)}</dd></div>
+            </dl>
+          )}
+          {tinhTien && <div className="summary-total"><span>Tổng cộng</span><strong>{formatTien(tinhTien.tongTien)}</strong></div>}
+
+          <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={dangDat || dangTinh || !tinhTien}>
+            {dangDat ? <><span className="spinner" /> Đang đặt hàng...</> : 'Xác nhận đặt hàng'}
+          </button>
+          <p className="summary-note"><Icon name="lock" size={14} /><span>Bằng việc đặt hàng, bạn đồng ý với <Link to="/chinh-sach">chính sách mua hàng</Link>.</span></p>
+        </aside>
+      </form>
+    </div>
   );
 }
