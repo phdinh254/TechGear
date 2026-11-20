@@ -2,17 +2,42 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { wishlistApi } from '../api/customerApi';
 import { layThongBaoLoi } from '../api/axiosClient';
+import AccountShell from '../components/AccountShell.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
-import Loading from '../components/Loading.jsx';
 import ProductCard from '../components/ProductCard.jsx';
+import EmptyState from '../components/ui/EmptyState.jsx';
+import { ProductGridSkeleton } from '../components/ui/Skeleton.jsx';
+import { useWishlist } from '../context/WishlistContext.jsx';
 
 export default function WishlistPage() {
   const [sanPhams, setSanPhams] = useState(null);
   const [loi, setLoi] = useState('');
-  useEffect(() => { wishlistApi.layDanhSach().then(setSanPhams).catch((error) => setLoi(layThongBaoLoi(error))); }, []);
-  const xoa = async (id) => {
-    try { await wishlistApi.xoa(id); setSanPhams((cu) => cu.filter((item) => item.id !== id)); }
-    catch (error) { setLoi(layThongBaoLoi(error)); }
-  };
-  return <div><div className="page-heading"><h1>Sản phẩm yêu thích</h1><Link to="/tai-khoan">Quay lại tài khoản</Link></div><ErrorMessage>{loi}</ErrorMessage>{!sanPhams && !loi && <Loading />}{sanPhams?.length === 0 && <p className="muted">Danh sách yêu thích đang trống.</p>}<div className="product-grid">{sanPhams?.map((sp) => <div className="wishlist-item" key={sp.id}><ProductCard sanPham={sp} /><button type="button" onClick={() => xoa(sp.id)}>Bỏ yêu thích</button></div>)}</div></div>;
+  const { laYeuThich } = useWishlist();
+
+  useEffect(() => {
+    wishlistApi.layDanhSach().then(setSanPhams).catch((error) => setLoi(layThongBaoLoi(error)));
+  }, []);
+
+  // Bỏ tim ngay trên thẻ thì ẩn sản phẩm khỏi danh sách
+  const hienThi = sanPhams?.filter((sp) => laYeuThich(sp.id)) ?? null;
+
+  return (
+    <AccountShell>
+      <div className="panel">
+        <h1 className="panel-title">Sản phẩm yêu thích {hienThi?.length > 0 && <span className="muted">({hienThi.length})</span>}</h1>
+        <ErrorMessage>{loi}</ErrorMessage>
+        {!hienThi && !loi && <div className="product-grid product-grid-3"><ProductGridSkeleton soLuong={3} /></div>}
+        {hienThi?.length === 0 && (
+          <EmptyState compact icon="heart" tieuDe="Chưa có sản phẩm yêu thích" moTa="Nhấn biểu tượng trái tim trên sản phẩm để lưu lại và xem sau.">
+            <Link to="/san-pham" className="btn btn-primary">Khám phá sản phẩm</Link>
+          </EmptyState>
+        )}
+        {hienThi?.length > 0 && (
+          <div className="product-grid product-grid-3">
+            {hienThi.map((sp) => <ProductCard key={sp.id} sanPham={sp} />)}
+          </div>
+        )}
+      </div>
+    </AccountShell>
+  );
 }

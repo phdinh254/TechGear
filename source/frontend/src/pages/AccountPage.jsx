@@ -1,65 +1,38 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import accountApi from '../api/accountApi';
 import { layThongBaoLoi } from '../api/axiosClient';
+import AccountShell, { Avatar } from '../components/AccountShell.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
-import Loading from '../components/Loading.jsx';
+import EmptyState from '../components/ui/EmptyState.jsx';
+import Icon from '../components/ui/Icon.jsx';
+import PasswordInput from '../components/ui/PasswordInput.jsx';
+import { SkeletonBlock } from '../components/ui/Skeleton.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from '../context/ToastContext.jsx';
+import { PasswordHints } from './RegisterPage.jsx';
 
-const DIA_CHI_RONG = {
-  tenNguoiNhan: '',
-  soDienThoai: '',
-  tinhThanh: '',
-  phuongXa: '',
-  diaChiChiTiet: '',
-  laMacDinh: false,
-};
+const DIA_CHI_RONG = { tenNguoiNhan: '', soDienThoai: '', tinhThanh: '', phuongXa: '', diaChiChiTiet: '', laMacDinh: false };
 
-export default function AccountPage() {
+function HoSo() {
   const { nguoiDung, capNhatNguoiDung } = useAuth();
-  const [tab, setTab] = useState('ho-so');
+  const toast = useToast();
   const [hoSo, setHoSo] = useState({
     hoTen: nguoiDung.hoTen || '',
     soDienThoai: nguoiDung.soDienThoai || '',
     gioiTinh: nguoiDung.gioiTinh || '',
     ngaySinh: nguoiDung.ngaySinh || '',
   });
-  const [matKhau, setMatKhau] = useState({ matKhauCu: '', matKhauMoi: '', nhapLai: '' });
-  const [diaChis, setDiaChis] = useState([]);
-  const [diaChiForm, setDiaChiForm] = useState(DIA_CHI_RONG);
-  const [diaChiDangSua, setDiaChiDangSua] = useState(null);
-  const [dangTaiDiaChi, setDangTaiDiaChi] = useState(true);
   const [dangGui, setDangGui] = useState(false);
   const [loi, setLoi] = useState('');
-  const [thongBao, setThongBao] = useState('');
 
-  const taiDiaChi = () => {
-    setDangTaiDiaChi(true);
-    accountApi.layDiaChi()
-      .then(setDiaChis)
-      .catch((error) => setLoi(layThongBaoLoi(error)))
-      .finally(() => setDangTaiDiaChi(false));
-  };
-
-  useEffect(taiDiaChi, []);
-
-  const batDau = () => {
+  const luu = async (e) => {
+    e.preventDefault();
     setLoi('');
-    setThongBao('');
     setDangGui(true);
-  };
-
-  const luuHoSo = async (event) => {
-    event.preventDefault();
-    batDau();
     try {
-      const moi = await accountApi.capNhatHoSo({
-        ...hoSo,
-        gioiTinh: hoSo.gioiTinh || null,
-        ngaySinh: hoSo.ngaySinh || null,
-      });
-      capNhatNguoiDung(moi);
-      setThongBao('Cập nhật hồ sơ thành công');
+      capNhatNguoiDung(await accountApi.capNhatHoSo({ ...hoSo, gioiTinh: hoSo.gioiTinh || null, ngaySinh: hoSo.ngaySinh || null }));
+      toast.hien('Đã lưu thông tin cá nhân');
     } catch (error) {
       setLoi(layThongBaoLoi(error));
     } finally {
@@ -67,14 +40,15 @@ export default function AccountPage() {
     }
   };
 
-  const doiAnhDaiDien = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
+  const doiAnh = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    batDau();
+    setLoi('');
+    setDangGui(true);
     try {
       capNhatNguoiDung(await accountApi.doiAnhDaiDien(file));
-      setThongBao('Cập nhật ảnh đại diện thành công');
+      toast.hien('Đã cập nhật ảnh đại diện');
     } catch (error) {
       setLoi(layThongBaoLoi(error));
     } finally {
@@ -82,10 +56,47 @@ export default function AccountPage() {
     }
   };
 
-  const doiMatKhau = async (event) => {
-    event.preventDefault();
+  return (
+    <div className="panel">
+      <h1 className="panel-title">Thông tin cá nhân</h1>
+      <ErrorMessage>{loi}</ErrorMessage>
+      <div className="avatar-row">
+        <Avatar nguoiDung={nguoiDung} size={72} />
+        <div>
+          <label className="btn btn-outline btn-sm avatar-upload">
+            <Icon name="user" size={16} /> Đổi ảnh đại diện
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={dangGui} onChange={doiAnh} className="visually-hidden" />
+          </label>
+          <p className="field-hint">JPG, PNG, WEBP hoặc GIF · tối đa 5MB</p>
+        </div>
+      </div>
+      <form className="form" onSubmit={luu}>
+        <div className="form-grid">
+          <label className="field">Email<input value={nguoiDung.email} disabled /></label>
+          <label className="field">Họ và tên<input required maxLength="100" value={hoSo.hoTen} onChange={(e) => setHoSo({ ...hoSo, hoTen: e.target.value })} /></label>
+          <label className="field">Số điện thoại<input type="tel" pattern="0[0-9]{9}" title="10 chữ số, bắt đầu bằng 0" value={hoSo.soDienThoai} onChange={(e) => setHoSo({ ...hoSo, soDienThoai: e.target.value })} /></label>
+          <label className="field">Giới tính
+            <select value={hoSo.gioiTinh} onChange={(e) => setHoSo({ ...hoSo, gioiTinh: e.target.value })}>
+              <option value="">Chưa chọn</option><option value="nam">Nam</option><option value="nu">Nữ</option><option value="khac">Khác</option>
+            </select>
+          </label>
+          <label className="field">Ngày sinh<input type="date" max={new Date().toISOString().slice(0, 10)} value={hoSo.ngaySinh} onChange={(e) => setHoSo({ ...hoSo, ngaySinh: e.target.value })} /></label>
+        </div>
+        <div><button className="btn btn-primary" disabled={dangGui}>{dangGui ? 'Đang lưu...' : 'Lưu thay đổi'}</button></div>
+      </form>
+    </div>
+  );
+}
+
+function DoiMatKhau() {
+  const toast = useToast();
+  const [matKhau, setMatKhau] = useState({ matKhauCu: '', matKhauMoi: '', nhapLai: '' });
+  const [dangGui, setDangGui] = useState(false);
+  const [loi, setLoi] = useState('');
+
+  const doi = async (e) => {
+    e.preventDefault();
     setLoi('');
-    setThongBao('');
     if (matKhau.matKhauMoi !== matKhau.nhapLai) {
       setLoi('Mật khẩu nhập lại không khớp');
       return;
@@ -93,8 +104,8 @@ export default function AccountPage() {
     setDangGui(true);
     try {
       const { nhapLai, ...duLieu } = matKhau;
-      const response = await accountApi.doiMatKhau(duLieu);
-      setThongBao(response.thongBao);
+      const res = await accountApi.doiMatKhau(duLieu);
+      toast.hien(res.thongBao || 'Đã đổi mật khẩu');
       setMatKhau({ matKhauCu: '', matKhauMoi: '', nhapLai: '' });
     } catch (error) {
       setLoi(layThongBaoLoi(error));
@@ -103,16 +114,55 @@ export default function AccountPage() {
     }
   };
 
-  const luuDiaChi = async (event) => {
-    event.preventDefault();
-    batDau();
+  return (
+    <div className="panel">
+      <h1 className="panel-title">Đổi mật khẩu</h1>
+      <ErrorMessage>{loi}</ErrorMessage>
+      <form className="form form-narrow" onSubmit={doi}>
+        <div className="field"><label htmlFor="mk-cu">Mật khẩu hiện tại</label><PasswordInput id="mk-cu" required autoComplete="current-password" value={matKhau.matKhauCu} onChange={(e) => setMatKhau({ ...matKhau, matKhauCu: e.target.value })} /></div>
+        <div className="field">
+          <label htmlFor="mk-moi-tk">Mật khẩu mới</label>
+          <PasswordInput id="mk-moi-tk" required minLength="8" maxLength="100" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,100}" title="Ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số" autoComplete="new-password" value={matKhau.matKhauMoi} onChange={(e) => setMatKhau({ ...matKhau, matKhauMoi: e.target.value })} />
+          <PasswordHints matKhau={matKhau.matKhauMoi} />
+        </div>
+        <div className="field"><label htmlFor="mk-lai-tk">Nhập lại mật khẩu mới</label><PasswordInput id="mk-lai-tk" required minLength="8" maxLength="100" autoComplete="new-password" value={matKhau.nhapLai} onChange={(e) => setMatKhau({ ...matKhau, nhapLai: e.target.value })} /></div>
+        <div><button className="btn btn-primary" disabled={dangGui}>{dangGui ? 'Đang lưu...' : 'Đổi mật khẩu'}</button></div>
+      </form>
+    </div>
+  );
+}
+
+function SoDiaChi() {
+  const toast = useToast();
+  const [diaChis, setDiaChis] = useState([]);
+  const [dangTai, setDangTai] = useState(true);
+  const [form, setForm] = useState(DIA_CHI_RONG);
+  const [dangSua, setDangSua] = useState(null);
+  const [moForm, setMoForm] = useState(false);
+  const [dangGui, setDangGui] = useState(false);
+  const [loi, setLoi] = useState('');
+
+  const tai = () => {
+    setDangTai(true);
+    accountApi.layDiaChi()
+      .then(setDiaChis)
+      .catch((error) => setLoi(layThongBaoLoi(error)))
+      .finally(() => setDangTai(false));
+  };
+  useEffect(tai, []);
+
+  const dongForm = () => { setDangSua(null); setForm(DIA_CHI_RONG); setMoForm(false); };
+
+  const luu = async (e) => {
+    e.preventDefault();
+    setLoi('');
+    setDangGui(true);
     try {
-      if (diaChiDangSua) await accountApi.capNhatDiaChi(diaChiDangSua, diaChiForm);
-      else await accountApi.taoDiaChi(diaChiForm);
-      setDiaChiForm(DIA_CHI_RONG);
-      setDiaChiDangSua(null);
-      setThongBao(diaChiDangSua ? 'Cập nhật địa chỉ thành công' : 'Thêm địa chỉ thành công');
-      taiDiaChi();
+      if (dangSua) await accountApi.capNhatDiaChi(dangSua, form);
+      else await accountApi.taoDiaChi(form);
+      toast.hien(dangSua ? 'Đã cập nhật địa chỉ' : 'Đã thêm địa chỉ mới');
+      dongForm();
+      tai();
     } catch (error) {
       setLoi(layThongBaoLoi(error));
     } finally {
@@ -120,118 +170,71 @@ export default function AccountPage() {
     }
   };
 
-  const suaDiaChi = (diaChi) => {
-    setDiaChiDangSua(diaChi.id);
-    setDiaChiForm({ ...diaChi });
-    setLoi('');
-    setThongBao('');
+  const thaoTac = async (ham, thongBao) => {
+    try { await ham(); toast.hien(thongBao); tai(); } catch (error) { setLoi(layThongBaoLoi(error)); }
   };
 
-  const datMacDinh = async (id) => {
-    try {
-      await accountApi.datDiaChiMacDinh(id);
-      taiDiaChi();
-    } catch (error) {
-      setLoi(layThongBaoLoi(error));
-    }
-  };
-
-  const xoaDiaChi = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
-    try {
-      await accountApi.xoaDiaChi(id);
-      taiDiaChi();
-    } catch (error) {
-      setLoi(layThongBaoLoi(error));
-    }
-  };
+  const doi = (khoa) => (e) => setForm({ ...form, [khoa]: e.target.value });
 
   return (
-    <div className="account-layout">
-      <aside className="account-nav">
-        <h2>Tài khoản</h2>
-        {[
-          ['ho-so', 'Thông tin cá nhân'],
-          ['dia-chi', 'Sổ địa chỉ'],
-          ['mat-khau', 'Đổi mật khẩu'],
-        ].map(([giaTri, nhan]) => (
-          <button key={giaTri} type="button" className={tab === giaTri ? 'active' : ''} onClick={() => {
-            setTab(giaTri);
-            setLoi('');
-            setThongBao('');
-          }}>
-            {nhan}
-          </button>
-        ))}
-        <Link to="/tai-khoan/don-hang">Đơn hàng của tôi</Link>
-        <Link to="/tai-khoan/yeu-thich">Sản phẩm yêu thích</Link>
-      </aside>
+    <div className="panel">
+      <div className="panel-head">
+        <h1 className="panel-title">Sổ địa chỉ</h1>
+        {!moForm && <button type="button" className="btn btn-outline btn-sm" onClick={() => setMoForm(true)}><Icon name="plus" size={16} /> Thêm địa chỉ</button>}
+      </div>
+      <ErrorMessage>{loi}</ErrorMessage>
 
-      <section className="account-content">
-        <ErrorMessage>{loi}</ErrorMessage>
-        {thongBao && <p className="success">{thongBao}</p>}
-
-        {tab === 'ho-so' && (
-          <form className="form" onSubmit={luuHoSo}>
-            <h1>Thông tin cá nhân</h1>
-            <label>Email<input value={nguoiDung.email} disabled /></label>
-            <label>Họ và tên<input required maxLength="100" value={hoSo.hoTen} onChange={(e) => setHoSo({ ...hoSo, hoTen: e.target.value })} /></label>
-            <label>Số điện thoại<input type="tel" pattern="0[0-9]{9}" value={hoSo.soDienThoai} onChange={(e) => setHoSo({ ...hoSo, soDienThoai: e.target.value })} /></label>
-            <label>Giới tính<select value={hoSo.gioiTinh} onChange={(e) => setHoSo({ ...hoSo, gioiTinh: e.target.value })}>
-              <option value="">Chưa chọn</option><option value="nam">Nam</option><option value="nu">Nữ</option><option value="khac">Khác</option>
-            </select></label>
-            <label>Ngày sinh<input type="date" max={new Date().toISOString().slice(0, 10)} value={hoSo.ngaySinh} onChange={(e) => setHoSo({ ...hoSo, ngaySinh: e.target.value })} /></label>
-            <label>Ảnh đại diện (JPG/PNG/WEBP/GIF, tối đa 5MB)<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={dangGui} onChange={doiAnhDaiDien} /></label>
-            <button className="btn" disabled={dangGui}>Lưu thay đổi</button>
-          </form>
-        )}
-
-        {tab === 'mat-khau' && (
-          <form className="form" onSubmit={doiMatKhau}>
-            <h1>Đổi mật khẩu</h1>
-            <label>Mật khẩu hiện tại<input type="password" required autoComplete="current-password" value={matKhau.matKhauCu} onChange={(e) => setMatKhau({ ...matKhau, matKhauCu: e.target.value })} /></label>
-            <label>Mật khẩu mới<input type="password" required minLength="8" maxLength="100" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,100}" autoComplete="new-password" value={matKhau.matKhauMoi} onChange={(e) => setMatKhau({ ...matKhau, matKhauMoi: e.target.value })} /></label>
-            <label>Nhập lại mật khẩu<input type="password" required minLength="8" maxLength="100" autoComplete="new-password" value={matKhau.nhapLai} onChange={(e) => setMatKhau({ ...matKhau, nhapLai: e.target.value })} /></label>
-            <button className="btn" disabled={dangGui}>Đổi mật khẩu</button>
-          </form>
-        )}
-
-        {tab === 'dia-chi' && (
-          <div>
-            <h1>Sổ địa chỉ</h1>
-            {dangTaiDiaChi ? <Loading /> : (
-              <div className="address-list">
-                {diaChis.map((diaChi) => (
-                  <article key={diaChi.id} className="address-card">
-                    <div><strong>{diaChi.tenNguoiNhan}</strong> · {diaChi.soDienThoai}{diaChi.laMacDinh && <span className="default-tag">Mặc định</span>}</div>
-                    <p>{diaChi.diaChiChiTiet}, {diaChi.phuongXa}, {diaChi.tinhThanh}</p>
-                    <div className="inline-actions">
-                      <button type="button" onClick={() => suaDiaChi(diaChi)}>Sửa</button>
-                      {!diaChi.laMacDinh && <button type="button" onClick={() => datMacDinh(diaChi.id)}>Đặt mặc định</button>}
-                      <button type="button" className="danger-link" onClick={() => xoaDiaChi(diaChi.id)}>Xóa</button>
-                    </div>
-                  </article>
-                ))}
-                {diaChis.length === 0 && <p className="muted">Bạn chưa lưu địa chỉ giao hàng.</p>}
-              </div>
-            )}
-
-            <form className="form address-form" onSubmit={luuDiaChi}>
-              <h2>{diaChiDangSua ? 'Sửa địa chỉ' : 'Thêm địa chỉ'}</h2>
-              <label>Tên người nhận<input required maxLength="100" value={diaChiForm.tenNguoiNhan} onChange={(e) => setDiaChiForm({ ...diaChiForm, tenNguoiNhan: e.target.value })} /></label>
-              <label>Số điện thoại<input required type="tel" pattern="0[0-9]{9}" value={diaChiForm.soDienThoai} onChange={(e) => setDiaChiForm({ ...diaChiForm, soDienThoai: e.target.value })} /></label>
-              <label>Tỉnh/thành<input required maxLength="100" value={diaChiForm.tinhThanh} onChange={(e) => setDiaChiForm({ ...diaChiForm, tinhThanh: e.target.value })} /></label>
-              <label>Phường/xã<input required maxLength="100" value={diaChiForm.phuongXa} onChange={(e) => setDiaChiForm({ ...diaChiForm, phuongXa: e.target.value })} /></label>
-              <label>Địa chỉ chi tiết<input required maxLength="255" value={diaChiForm.diaChiChiTiet} onChange={(e) => setDiaChiForm({ ...diaChiForm, diaChiChiTiet: e.target.value })} /></label>
-              <label className="checkbox-label"><input type="checkbox" checked={diaChiForm.laMacDinh} onChange={(e) => setDiaChiForm({ ...diaChiForm, laMacDinh: e.target.checked })} /> Đặt làm địa chỉ mặc định</label>
-              <div className="inline-actions">
-                <button className="btn" disabled={dangGui}>{diaChiDangSua ? 'Lưu địa chỉ' : 'Thêm địa chỉ'}</button>
-                {diaChiDangSua && <button type="button" onClick={() => { setDiaChiDangSua(null); setDiaChiForm(DIA_CHI_RONG); }}>Hủy</button>}
-              </div>
-            </form>
+      {moForm && (
+        <form className="form address-form" onSubmit={luu}>
+          <h2>{dangSua ? 'Sửa địa chỉ' : 'Địa chỉ mới'}</h2>
+          <div className="form-grid">
+            <label className="field">Tên người nhận<input required maxLength="100" value={form.tenNguoiNhan} onChange={doi('tenNguoiNhan')} /></label>
+            <label className="field">Số điện thoại<input required type="tel" pattern="0[0-9]{9}" title="10 chữ số, bắt đầu bằng 0" value={form.soDienThoai} onChange={doi('soDienThoai')} /></label>
+            <label className="field">Tỉnh / thành phố<input required maxLength="100" value={form.tinhThanh} onChange={doi('tinhThanh')} /></label>
+            <label className="field">Phường / xã<input required maxLength="100" value={form.phuongXa} onChange={doi('phuongXa')} /></label>
+            <label className="field span-2">Địa chỉ chi tiết<input required maxLength="255" value={form.diaChiChiTiet} onChange={doi('diaChiChiTiet')} /></label>
           </div>
-        )}
-      </section>
+          <label className="checkbox-label"><input type="checkbox" checked={form.laMacDinh} onChange={(e) => setForm({ ...form, laMacDinh: e.target.checked })} /> Đặt làm địa chỉ mặc định</label>
+          <div className="inline-actions">
+            <button className="btn btn-primary" disabled={dangGui}>{dangSua ? 'Lưu địa chỉ' : 'Thêm địa chỉ'}</button>
+            <button type="button" className="btn btn-ghost" onClick={dongForm}>Hủy</button>
+          </div>
+        </form>
+      )}
+
+      {dangTai ? (
+        <div className="address-grid"><SkeletonBlock height={120} /><SkeletonBlock height={120} /></div>
+      ) : diaChis.length === 0 ? (
+        !moForm && <EmptyState compact icon="mapPin" tieuDe="Chưa có địa chỉ" moTa="Lưu địa chỉ để thanh toán nhanh hơn ở lần mua sau." />
+      ) : (
+        <div className="address-grid">
+          {diaChis.map((dc) => (
+            <article key={dc.id} className={`address-card${dc.laMacDinh ? ' is-default' : ''}`}>
+              <div className="address-card-head">
+                <strong>{dc.tenNguoiNhan}</strong>
+                {dc.laMacDinh && <span className="badge badge-soft">Mặc định</span>}
+              </div>
+              <p className="muted">{dc.soDienThoai}</p>
+              <p>{dc.diaChiDayDu || `${dc.diaChiChiTiet}, ${dc.phuongXa}, ${dc.tinhThanh}`}</p>
+              <div className="inline-actions">
+                <button type="button" className="link-button" onClick={() => { setDangSua(dc.id); setForm({ ...dc }); setMoForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Sửa</button>
+                {!dc.laMacDinh && <button type="button" className="link-button" onClick={() => thaoTac(() => accountApi.datDiaChiMacDinh(dc.id), 'Đã đặt làm mặc định')}>Đặt mặc định</button>}
+                <button type="button" className="link-button text-danger" onClick={() => { if (window.confirm('Xóa địa chỉ này?')) thaoTac(() => accountApi.xoaDiaChi(dc.id), 'Đã xóa địa chỉ'); }}>Xóa</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function AccountPage() {
+  const [params] = useSearchParams();
+  const tab = params.get('tab') || 'ho-so';
+  return (
+    <AccountShell>
+      {tab === 'dia-chi' ? <SoDiaChi /> : tab === 'mat-khau' ? <DoiMatKhau /> : <HoSo />}
+    </AccountShell>
   );
 }
