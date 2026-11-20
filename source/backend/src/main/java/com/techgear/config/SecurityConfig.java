@@ -50,7 +50,7 @@ public class SecurityConfig {
                                 "/api/tra-cuu-don-hang").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/san-pham/**", "/api/danh-muc/**", "/api/thuong-hieu/**",
-                                "/api/ma-giam-gia/**", "/api/banner/**", "/uploads/**").permitAll()
+                                "/api/ma-giam-gia/**", "/api/banner/**", "/api/cai-dat", "/uploads/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("QUAN_TRI")
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
