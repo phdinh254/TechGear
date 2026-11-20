@@ -5,6 +5,7 @@ import com.techgear.dto.PageResponse;
 import com.techgear.dto.SanPhamChiTietResponse;
 import com.techgear.dto.SanPhamTomTatResponse;
 import com.techgear.dto.ThuongHieuResponse;
+import com.techgear.entity.BienTheSanPham;
 import com.techgear.entity.DanhMuc;
 import com.techgear.entity.GiaTriTuyChon;
 import com.techgear.entity.HinhAnhSanPham;
@@ -12,8 +13,13 @@ import com.techgear.entity.SanPham;
 import com.techgear.entity.ThuongHieu;
 import com.techgear.exception.ApiException;
 import com.techgear.repository.SanPhamRepository;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -65,11 +71,8 @@ public class SanPhamService {
                 Join<SanPham, ThuongHieu> th = root.join("thuongHieu");
                 dk.add(cb.equal(th.get("slug"), thuongHieuSlug));
             }
-            if (giaTu != null) {
-                dk.add(cb.greaterThanOrEqualTo(root.get("giaBan"), giaTu));
-            }
-            if (giaDen != null) {
-                dk.add(cb.lessThanOrEqualTo(root.get("giaBan"), giaDen));
+            if (giaTu != null || giaDen != null) {
+                dk.add(locTheoGiaBienThe(root, query, cb, giaTu, giaDen));
             }
             return cb.and(dk.toArray(new Predicate[0]));
         };
@@ -137,6 +140,38 @@ public class SanPhamService {
         return new SanPhamTomTatResponse(sp.getId(), sp.getTen(), sp.getSlug(), sp.getMoTaNgan(),
                 sp.getGiaBan(), sp.getGiaGoc(), anhChinh,
                 sp.getThuongHieu() == null ? null : sp.getThuongHieu().getTen(), conHang);
+    }
+
+    /**
+     * Sản phẩm khớp khoảng giá khi có ít nhất một biến thể đang hiển thị có giá (giá riêng của biến thể,
+     * NULL thì lấy giá sản phẩm) nằm trong khoảng. Sản phẩm chưa có biến thể hiển thị thì xét giá sản phẩm.
+     */
+    private Predicate locTheoGiaBienThe(Root<SanPham> root, CriteriaQuery<?> query, CriteriaBuilder cb,
+                                        BigDecimal giaTu, BigDecimal giaDen) {
+        Subquery<Long> bienTheKhopGia = query.subquery(Long.class);
+        Root<BienTheSanPham> bt = bienTheKhopGia.from(BienTheSanPham.class);
+        Expression<BigDecimal> giaHieuLuc = cb.coalesce(bt.<BigDecimal>get("giaBan"), root.<BigDecimal>get("giaBan"));
+        List<Predicate> dkBienThe = new ArrayList<>();
+        dkBienThe.add(cb.equal(bt.get("sanPham"), root));
+        dkBienThe.add(cb.isTrue(bt.get("hienThi")));
+        dkBienThe.addAll(trongKhoang(cb, giaHieuLuc, giaTu, giaDen));
+        bienTheKhopGia.select(bt.get("id")).where(dkBienThe.toArray(new Predicate[0]));
+
+        Subquery<Long> coBienThe = query.subquery(Long.class);
+        Root<BienTheSanPham> bt2 = coBienThe.from(BienTheSanPham.class);
+        coBienThe.select(bt2.get("id")).where(cb.equal(bt2.get("sanPham"), root), cb.isTrue(bt2.get("hienThi")));
+
+        List<Predicate> dkGiaSanPham = new ArrayList<>(trongKhoang(cb, root.get("giaBan"), giaTu, giaDen));
+        dkGiaSanPham.add(cb.not(cb.exists(coBienThe)));
+        return cb.or(cb.exists(bienTheKhopGia), cb.and(dkGiaSanPham.toArray(new Predicate[0])));
+    }
+
+    private static List<Predicate> trongKhoang(CriteriaBuilder cb, Expression<BigDecimal> gia,
+                                               BigDecimal giaTu, BigDecimal giaDen) {
+        List<Predicate> dk = new ArrayList<>();
+        if (giaTu != null) dk.add(cb.greaterThanOrEqualTo(gia, giaTu));
+        if (giaDen != null) dk.add(cb.lessThanOrEqualTo(gia, giaDen));
+        return dk;
     }
 
     private Sort taoSapXep(String sapXep) {
