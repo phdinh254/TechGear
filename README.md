@@ -202,6 +202,9 @@ Lỗi trả về dạng `{ "thoiGian": "...", "trangThai": 400, "thongBao": "...
 | GET | `/don-hang-cua-toi` | Đã đăng nhập | Danh sách đơn hàng của tôi |
 | GET | `/don-hang-cua-toi/{maDonHang}` | Đã đăng nhập | Chi tiết đơn hàng |
 | PATCH | `/don-hang-cua-toi/{maDonHang}/huy` | Đã đăng nhập | Hủy đơn hàng |
+| POST | `/tra-cuu-don-hang` | Công khai | Tra cứu đơn bằng mã đơn + email hoặc số điện thoại đặt hàng |
+| GET | `/banner` | Công khai | Banner đang hiển thị (lọc theo khung thời gian, sắp theo thứ tự) |
+| GET | `/cai-dat` | Công khai | Cài đặt công khai: tên cửa hàng, hotline, email, phí vận chuyển |
 | GET | `/yeu-thich` | Đã đăng nhập | Danh sách sản phẩm yêu thích |
 | GET / POST / DELETE | `/yeu-thich/{sanPhamId}` | Đã đăng nhập | Kiểm tra / thêm / bỏ yêu thích |
 | POST | `/danh-gia` | Đã đăng nhập | Đánh giá sản phẩm trong đơn đã hoàn thành (chờ duyệt) |
@@ -227,9 +230,9 @@ Tham số `/san-pham`: `tuKhoa`, `danhMuc` (slug, gồm cả danh mục con), `t
 |---|---|---|
 | 1. Nền tảng | ERD, kiến trúc, sơ đồ lớp; chuẩn hóa lỗi; cấu hình biến môi trường; Swagger; upload ảnh | Xong |
 | 2. Tài khoản | Hồ sơ, đổi mật khẩu, ảnh đại diện, quên / đặt lại mật khẩu, sổ địa chỉ | Xong |
-| 3. Sản phẩm | Tìm kiếm theo giá biến thể, banner, cài đặt cửa hàng, đánh giá theo sản phẩm | Đang làm |
+| 3. Sản phẩm | Tìm kiếm theo giá biến thể, banner, cài đặt cửa hàng, đánh giá theo sản phẩm | Xong |
 | 4. Giỏ hàng | Giỏ hàng trên server, gộp giỏ localStorage khi đăng nhập, yêu thích | Xong |
-| 5. Đặt hàng | Mã giảm giá, phí vận chuyển, tồn kho, đơn của tôi, hủy đơn, tra cứu đơn | Đang làm (còn tra cứu đơn) |
+| 5. Đặt hàng | Mã giảm giá, phí vận chuyển, tồn kho, đơn của tôi, hủy đơn, tra cứu đơn | Xong |
 | 6. Thanh toán | VNPay (sandbox) | Chưa |
 | 7. Đánh giá | Đánh giá sản phẩm đã mua, chờ duyệt | Xong |
 | 8. Quản trị | Sản phẩm + biến thể, kho, đơn hàng, mã giảm giá, banner, người dùng, thống kê | Chưa |
