@@ -1,3 +1,8 @@
 export default function Loading({ noiDung = 'Đang tải...' }) {
-  return <p className="state">{noiDung}</p>;
+  return (
+    <div className="loading" role="status">
+      <span className="spinner spinner-lg" />
+      <span>{noiDung}</span>
+    </div>
+  );
 }
