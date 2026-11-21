@@ -34,6 +34,7 @@ public class DanhGiaService {
     @Transactional(readOnly = true)
     public DanhGiaSanPhamResponse layTheoSanPham(String slug, int trang, int kichThuoc) {
         SanPham sanPham = sanPhamRepository.findBySlugAndHienThiTrue(slug)
+                .filter(SanPham::dangBan)
                 .orElseThrow(() -> ApiException.khongTimThay("Không tìm thấy sản phẩm"));
 
         Page<DanhGiaResponse> danhSach = danhGiaRepository

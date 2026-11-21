@@ -14,7 +14,17 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Long>, JpaSpec
 
     Optional<SanPham> findBySlugAndHienThiTrue(String slug);
 
-    List<SanPham> findTop8ByHienThiTrueAndNoiBatTrueOrderByIdDesc();
+    long countByDanhMucId(Long danhMucId);
+
+    /** Mỗi dòng: [danhMucId, số sản phẩm]. */
+    @Query("SELECT s.danhMuc.id, COUNT(s) FROM SanPham s GROUP BY s.danhMuc.id")
+    List<Object[]> demTheoDanhMuc();
+
+    long countByThuongHieuId(Long thuongHieuId);
+
+    /** Mỗi dòng: [thuongHieuId, số sản phẩm]. */
+    @Query("SELECT s.thuongHieu.id, COUNT(s) FROM SanPham s WHERE s.thuongHieu IS NOT NULL GROUP BY s.thuongHieu.id")
+    List<Object[]> demTheoThuongHieu();
 
     @Modifying
     @Query("UPDATE SanPham s SET s.luotXem = s.luotXem + 1 WHERE s.id = :id")
@@ -23,4 +33,8 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Long>, JpaSpec
     /** Đếm slug kể cả bản ghi đã xóa mềm (cột slug UNIQUE trong CSDL), bỏ qua bản ghi có id = boQuaId. */
     @Query(value = "SELECT COUNT(*) FROM san_pham WHERE slug = :slug AND id <> :boQuaId", nativeQuery = true)
     long demSlugKeCaDaXoa(@Param("slug") String slug, @Param("boQuaId") long boQuaId);
+
+    @Modifying
+    @Query("UPDATE SanPham s SET s.deletedAt = CURRENT_TIMESTAMP WHERE s.id = :id")
+    int xoaMem(@Param("id") Long id);
 }

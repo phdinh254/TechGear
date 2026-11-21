@@ -115,7 +115,7 @@ public class GioHangService {
         BienTheSanPham bienThe = bienTheRepository.findById(bienTheId)
                 .orElseThrow(() -> ApiException.khongTimThay("Không tìm thấy biến thể sản phẩm"));
         SanPham sanPham = bienThe.getSanPham();
-        if (!Boolean.TRUE.equals(bienThe.getHienThi()) || !Boolean.TRUE.equals(sanPham.getHienThi())) {
+        if (!Boolean.TRUE.equals(bienThe.getHienThi()) || !sanPham.dangBan()) {
             throw ApiException.khongTimThay("Sản phẩm không còn được bán");
         }
         if (bienThe.getSoLuongTon() <= 0) {
@@ -157,7 +157,7 @@ public class GioHangService {
                 .map(HinhAnhSanPham::getDuongDan)
                 .findFirst()
                 .orElse(sanPham.getHinhAnhs().isEmpty() ? null : sanPham.getHinhAnhs().get(0).getDuongDan());
-        boolean conBan = Boolean.TRUE.equals(sanPham.getHienThi())
+        boolean conBan = sanPham.dangBan()
                 && Boolean.TRUE.equals(bienThe.getHienThi()) && bienThe.getSoLuongTon() > 0;
         return new GioHangResponse.DongGioHang(
                 chiTiet.getId(), bienThe.getId(), sanPham.getSlug(), sanPham.getTen(), phanLoai,

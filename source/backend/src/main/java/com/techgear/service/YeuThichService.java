@@ -28,7 +28,7 @@ public class YeuThichService {
     public List<SanPhamTomTatResponse> layDanhSach(Long nguoiDungId) {
         return yeuThichRepository.findByNguoiDungIdOrderByCreatedAtDesc(nguoiDungId).stream()
                 .map(YeuThich::getSanPham)
-                .filter(item -> Boolean.TRUE.equals(item.getHienThi()))
+                .filter(SanPham::dangBan)
                 .map(sanPhamService::taoTomTat)
                 .toList();
     }
@@ -45,7 +45,7 @@ public class YeuThichService {
         NguoiDung nguoiDung = nguoiDungRepository.findById(nguoiDungId)
                 .orElseThrow(() -> ApiException.khongTimThay("Không tìm thấy người dùng"));
         SanPham sanPham = sanPhamRepository.findById(sanPhamId)
-                .filter(item -> Boolean.TRUE.equals(item.getHienThi()))
+                .filter(SanPham::dangBan)
                 .orElseThrow(() -> ApiException.khongTimThay("Không tìm thấy sản phẩm"));
         YeuThich yeuThich = new YeuThich();
         yeuThich.setId(id);

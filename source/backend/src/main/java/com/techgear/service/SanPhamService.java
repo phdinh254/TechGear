@@ -17,6 +17,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -58,9 +59,8 @@ public class SanPhamService {
         List<Long> danhMucIds = StringUtils.hasText(danhMucSlug)
                 ? danhMucService.layIdKemDanhMucCon(danhMucSlug) : null;
 
-        Specification<SanPham> spec = (root, query, cb) -> {
+        Specification<SanPham> locTheoDieuKien = (root, query, cb) -> {
             List<Predicate> dk = new ArrayList<>();
-            dk.add(cb.isTrue(root.get("hienThi")));
             if (StringUtils.hasText(tuKhoa)) {
                 dk.add(cb.like(cb.lower(root.get("ten")), "%" + tuKhoa.trim().toLowerCase(Locale.ROOT) + "%"));
             }
@@ -76,6 +76,7 @@ public class SanPhamService {
             }
             return cb.and(dk.toArray(new Predicate[0]));
         };
+        Specification<SanPham> spec = dieuKienDangBan().and(locTheoDieuKien);
 
         PageRequest pageable = PageRequest.of(Math.max(trang, 0),
                 Math.min(Math.max(kichThuoc, 1), KICH_THUOC_TOI_DA), taoSapXep(sapXep));
@@ -85,8 +86,20 @@ public class SanPhamService {
 
     @Transactional(readOnly = true)
     public List<SanPhamTomTatResponse> layNoiBat() {
-        return sanPhamRepository.findTop8ByHienThiTrueAndNoiBatTrueOrderByIdDesc().stream()
-                .map(this::taoTomTat).toList();
+        Specification<SanPham> noiBat = (root, query, cb) -> cb.isTrue(root.get("noiBat"));
+        return sanPhamRepository.findAll(dieuKienDangBan().and(noiBat),
+                        PageRequest.of(0, 8, Sort.by(Sort.Direction.DESC, "id")))
+                .getContent().stream().map(this::taoTomTat).toList();
+    }
+
+    /** Sản phẩm đang bán: sản phẩm, danh mục và danh mục cha (nếu có) đều hiển thị. */
+    static Specification<SanPham> dieuKienDangBan() {
+        return (root, query, cb) -> {
+            Join<SanPham, DanhMuc> danhMuc = root.join("danhMuc");
+            Join<DanhMuc, DanhMuc> cha = danhMuc.join("danhMucCha", JoinType.LEFT);
+            return cb.and(cb.isTrue(root.get("hienThi")), cb.isTrue(danhMuc.get("hienThi")),
+                    cb.or(cb.isNull(cha.get("id")), cb.isTrue(cha.get("hienThi"))));
+        };
     }
 
     /** Lấy chi tiết sản phẩm theo slug và tăng lượt xem. */
@@ -94,6 +107,9 @@ public class SanPhamService {
     public SanPhamChiTietResponse layChiTiet(String slug) {
         SanPham sp = sanPhamRepository.findBySlugAndHienThiTrue(slug)
                 .orElseThrow(() -> ApiException.khongTimThay("Không tìm thấy sản phẩm"));
+        if (!sp.dangBan()) {
+            throw ApiException.khongTimThay("Không tìm thấy sản phẩm");
+        }
         sanPhamRepository.tangLuotXem(sp.getId());
 
         DanhMuc dm = sp.getDanhMuc();

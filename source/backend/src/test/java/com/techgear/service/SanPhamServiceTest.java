@@ -18,6 +18,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -73,5 +75,25 @@ class SanPhamServiceTest {
         assertNull(response.thuongHieu());
         assertEquals(4, response.luotXem());
         verify(sanPhamRepository).tangLuotXem(sanPham.getId());
+    }
+
+    @Test
+    void chiTietSanPhamThuocDanhMucAnTra404() {
+        DanhMuc danhMuc = new DanhMuc();
+        danhMuc.setId(10L);
+        danhMuc.setHienThi(false);
+
+        SanPham sanPham = new SanPham();
+        sanPham.setId(20L);
+        sanPham.setDanhMuc(danhMuc);
+        sanPham.setSlug("san-pham-an");
+
+        when(sanPhamRepository.findBySlugAndHienThiTrue("san-pham-an")).thenReturn(Optional.of(sanPham));
+
+        ApiException loi = assertThrows(ApiException.class, () -> sanPhamService.layChiTiet("san-pham-an"));
+
+        assertEquals(HttpStatus.NOT_FOUND, loi.getStatus());
+        assertEquals("Không tìm thấy sản phẩm", loi.getMessage());
+        verify(sanPhamRepository, never()).tangLuotXem(any());
     }
 }

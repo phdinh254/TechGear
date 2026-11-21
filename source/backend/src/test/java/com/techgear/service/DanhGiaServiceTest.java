@@ -51,6 +51,7 @@ class DanhGiaServiceTest {
         SanPham sanPham = new SanPham();
         sanPham.setId(5L);
         sanPham.setSlug("tai-nghe");
+        sanPham.setDanhMuc(new com.techgear.entity.DanhMuc());
 
         NguoiDung nguoiDung = new NguoiDung();
         nguoiDung.setHoTen("Khách hàng mẫu");
@@ -74,5 +75,19 @@ class DanhGiaServiceTest {
         assertEquals(1, response.tongDanhGia());
         assertEquals("Khách hàng mẫu", response.danhSach().noiDung().get(0).tenNguoiDung());
         assertEquals(5, response.danhSach().noiDung().get(0).soSao());
+    }
+
+    @Test
+    void sanPhamBiAnQuaDanhMucThiKhongTraDanhGia() {
+        com.techgear.entity.DanhMuc danhMuc = new com.techgear.entity.DanhMuc();
+        danhMuc.setHienThi(false);
+        SanPham sanPham = new SanPham();
+        sanPham.setId(5L);
+        sanPham.setDanhMuc(danhMuc);
+        when(sanPhamRepository.findBySlugAndHienThiTrue("tai-nghe")).thenReturn(Optional.of(sanPham));
+
+        com.techgear.exception.ApiException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                com.techgear.exception.ApiException.class, () -> danhGiaService.layTheoSanPham("tai-nghe", 0, 5));
+        assertEquals("Không tìm thấy sản phẩm", ex.getMessage());
     }
 }

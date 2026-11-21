@@ -128,7 +128,7 @@ public class DatHangService {
                     : bienTheRepository.findById(entry.getKey()).orElseThrow(
                     () -> ApiException.khongTimThay("Không tìm thấy biến thể sản phẩm"));
             if (!Boolean.TRUE.equals(bienThe.getHienThi())
-                    || !Boolean.TRUE.equals(bienThe.getSanPham().getHienThi())) {
+                    || !bienThe.getSanPham().dangBan()) {
                 throw new ApiException(HttpStatus.CONFLICT, "Sản phẩm không còn được bán: " + bienThe.getSku());
             }
             if (entry.getValue() > bienThe.getSoLuongTon()) {

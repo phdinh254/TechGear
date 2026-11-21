@@ -81,4 +81,13 @@ public class SanPham extends AuditableEntity {
     @OneToMany(mappedBy = "sanPham", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id ASC")
     private List<BienTheSanPham> bienThes = new ArrayList<>();
+
+    /** Sản phẩm đang bán khi chính nó, danh mục và danh mục cha (nếu có) đều đang hiển thị. */
+    public boolean dangBan() {
+        if (!Boolean.TRUE.equals(hienThi) || danhMuc == null || !Boolean.TRUE.equals(danhMuc.getHienThi())) {
+            return false;
+        }
+        DanhMuc cha = danhMuc.getDanhMucCha();
+        return cha == null || Boolean.TRUE.equals(cha.getHienThi());
+    }
 }
