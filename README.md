@@ -109,6 +109,12 @@ Trạng thái thanh toán của đơn:
 
 [![Viết đánh giá](docs/thiet-ke/18_hd_viet_danh_gia.drawio.png)](docs/thiet-ke/18_hd_viet_danh_gia.drawio.png)
 
+### 10. Quản trị
+
+| Xử lý đơn hàng | Thêm sản phẩm |
+|:---:|:---:|
+| [![Quản trị xử lý đơn hàng](docs/thiet-ke/19_hd_qt_xu_ly_don_hang.drawio.png)](docs/thiet-ke/19_hd_qt_xu_ly_don_hang.drawio.png) | [![Quản trị thêm sản phẩm](docs/thiet-ke/20_hd_qt_them_san_pham.drawio.png)](docs/thiet-ke/20_hd_qt_them_san_pham.drawio.png) |
+
 ## Sơ đồ use case
 
 Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png`, `.svg`). Tác nhân và quy ước quan hệ: xem [`docs/so-do-use-case/README.md`](docs/so-do-use-case/README.md).
