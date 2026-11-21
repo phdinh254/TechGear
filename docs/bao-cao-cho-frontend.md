@@ -1,6 +1,6 @@
 # Báo cáo backend cho người làm frontend
 
-Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 15/11/2026 (Phase 9) · Nhánh: `hoanglong`
+Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 21/11/2026 (Phase 10) · Nhánh: `hoanglong`
 
 Tài liệu này tóm tắt những gì backend mới đã có, chỗ nào khác backend cũ, và việc frontend cần làm. Mỗi phase backend
 xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên, trả về, mã lỗi) nằm ở
@@ -15,6 +15,7 @@ cd source/backend && mvn spring-boot:run
 - API: `http://localhost:8080/api`, trùng `VITE_API_URL` mặc định của frontend nên không phải sửa `.env`.
 - Swagger UI để gọi thử: `http://localhost:8080/swagger-ui.html`. Đăng nhập lấy token, bấm **Authorize** rồi dán token vào.
 - Tài khoản mẫu: `admin@techgear.vn` / `Admin@123` (quản trị), `khach@techgear.vn` / `Khach@123` (khách hàng).
+  Dữ liệu mẫu đầy đủ (sản phẩm có ảnh, đơn hàng, đánh giá...): xem mục 11, cần xóa CSDL dev cũ một lần.
 - CORS chỉ cho phép `http://localhost:5173`. Vite tự đổi sang cổng khác khi 5173 bận (VD 5174) thì mọi lệnh gọi bị chặn.
   Gặp vậy thì tắt tiến trình đang chiếm 5173, hoặc chạy backend với `FRONTEND_URL=http://localhost:5174`.
 - Chưa cấu hình email thì liên kết đặt lại mật khẩu được in ra log của backend (dòng `Chưa cấu hình MAIL_USERNAME …`).
@@ -32,6 +33,7 @@ cd source/backend && mvn spring-boot:run
 | Thanh toán VNPay (sandbox) | Xong (Phase 7) | API mới; frontend cần thêm route `/thanh-toan/ket-qua` |
 | Đánh giá: viết, xem đánh giá đã duyệt, điểm trung bình ở chi tiết sản phẩm | Xong (Phase 8) | API mới; trường mới ở chi tiết sản phẩm không làm hỏng trang hiện tại |
 | Trang quản trị: danh mục, thương hiệu, sản phẩm, kho, đơn hàng, mã giảm giá, banner, cài đặt, người dùng, đánh giá, thống kê | Xong (Phase 9) | API mới; frontend chưa có trang quản trị (`laQuanTri` trong `AuthContext` đã có sẵn để ẩn/hiện menu) |
+| Dữ liệu mẫu đầy đủ: ảnh, banner, khách, đơn đủ trạng thái, đánh giá | Xong (Phase 10) | Có ngay khi chạy backend trên CSDL trống (mục 11) |
 
 ## 3. Quy ước chung (áp dụng mọi API)
 
@@ -300,13 +302,32 @@ Chi tiết từng API: các mục "Chi tiết API quản trị" (9.1 → 9.5) tr
 
 Sơ đồ: [quản trị xử lý đơn](thiet-ke/19_hd_qt_xu_ly_don_hang.drawio.png), [quản trị thêm sản phẩm](thiet-ke/20_hd_qt_them_san_pham.drawio.png).
 
-## 11. Kiểm thử phía backend
+## 11. Phase 10 – Dữ liệu mẫu
+
+Chạy backend profile dev trên CSDL trống là có sẵn dữ liệu để dựng giao diện. **CSDL dev cũ phải xóa một lần**
+(`docker compose down -v` rồi `docker compose up -d`), vì dữ liệu mẫu chỉ nạp khi chưa có sản phẩm hay đơn hàng nào.
+
+| Có gì | Dùng để thử |
+|---|---|
+| 35 sản phẩm / 9 danh mục con (mỗi danh mục ≥ 3), 10 thương hiệu có logo (trừ Baseus), 1 sản phẩm ẩn (`tai-nghe-sony-wh-ch510` → 404) | Trang chủ, lọc, sắp xếp, phân trang, trang chi tiết |
+| Ảnh: mọi sản phẩm có 1–3 ảnh, 4 danh mục cha có ảnh. `duongDan` là URL đầy đủ `https://...` (Wikimedia Commons) | `duongDanAnh()` trong `src/utils` đã giữ nguyên URL `http(s)` nên hiện đúng. Ảnh upload mới vẫn là `/uploads/...` |
+| Biến thể hết hàng (`BAS-GAN5-100-TRANG`, `XMI-PB20K`) và sắp hết | Nút "Hết hàng", cảnh báo tồn kho ở trang quản trị |
+| 4 banner: 3 đang chạy, 1 đã hết hạn (chỉ thấy ở trang quản trị) | Slider trang chủ |
+| 10 khách `*@example.com` / `Khach@123`, trong đó `ngo.long@example.com` bị khóa (đăng nhập trả 403) | Trang quản trị người dùng |
+| 43 đơn trong 90 ngày qua: đủ 5 trạng thái, COD và VNPay (đã trả, thất bại rồi trả lại, quá hạn tự hủy, hoàn tiền), có đơn vãng lai | Đơn của tôi, tra cứu, trang quản trị đơn, thống kê doanh thu theo ngày/tháng, bán chạy |
+| 27 đánh giá (đã duyệt, chờ duyệt, đã ẩn) | Sao + đánh giá ở chi tiết sản phẩm, trang duyệt đánh giá |
+| `khach@techgear.vn`: 3 đơn, 2 địa chỉ, giỏ hàng 2 dòng, 3 sản phẩm yêu thích | Đăng nhập là thấy ngay giỏ, yêu thích, lịch sử đơn |
+
+Nguồn và giấy phép của từng ảnh: [`nguon-anh-mau.md`](nguon-anh-mau.md). Bản CSDL đầy đủ để nộp bài hoặc nạp tay:
+`database/DB_TechGear.sql` (cách nạp ghi ở đầu file).
+
+## 12. Kiểm thử phía backend
 
 Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
 để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request), "06 Đánh giá" (12 request), "07 Quản trị" (50 request, chạy một vòng từ tạo sản phẩm tới đơn hoàn thành, đánh giá được duyệt, thống kê).
 
-## 12. Liên hệ
+## 13. Liên hệ
 
 Backend trả sai hình dạng dữ liệu hoặc thiếu trường frontend cần: báo kèm request (URL, body) và response nhận được.
 Phần frontend do bạn quyết định. Backend không sửa gì trong `source/frontend`.

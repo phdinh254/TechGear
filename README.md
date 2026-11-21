@@ -16,8 +16,13 @@ Nhóm sinh viên thực hiện:
 
 ```
 TechGear/
+├── database/
+│   └── DB_TechGear.sql           Lược đồ + dữ liệu mẫu PostgreSQL 17 (xuất bằng pg_dump)
 ├── docs/
-│   └── so-do-use-case/           9 sơ đồ use case (draw.io)
+│   ├── so-do-use-case/           9 sơ đồ use case (draw.io)
+│   ├── thiet-ke/                 Đặc tả, từ điển dữ liệu, đặc tả API, sơ đồ thiết kế
+│   └── nguon-anh-mau.md          Nguồn, tác giả, giấy phép ảnh dữ liệu mẫu
+├── postman/                      Bộ kiểm thử API (Postman/Newman)
 └── source/
     ├── backend/                  Spring Boot REST API (cổng 8080) – đang viết lại
     └── frontend/                 React (cổng 5173)
@@ -154,8 +159,14 @@ cd source/backend
 mvn spring-boot:run         # tự bật profile dev (kết nối CSDL ở trên, khóa JWT dùng cho máy cá nhân)
 ```
 - Swagger UI: `http://localhost:8080/swagger-ui.html` (bấm **Authorize**, dán token nhận được khi đăng nhập).
-- Tài khoản mẫu (chỉ profile dev): `admin@techgear.vn` / `Admin@123` (quản trị), `khach@techgear.vn` / `Khach@123` (khách hàng).
-- Mã giảm giá mẫu (chỉ profile dev): `GIAM10`, `GIAM50K`, `MOILAN1` (mỗi khách 1 lần), `HETHAN` (đã hết hạn).
+- Dữ liệu mẫu (chỉ profile dev, nạp khi CSDL chưa có sản phẩm/đơn hàng; muốn nạp lại: `docker compose down -v`): 35 sản phẩm
+  có ảnh, 4 banner, 12 tài khoản, 43 đơn trong 90 ngày qua (đủ trạng thái, COD/VNPay), 27 đánh giá. Chi tiết:
+  [`docs/bao-cao-cho-frontend.md`](docs/bao-cao-cho-frontend.md) mục 11. Ảnh là link Wikimedia Commons (cần internet),
+  nguồn và giấy phép: [`docs/nguon-anh-mau.md`](docs/nguon-anh-mau.md).
+- Tài khoản mẫu: `admin@techgear.vn` / `Admin@123` (quản trị), `khach@techgear.vn` / `Khach@123` (khách hàng),
+  10 khách `*@example.com` / `Khach@123` (`ngo.long@example.com` bị khóa).
+- Mã giảm giá mẫu: `GIAM10`, `GIAM50K`, `MOILAN1` (mỗi khách 1 lần), `HETHAN` (đã hết hạn).
+- Không chạy backend mà chỉ cần CSDL (VD để chấm/nộp bài): nạp `database/DB_TechGear.sql` vào CSDL trống, cách nạp ghi ở đầu file.
 - VNPay: dev dùng mã website và khóa giả (đủ để test IPN bằng Postman). Thanh toán thật trên sandbox: đặt `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` do sandbox.vnpayment.vn cấp.
 - Chưa cấu hình `MAIL_USERNAME` thì liên kết đặt lại mật khẩu được ghi ra log của backend thay vì gửi email.
 - Biến môi trường khi triển khai: xem `source/backend/.env.example` (bắt buộc `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
@@ -199,5 +210,5 @@ frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/a
 | 7. Thanh toán | VNPay (sandbox) | Xong |
 | 8. Đánh giá | Đánh giá sản phẩm đã mua, chờ duyệt | Xong |
 | 9. Quản trị | Sản phẩm, kho, đơn hàng, khuyến mãi, người dùng, thống kê | Xong |
-| 10. Dữ liệu mẫu | Dữ liệu mẫu đầy đủ + file `database/DB_TechGear.sql` | Chưa |
+| 10. Dữ liệu mẫu | Dữ liệu mẫu đầy đủ + file `database/DB_TechGear.sql` | Xong |
 | 11. Bàn giao | Kiểm thử toàn bộ, tài liệu, review | Chưa |
