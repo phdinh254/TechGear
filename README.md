@@ -9,8 +9,8 @@ Nhóm sinh viên thực hiện:
 | Thành phần | Công nghệ |
 |---|---|
 | Frontend | ReactJS 18 + Vite 5, React Router 6, Axios |
-| Backend | Java 21, Spring Boot 4.1 (Web MVC, Data JPA, Security + OAuth2 Resource Server/JWT, Validation, Mail), Flyway, springdoc-openapi (Swagger UI) – **đang viết lại** |
-| CSDL | PostgreSQL 17 (chạy bằng Docker Compose) – **đang viết lại** |
+| Backend | Java 21, Spring Boot 4.1 (Web MVC, Data JPA, Security + OAuth2 Resource Server/JWT, Validation, Mail), Flyway, springdoc-openapi (Swagger UI) |
+| CSDL | PostgreSQL 17 (chạy bằng Docker Compose), lược đồ quản lý bằng Flyway |
 
 ## Cấu trúc thư mục
 
@@ -24,7 +24,7 @@ TechGear/
 │   └── nguon-anh-mau.md          Nguồn, tác giả, giấy phép ảnh dữ liệu mẫu
 ├── postman/                      Bộ kiểm thử API (Postman/Newman)
 └── source/
-    ├── backend/                  Spring Boot REST API (cổng 8080) – đang viết lại
+    ├── backend/                  Spring Boot REST API (cổng 8080)
     └── frontend/                 React (cổng 5173)
         └── src/
             ├── api/              axiosClient (tự gắn token), các hàm gọi API
