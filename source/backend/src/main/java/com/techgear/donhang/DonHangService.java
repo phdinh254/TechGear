@@ -158,6 +158,10 @@ public class DonHangService {
 
     private DonHangResponse.ChiTiet dat(Long nguoiDungId, String email, DatHangRequest req) {
         BangGia g = tinh(req.dongs(), req.maGiamGia(), nguoiDungId, email, true);
+        if (g.tongTien() == 0 && "vnpay".equals(req.phuongThucThanhToan().name())) {
+            // VNPay không nhận số tiền 0 → đơn không bao giờ thanh toán được rồi bị tự hủy
+            throw ApiException.yeuCauKhongHopLe("Đơn 0đ không cần thanh toán VNPay, vui lòng chọn thanh toán khi nhận hàng");
+        }
 
         Map<String, Object> cot = new HashMap<>();
         cot.put("ma", maDonHangMoi());

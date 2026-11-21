@@ -116,6 +116,21 @@ class DatHangIT extends KiemThuDonHang {
     }
 
     @Test
+    void donVnPayTongTien0dPhaiChonCod() throws Exception {
+        jdbc.update("UPDATE cai_dat SET gia_tri = '0' WHERE khoa = 'phi_van_chuyen'");
+        long bt = bienThe("Cáp", 100_000, 5);
+        long id = maGiamGia("Free-" + TaoDuLieuSanPham.hauTo(), "phan_tram", 100, 0, null, null, null);
+        String ma = jdbc.queryForObject("SELECT ma FROM ma_giam_gia WHERE id = ?", String.class, id);
+
+        datHang(don(",\"maGiamGia\":\"" + ma + "\"", dong(bt, 1)).replace("\"cod\"", "\"vnpay\""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.thongBao").value("Đơn 0đ không cần thanh toán VNPay, vui lòng chọn thanh toán khi nhận hàng"));
+        datHang(don(",\"maGiamGia\":\"" + ma + "\"", dong(bt, 1)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tongTien").value(0));
+    }
+
+    @Test
     void maGiamGiaSaiTra400() throws Exception {
         long bt = bienThe("Loa", 100_000, 5);
         String h = TaoDuLieuSanPham.hauTo();

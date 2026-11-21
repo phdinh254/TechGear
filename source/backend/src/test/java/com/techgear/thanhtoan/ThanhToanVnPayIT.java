@@ -144,6 +144,19 @@ class ThanhToanVnPayIT extends KiemThuTichHop {
     }
 
     @Test
+    void khachHuyDonDaThanhToanThiGhiChuCanHoanTien() throws Exception {
+        String ma = datHang("vnpay");
+        goi("/api/thanh-toan/vnpay/ipn", ipn(taoUrl(ma), "00", KHOA)).andExpect(content().json("{\"RspCode\":\"00\"}"));
+
+        mvc.perform(post("/api/don-hang/" + ma + "/huy").header("Authorization", token)).andExpect(status().isOk());
+
+        Map<String, Object> don = jdbc.queryForMap(
+                "SELECT trang_thai, trang_thai_thanh_toan, ghi_chu_quan_tri FROM don_hang WHERE ma_don_hang = ?", ma);
+        assertThat(don).containsEntry("trang_thai", "da_huy").containsEntry("trang_thai_thanh_toan", "da_thanh_toan");
+        assertThat((String) don.get("ghi_chu_quan_tri")).contains("cần hoàn tiền");
+    }
+
+    @Test
     void ipnSaiChuKyKhongCoGiaoDichSaiSoTien() throws Exception {
         String ma = datHang("vnpay");
         Map<String, String> url = taoUrl(ma);

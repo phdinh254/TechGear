@@ -155,8 +155,15 @@ class DonHangRepository {
                 .param("id", donHangId).query(DongHoan.class).list();
     }
 
+    /** Hủy đơn đã thanh toán (VD VNPay trả trước khi quản trị xác nhận): ghi chú để quản trị hoàn tiền, như IPN đến trễ. */
     void doiTrangThai(Long donHangId, TrangThaiDonHang trangThai) {
-        jdbc.sql("UPDATE don_hang SET trang_thai = :tt, updated_at = now() WHERE id = :id")
+        jdbc.sql("""
+                        UPDATE don_hang SET trang_thai = :tt, updated_at = now(),
+                               ghi_chu_quan_tri = CASE WHEN :tt = 'da_huy' AND trang_thai_thanh_toan = 'da_thanh_toan'
+                                   THEN concat_ws(' | ', ghi_chu_quan_tri, 'Đơn đã thanh toán bị hủy – cần hoàn tiền')
+                                   ELSE ghi_chu_quan_tri END
+                        WHERE id = :id
+                        """)
                 .param("tt", trangThai.name()).param("id", donHangId).update();
     }
 
