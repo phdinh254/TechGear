@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import java.math.BigDecimal;
 
@@ -23,11 +25,15 @@ public class ChiTietDonHang extends AuditableEntity {
     @JoinColumn(name = "don_hang_id", nullable = false)
     private DonHang donHang;
 
+    /** Sản phẩm đã xóa mềm thì coi như null (đơn cũ vẫn mở được). */
     @ManyToOne(fetch = FetchType.LAZY)
+    @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "san_pham_id")
     private SanPham sanPham;
 
+    /** Biến thể đã xóa mềm thì coi như null. */
     @ManyToOne(fetch = FetchType.LAZY)
+    @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "bien_the_id")
     private BienTheSanPham bienThe;
 

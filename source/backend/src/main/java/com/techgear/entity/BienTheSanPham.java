@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -18,7 +19,14 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(name = "bien_the_san_pham")
-@SQLDelete(sql = "UPDATE bien_the_san_pham SET deleted_at = NOW() WHERE id = ?")
+/* Chỉ UPDATE cột thay đổi: sửa biến thể ở trang quản trị không ghi đè so_luong_ton của luồng đặt hàng / nhập kho. */
+@DynamicUpdate
+/*
+ * Xóa mềm đồng thời giải phóng SKU ("ABC" -> "ABC#id", giống SkuUtil.giaiPhong) để SKU dùng lại được.
+ * Phải làm trong câu lệnh xóa: Hibernate không ghi thay đổi (dirty) của entity đã bị xóa / orphanRemoval.
+ */
+@SQLDelete(sql = "UPDATE bien_the_san_pham SET deleted_at = NOW(), "
+        + "sku = CONCAT(LEFT(sku, 99 - CHAR_LENGTH(id)), '#', id) WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class BienTheSanPham extends AuditableEntity {
 
