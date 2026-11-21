@@ -217,4 +217,4 @@ frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/a
 | 8. Đánh giá | Đánh giá sản phẩm đã mua, chờ duyệt | Xong |
 | 9. Quản trị | Sản phẩm, kho, đơn hàng, khuyến mãi, người dùng, thống kê | Xong |
 | 10. Dữ liệu mẫu | Dữ liệu mẫu đầy đủ + file `database/DB_TechGear.sql` | Xong |
-| 11. Bàn giao | Kiểm thử toàn bộ, tài liệu, review | Chưa |
+| 11. Bàn giao | Kiểm thử toàn bộ, tài liệu, review | Xong |

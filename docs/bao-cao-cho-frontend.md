@@ -321,14 +321,32 @@ Chạy backend profile dev trên CSDL trống là có sẵn dữ liệu để d�
 Nguồn và giấy phép của từng ảnh: [`nguon-anh-mau.md`](nguon-anh-mau.md). Bản CSDL đầy đủ để nộp bài hoặc nạp tay:
 `database/DB_TechGear.sql` (cách nạp ghi ở đầu file).
 
-## 12. Kiểm thử phía backend
+## 12. Phase 11 – Hành vi mới và hạn chế đã biết
+
+Hành vi mới (sau review bảo mật và review code):
+- `POST /don-hang` (và `/vang-lai`) chọn VNPay mà tổng tiền 0đ → 400 "Đơn 0đ không cần thanh toán VNPay, vui lòng chọn thanh
+  toán khi nhận hàng". Gợi ý: ẩn lựa chọn VNPay khi `tinh-thu` trả `tongTien = 0`.
+- Khách hoặc quản trị hủy đơn **đã thanh toán** (VNPay trả xong khi đơn còn chờ xác nhận) → đơn `da_huy`, vẫn
+  `da_thanh_toan`, `ghiChuQuanTri` thêm "Đơn đã thanh toán bị hủy – cần hoàn tiền". Quản trị hoàn tiền xong thì
+  `PATCH /admin/don-hang/{ma}/thanh-toan` `{ trangThaiThanhToan: "da_hoan_tien" }`.
+- Giới hạn số lần (đăng nhập sai, quên mật khẩu, tra cứu đơn, đặt hàng vãng lai) tính cả các request gửi song song.
+
+Hạn chế đã biết (cố ý giữ, ghi lại để không bất ngờ):
+- `POST /don-hang/tinh-thu` là đường dẫn công khai nên backend bỏ qua token. Khách đã đăng nhập cần gửi kèm `email` của
+  tài khoản thì kết quả kiểm lượt dùng mã "mỗi khách N lần" mới khớp lúc đặt hàng thật.
+- `POST /thanh-toan/vnpay/{ma}` công khai (khách vãng lai cần trả tiền). Ai biết mã đơn (6 ký tự ngẫu nhiên) có thể tạo thêm
+  liên kết thanh toán cho đơn đó, nhưng không xem được thông tin đơn và mỗi đơn tối đa 99 lần thử.
+- Sửa tùy chọn mà **đổi chéo** tên hai giá trị trong một lần gửi (VD Đen ↔ Trắng) → 409; đổi qua một tên tạm rồi sửa tiếp.
+- Bộ đếm giới hạn số lần lưu trong bộ nhớ một máy chủ (chạy nhiều máy chủ thì cần kho dùng chung).
+
+## 13. Kiểm thử phía backend
 
 Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
 để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request), "06 Đánh giá" (12 request), "07 Quản trị" (68 request, chạy một vòng từ tạo sản phẩm tới đơn hoàn thành, đánh giá được duyệt, thống kê).
 Bộ Postman gọi đủ cả 92 API của backend (đối chiếu với Swagger `/v3/api-docs`).
 
-## 13. Liên hệ
+## 14. Liên hệ
 
 Backend trả sai hình dạng dữ liệu hoặc thiếu trường frontend cần: báo kèm request (URL, body) và response nhận được.
 Phần frontend do bạn quyết định. Backend không sửa gì trong `source/frontend`.

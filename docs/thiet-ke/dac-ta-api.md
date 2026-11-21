@@ -222,7 +222,7 @@ tổng lượt, khách chưa hết lượt của mình (đếm đơn chưa hủy
 | API | Gửi lên | Trả về | Lỗi riêng |
 |---|---|---|---|
 | `POST /don-hang/tinh-thu` | `{ dongs, maGiamGia?, email? }` (`email` để kiểm lượt mỗi người) | 200 `TinhThu` (không lưu, không giữ hàng) | Như đặt hàng |
-| `POST /don-hang` | `{ dongs, ...NguoiNhan, maGiamGia?, phuongThucThanhToan, ghiChu? }`; email lấy từ tài khoản | 201 `DonHang`; các biến thể vừa đặt bị xóa khỏi giỏ server | 404 "Phiên bản sản phẩm không còn bán"; 409 "Sản phẩm X (phân loại) chỉ còn N trong kho" / "... đã hết hàng"; 400 mã giảm giá |
+| `POST /don-hang` | `{ dongs, ...NguoiNhan, maGiamGia?, phuongThucThanhToan, ghiChu? }`; email lấy từ tài khoản | 201 `DonHang`; các biến thể vừa đặt bị xóa khỏi giỏ server | 404 "Phiên bản sản phẩm không còn bán"; 409 "Sản phẩm X (phân loại) chỉ còn N trong kho" / "... đã hết hàng"; 400 mã giảm giá; 400 "Đơn 0đ không cần thanh toán VNPay, vui lòng chọn thanh toán khi nhận hàng" |
 | `POST /don-hang/vang-lai` | như trên + `email` (bắt buộc) | 201 `DonHang` | như trên; 429 khi một IP đặt quá 10 đơn / 15 phút |
 | `GET /don-hang` | `trangThai?`, `trang`, `kichThuoc` (1–50, mặc định 10) | 200 trang `DonHangTomTat`, mới nhất trước | |
 | `GET /don-hang/{maDonHang}` | – | 200 `DonHang` | 404 "Không tìm thấy đơn hàng" (kể cả đơn người khác) |
