@@ -38,6 +38,8 @@ export function AuthProvider({ children }) {
     setNguoiDung(null);
   }, []);
 
+  const capNhatNguoiDung = useCallback((duLieu) => setNguoiDung(duLieu), []);
+
   const giaTri = useMemo(
     () => ({
       nguoiDung,
@@ -46,8 +48,9 @@ export function AuthProvider({ children }) {
       dangNhap,
       dangKy,
       dangXuat,
+      capNhatNguoiDung,
     }),
-    [nguoiDung, dangTai, dangNhap, dangKy, dangXuat],
+    [nguoiDung, dangTai, dangNhap, dangKy, dangXuat, capNhatNguoiDung],
   );
 
   return <AuthContext.Provider value={giaTri}>{children}</AuthContext.Provider>;

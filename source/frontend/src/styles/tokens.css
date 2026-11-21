@@ -1,0 +1,103 @@
+/* =========================================================
+   TechGear design tokens
+   Navy (nhận diện) + Electric Blue (điểm nhấn), nền sáng chủ đạo,
+   khối lớn dùng nền tối để tạo tương phản.
+   ========================================================= */
+:root {
+  /* Màu thương hiệu */
+  --navy-950: #070d1a;
+  --navy-900: #0b1324;
+  --navy-800: #111c33;
+  --navy-700: #1a2744;
+  --navy-600: #26365a;
+  --blue-600: #1f56e0;
+  --blue-500: #2f6bff;   /* Electric Blue – CTA & điểm nhấn */
+  --blue-400: #5b8cff;
+  --blue-100: #e7eeff;
+  --blue-50: #f2f6ff;
+  --cyan-400: #38d6f5;   /* dùng rất tiết chế: ánh sáng trên nền tối */
+
+  /* Trung tính */
+  --ink: #0b1220;        /* tiêu đề */
+  --text: #2a3346;       /* nội dung */
+  --muted: #667085;
+  --subtle: #98a2b3;
+  --line: #e7eaf0;
+  --line-strong: #d5dae3;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;  /* nền khung ảnh sản phẩm */
+
+  /* Trạng thái */
+  --sale: #e5484d;
+  --sale-bg: #fff0f0;
+  --success: #12805c;
+  --success-bg: #e8f7f0;
+  --warning: #b54708;
+  --warning-bg: #fff6e6;
+  --danger: #d92d20;
+  --danger-bg: #fef1f0;
+
+  /* Typography */
+  --font: 'Be Vietnam Pro', 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.375rem;
+  --fs-xl: clamp(1.6rem, 1.2rem + 1.4vw, 2.25rem);
+  --fs-2xl: clamp(2rem, 1.3rem + 2.6vw, 3.25rem);
+  --fs-display: clamp(2.6rem, 1.4rem + 4.6vw, 5.25rem);
+  --lh-tight: 1.08;
+  --lh-snug: 1.3;
+  --lh-body: 1.6;
+  --tracking-tight: -0.035em;
+
+  /* Spacing (bội số 4) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+  --section-gap: clamp(56px, 4vw + 32px, 104px);
+
+  /* Bo góc */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* Đổ bóng – tiết chế, chỉ dùng khi cần nổi khối */
+  --shadow-xs: 0 1px 2px rgba(11, 18, 32, 0.05);
+  --shadow-sm: 0 2px 8px rgba(11, 18, 32, 0.06);
+  --shadow-md: 0 12px 32px -12px rgba(11, 18, 32, 0.18);
+  --shadow-lg: 0 28px 60px -24px rgba(11, 18, 32, 0.28);
+  --ring: 0 0 0 3px rgba(47, 107, 255, 0.25);
+
+  /* Chuyển động */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 150ms;
+  --dur: 240ms;
+  --dur-slow: 600ms;
+
+  /* Layout */
+  --container: 1760px;
+  --gutter: clamp(16px, 3.5vw, 56px);
+  --header-h: 72px;
+  --z-header: 50;
+  --z-overlay: 60;
+  --z-drawer: 70;
+  --z-toast: 80;
+}
+
+/* Breakpoints (tham chiếu, dùng trực tiếp trong media query):
+   sm 520px · md 768px · lg 1024px · xl 1280px */

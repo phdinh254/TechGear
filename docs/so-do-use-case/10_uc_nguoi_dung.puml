@@ -1,0 +1,81 @@
+@startuml UC_NguoiDung
+title Sơ đồ use case - Người dùng (Khách vãng lai và Khách hàng)
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam dpi 130
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F0FDFA
+  BorderColor #0F766E
+  ArrowColor #475569
+}
+skinparam actor {
+  BorderColor #0F766E
+  BackgroundColor #CCFBF1
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  FontStyle bold
+}
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #475569
+left to right direction
+
+actor "Khách vãng lai" as KVL
+actor "Khách hàng" as KH
+actor "Cổng thanh toán\nVNPay" as VNP <<Hệ thống>>
+actor "Dịch vụ Email" as MAIL <<Hệ thống>>
+
+KH -|> KVL
+
+rectangle "Website TechGear" {
+  usecase "UC07. Xem trang chủ" as UC07
+  usecase "UC08. Tìm kiếm sản phẩm" as UC08
+  usecase "UC09. Xem chi tiết sản phẩm" as UC09
+  usecase "UC10. Quản lý giỏ hàng" as UC10
+  usecase "UC11. Đặt hàng" as UC11
+  usecase "Nhập thông tin giao hàng" as INC1
+  usecase "Áp dụng mã giảm giá" as EXT1
+  usecase "UC12. Thanh toán qua VNPay" as UC12
+  usecase "UC01. Đăng ký tài khoản" as UC01
+  usecase "UC02. Đăng nhập" as UC02
+  usecase "UC03. Quên mật khẩu" as UC03
+
+  usecase "UC04. Đăng xuất" as UC04
+  usecase "UC05. Quản lý thông tin cá nhân" as UC05
+  usecase "UC06. Quản lý sổ địa chỉ" as UC06
+  usecase "UC13. Quản lý đơn hàng của tôi" as UC13
+  usecase "Hủy đơn hàng" as EXT2
+  usecase "UC14. Đánh giá sản phẩm" as UC14
+  usecase "UC15. Quản lý sản phẩm yêu thích" as UC15
+}
+
+' Khách vãng lai
+KVL --> UC07
+KVL --> UC08
+KVL --> UC09
+KVL --> UC10
+KVL --> UC11
+KVL --> UC01
+KVL --> UC02
+KVL --> UC03
+
+' Khách hàng (kế thừa thêm toàn bộ chức năng của Khách vãng lai)
+KH --> UC04
+KH --> UC05
+KH --> UC06
+KH --> UC13
+KH --> UC14
+KH --> UC15
+
+' Quan hệ include / extend
+UC11 ..> INC1 : <<include>>
+UC11 <.. EXT1 : <<extend>>
+UC11 <.. UC12 : <<extend>>
+UC13 <.. EXT2 : <<extend>>
+
+' Hệ thống ngoài
+UC12 --> VNP
+UC03 --> MAIL
+@enduml
