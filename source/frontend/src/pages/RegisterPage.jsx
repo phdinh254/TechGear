@@ -35,7 +35,7 @@ export default function RegisterPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [form, setForm] = useState({ hoTen: '', email: '', soDienThoai: '', matKhau: '', nhapLai: '' });
+  const [form, setForm] = useState({ hoTen: '', email: '', matKhau: '', nhapLai: '' });
   const [loi, setLoi] = useState('');
   const [loiTruong, setLoiTruong] = useState({});
   const [dangGui, setDangGui] = useState(false);
@@ -78,16 +78,10 @@ export default function RegisterPage() {
           <input required maxLength={100} autoComplete="name" value={form.hoTen} onChange={doi('hoTen')} />
           {loiCua('hoTen')}
         </label>
-        <div className="form-grid">
-          <label className="field">Email
-            <input type="email" required autoComplete="email" value={form.email} onChange={doi('email')} />
-            {loiCua('email')}
-          </label>
-          <label className="field"><span>Số điện thoại <span className="field-hint">(không bắt buộc)</span></span>
-            <input type="tel" pattern="0[0-9]{9}" title="10 chữ số, bắt đầu bằng 0" autoComplete="tel" value={form.soDienThoai} onChange={doi('soDienThoai')} />
-            {loiCua('soDienThoai')}
-          </label>
-        </div>
+        <label className="field">Email
+          <input type="email" required autoComplete="email" value={form.email} onChange={doi('email')} />
+          {loiCua('email')}
+        </label>
         <div className="field">
           <label htmlFor="dk-mat-khau">Mật khẩu</label>
           <PasswordInput id="dk-mat-khau" required minLength={8} maxLength={100} pattern={MAU_MAT_KHAU} title="Ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số" autoComplete="new-password" value={form.matKhau} onChange={doi('matKhau')} />
