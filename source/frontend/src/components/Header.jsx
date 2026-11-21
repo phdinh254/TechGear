@@ -195,6 +195,7 @@ function SearchPanel({ onClose }) {
 
 function AccountMenu({ nguoiDung, dangXuat }) {
   const [mo, setMo] = useState(false);
+  const { laQuanTri } = useAuth();
   const ref = useRef(null);
   const chuCai = (nguoiDung.hoTen || nguoiDung.email || '?').trim().split(/\s+/).pop()[0]?.toUpperCase();
 
@@ -218,6 +219,7 @@ function AccountMenu({ nguoiDung, dangXuat }) {
           </div>
           <Link role="menuitem" to="/tai-khoan" onClick={() => setMo(false)}><Icon name="user" size={18} /> Tài khoản</Link>
           <Link role="menuitem" to="/tai-khoan/don-hang" onClick={() => setMo(false)}><Icon name="package" size={18} /> Đơn hàng của tôi</Link>
+          {laQuanTri && <Link role="menuitem" to="/admin" onClick={() => setMo(false)}><Icon name="grid" size={18} /> Trang quản trị</Link>}
           <button role="menuitem" type="button" onClick={() => { setMo(false); dangXuat(); }}><Icon name="logout" size={18} /> Đăng xuất</button>
         </div>
       )}
@@ -226,6 +228,7 @@ function AccountMenu({ nguoiDung, dangXuat }) {
 }
 
 function MobileDrawer({ mo, onClose, danhMucs, nguoiDung, dangXuat }) {
+  const { laQuanTri } = useAuth();
   const [moRong, setMoRong] = useState(null);
   return (
     <>
@@ -269,6 +272,7 @@ function MobileDrawer({ mo, onClose, danhMucs, nguoiDung, dangXuat }) {
           {nguoiDung ? (
             <>
               <Link to="/tai-khoan" className="btn btn-outline" onClick={onClose}>Tài khoản</Link>
+              {laQuanTri && <Link to="/admin" className="btn btn-outline" onClick={onClose}><Icon name="grid" size={18} /> Trang quản trị</Link>}
               <button type="button" className="btn btn-ghost" onClick={() => { onClose(); dangXuat(); }}>Đăng xuất</button>
             </>
           ) : (

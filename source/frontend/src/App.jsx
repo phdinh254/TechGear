@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -18,6 +19,9 @@ import OrderLookupPage from './pages/OrderLookupPage.jsx';
 import PolicyPage from './pages/PolicyPage.jsx';
 import ContactPage from './pages/ContactPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
+import Loading from './components/Loading.jsx';
+
+const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
 
 export default function App() {
   return (
@@ -41,6 +45,7 @@ export default function App() {
         <Route path="tai-khoan/yeu-thich" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
+      <Route path="admin/*" element={<ProtectedRoute chiQuanTri><Suspense fallback={<Loading />}><AdminApp /></Suspense></ProtectedRoute>} />
     </Routes>
   );
 }
