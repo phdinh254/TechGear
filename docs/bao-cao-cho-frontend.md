@@ -1,10 +1,13 @@
 # Báo cáo backend cho người làm frontend
 
-Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 21/11/2026 (Phase 10) · Nhánh: `hoanglong`
+Người viết: Trần Hoàng Long (backend + CSDL) · Cập nhật: 21/11/2026 (Phase 12) · Nhánh: `hoanglong`
 
 Tài liệu này tóm tắt những gì backend mới đã có, chỗ nào khác backend cũ, và việc frontend cần làm. Mỗi phase backend
 xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên, trả về, mã lỗi) nằm ở
 [`thiet-ke/dac-ta-api.md`](thiet-ke/dac-ta-api.md). Tài liệu này không lặp lại các bảng trong đó.
+
+> **Frontend trên `main` (giao diện mới, trang quản trị):** danh sách chỗ phải sửa để chạy với backend này, xếp theo
+> từng file, nằm ở [`huong-dan-chuyen-frontend.md`](huong-dan-chuyen-frontend.md).
 
 ## 1. Chạy backend để thử
 
