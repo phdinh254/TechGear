@@ -17,8 +17,7 @@ Nhóm sinh viên thực hiện:
 ```
 TechGear/
 ├── database/
-│   ├── DB_TechGear.sql          Script tạo CSDL techgear + dữ liệu mẫu
-│   └── DB_TechGear_ban_cu.sql   Bản cũ (đề tài thời trang/Laravel), giữ lại để đối chiếu
+│   └── DB_TechGear.sql          Script tạo CSDL techgear + dữ liệu mẫu
 ├── docs/
 │   ├── so-do-use-case/           9 sơ đồ use case (draw.io)
 │   ├── thiet-ke/                 Sơ đồ thiết kế (draw.io) + đặc tả API
