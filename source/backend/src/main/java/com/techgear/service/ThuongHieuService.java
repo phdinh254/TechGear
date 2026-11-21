@@ -2,8 +2,10 @@ package com.techgear.service;
 
 import com.techgear.dto.ThuongHieuRequest;
 import com.techgear.dto.ThuongHieuResponse;
+import com.techgear.dto.admin.AdminThuongHieuResponse;
 import com.techgear.entity.ThuongHieu;
 import com.techgear.exception.ApiException;
+import com.techgear.repository.SanPhamRepository;
 import com.techgear.repository.ThuongHieuRepository;
 import com.techgear.util.SlugUtil;
 import lombok.RequiredArgsConstructor;
@@ -11,13 +13,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class ThuongHieuService {
 
     private final ThuongHieuRepository thuongHieuRepository;
+    private final SanPhamRepository sanPhamRepository;
 
     @Transactional(readOnly = true)
     public List<ThuongHieuResponse> layDangHienThi() {
@@ -26,9 +31,13 @@ public class ThuongHieuService {
     }
 
     @Transactional(readOnly = true)
-    public List<ThuongHieuResponse> layTatCa() {
+    public List<AdminThuongHieuResponse> layTatCaChoQuanTri() {
+        Map<Long, Long> soSanPham = new HashMap<>();
+        for (Object[] dong : sanPhamRepository.demTheoThuongHieu()) {
+            soSanPham.put((Long) dong[0], (Long) dong[1]);
+        }
         return thuongHieuRepository.findAll(Sort.by("ten")).stream()
-                .map(ThuongHieuResponse::tu).toList();
+                .map(th -> AdminThuongHieuResponse.tu(th, soSanPham.getOrDefault(th.getId(), 0L))).toList();
     }
 
     @Transactional
@@ -54,10 +63,14 @@ public class ThuongHieuService {
         return ThuongHieuResponse.tu(th);
     }
 
-    /** Xóa mềm (cập nhật deleted_at). */
+    /** Xóa mềm (cập nhật deleted_at). Chặn nếu thương hiệu còn sản phẩm. */
     @Transactional
     public void xoa(Long id) {
-        thuongHieuRepository.delete(timTheoId(id));
+        ThuongHieu th = timTheoId(id);
+        if (sanPhamRepository.countByThuongHieuId(id) > 0) {
+            throw ApiException.xungDot("Không thể xóa: thương hiệu còn sản phẩm");
+        }
+        thuongHieuRepository.delete(th);
     }
 
     /** Slug không trùng với bất kỳ thương hiệu nào, kể cả thương hiệu đã xóa mềm. */

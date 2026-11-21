@@ -3,6 +3,7 @@ package com.techgear.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.techgear.dto.ThuongHieuRequest;
 import com.techgear.dto.ThuongHieuResponse;
+import com.techgear.dto.admin.AdminThuongHieuResponse;
 import com.techgear.service.ThuongHieuService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,8 @@ public class AdminThuongHieuController {
     private final ThuongHieuService thuongHieuService;
 
     @GetMapping
-    public List<ThuongHieuResponse> layTatCa() {
-        return thuongHieuService.layTatCa();
+    public List<AdminThuongHieuResponse> layTatCa() {
+        return thuongHieuService.layTatCaChoQuanTri();
     }
 
     @PostMapping

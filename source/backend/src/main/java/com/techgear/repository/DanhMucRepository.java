@@ -15,6 +15,10 @@ public interface DanhMucRepository extends JpaRepository<DanhMuc, Long> {
 
     boolean existsBySlug(String slug);
 
+    boolean existsBySlugAndIdNot(String slug, Long id);
+
+    long countByDanhMucChaId(Long danhMucChaId);
+
     /** Đếm slug kể cả bản ghi đã xóa mềm (cột slug UNIQUE trong CSDL), bỏ qua bản ghi có id = boQuaId. */
     @Query(value = "SELECT COUNT(*) FROM danh_muc WHERE slug = :slug AND id <> :boQuaId", nativeQuery = true)
     long demSlugKeCaDaXoa(@Param("slug") String slug, @Param("boQuaId") long boQuaId);
