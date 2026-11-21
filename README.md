@@ -218,4 +218,4 @@ frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/a
 | 9. Quản trị | Sản phẩm, kho, đơn hàng, khuyến mãi, người dùng, thống kê | Xong |
 | 10. Dữ liệu mẫu | Dữ liệu mẫu đầy đủ + file `database/DB_TechGear.sql` | Xong |
 | 11. Bàn giao | Kiểm thử toàn bộ, tài liệu, review | Xong |
-| 12. Tích hợp `main` | Gộp frontend mới; thêm 3 API giao diện cần; hướng dẫn chuyển frontend (`docs/huong-dan-chuyen-frontend.md`) | Đang làm (frontend chờ sửa theo hướng dẫn) |
+| 12. Tích hợp `main` | Gộp frontend mới, nối mọi trang với backend mới, thêm 3 API giao diện cần | Xong |

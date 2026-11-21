@@ -6,8 +6,9 @@ Tài liệu này tóm tắt những gì backend mới đã có, chỗ nào khác
 xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên, trả về, mã lỗi) nằm ở
 [`thiet-ke/dac-ta-api.md`](thiet-ke/dac-ta-api.md). Tài liệu này không lặp lại các bảng trong đó.
 
-> **Frontend trên `main` (giao diện mới, trang quản trị):** danh sách chỗ phải sửa để chạy với backend này, xếp theo
-> từng file, nằm ở [`huong-dan-chuyen-frontend.md`](huong-dan-chuyen-frontend.md).
+> **Phase 12:** frontend trên `main` (giao diện mới, trang quản trị) đã được nối với backend này: giỏ hàng, đặt hàng (đăng nhập
+> và vãng lai), đơn của tôi, tra cứu bằng email, yêu thích, đánh giá, quản trị danh mục, sản phẩm (lưu qua các API con), tồn kho.
+> Thanh toán VNPay vẫn đang tắt trên giao diện (lựa chọn bị vô hiệu ở trang thanh toán); API đã sẵn, xem mục 8.
 
 ## 1. Chạy backend để thử
 
