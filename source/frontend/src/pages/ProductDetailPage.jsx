@@ -47,7 +47,7 @@ function DetailSkeleton() {
   );
 }
 
-function Reviews({ slug, onTongQuan }) {
+function Reviews({ slug, tongQuan }) {
   const [danhGia, setDanhGia] = useState(null);
   const [trang, setTrang] = useState(0);
   const [dangTai, setDangTai] = useState(true);
@@ -60,7 +60,7 @@ function Reviews({ slug, onTongQuan }) {
     setDangTai(true);
     setLoi('');
     catalogApi.layDanhGiaSanPham(slug, trang, { signal: controller.signal })
-      .then((kq) => { setDanhGia(kq); onTongQuan(kq); })
+      .then(setDanhGia)
       .catch((e) => { if (e.code !== 'ERR_CANCELED') setLoi(layThongBaoLoi(e)); })
       .finally(() => { if (!controller.signal.aborted) setDangTai(false); });
     return () => controller.abort();
@@ -68,7 +68,7 @@ function Reviews({ slug, onTongQuan }) {
 
   if (loi) return <ErrorMessage>{loi}</ErrorMessage>;
   if (!danhGia && dangTai) return <SkeletonBlock height={120} />;
-  if (!danhGia || danhGia.tongDanhGia === 0) {
+  if (!danhGia || danhGia.tongSoPhanTu === 0) {
     return (
       <EmptyState compact icon="star" tieuDe="Chưa có đánh giá" moTa="Khách đã mua và nhận hàng có thể đánh giá sản phẩm trong mục Đơn hàng của tôi." />
     );
@@ -77,28 +77,28 @@ function Reviews({ slug, onTongQuan }) {
   return (
     <div className="reviews">
       <div className="review-overview">
-        <strong>{Number(danhGia.diemTrungBinh).toFixed(1)}</strong>
+        <strong>{Number(tongQuan?.diemTrungBinh || 0).toFixed(1)}</strong>
         <div>
-          <Stars diem={danhGia.diemTrungBinh} size={18} />
-          <span className="muted">{danhGia.tongDanhGia} đánh giá đã được duyệt</span>
+          <Stars diem={tongQuan?.diemTrungBinh || 0} size={18} />
+          <span className="muted">{danhGia.tongSoPhanTu} đánh giá đã được duyệt</span>
         </div>
       </div>
       <div className={`review-list${dangTai ? ' is-loading' : ''}`}>
-        {danhGia.danhSach.noiDung.map((dg) => (
+        {danhGia.noiDung.map((dg) => (
           <article className="review-item" key={dg.id}>
             <div className="review-meta">
-              <span className="avatar avatar-soft">{(dg.tenNguoiDung || '?').trim().split(/\s+/).pop()[0]}</span>
+              <span className="avatar avatar-soft">{(dg.hoTen || '?').trim().split(/\s+/).pop()[0]}</span>
               <div>
-                <strong>{dg.tenNguoiDung}</strong>
+                <strong>{dg.hoTen}</strong>
                 <Stars diem={dg.soSao} size={13} />
               </div>
-              {dg.ngayDanhGia && <time dateTime={dg.ngayDanhGia}>{dinhDangNgay.format(new Date(dg.ngayDanhGia))}</time>}
+              {dg.ngayTao && <time dateTime={dg.ngayTao}>{dinhDangNgay.format(new Date(dg.ngayTao))}</time>}
             </div>
             {dg.noiDung && <p>{dg.noiDung}</p>}
           </article>
         ))}
       </div>
-      <Pagination trang={danhGia.danhSach.trang} tongSoTrang={danhGia.danhSach.tongSoTrang} onChange={setTrang} />
+      <Pagination trang={danhGia.trang} tongSoTrang={danhGia.tongSoTrang} onChange={setTrang} />
     </div>
   );
 }
@@ -132,6 +132,7 @@ export default function ProductDetailPage() {
     catalogApi.layChiTietSanPham(slug, { signal: controller.signal })
       .then((data) => {
         setSp(data);
+        setTongQuan({ diemTrungBinh: data.diemTrungBinh ?? 0, tongDanhGia: data.soDanhGia ?? 0 });
         // Chọn sẵn biến thể đầu tiên còn hàng
         const macDinh = data.bienThes.find((b) => b.soLuongTon > 0) || data.bienThes[0];
         const chonBanDau = {};
@@ -342,7 +343,7 @@ export default function ProductDetailPage() {
               ))}
             </dl>
           )}
-          <div hidden={tab !== 'danh-gia'}><Reviews slug={slug} onTongQuan={setTongQuan} /></div>
+          <div hidden={tab !== 'danh-gia'}><Reviews slug={slug} tongQuan={tongQuan} /></div>
         </div>
       </section>
 

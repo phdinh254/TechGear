@@ -42,7 +42,7 @@ export default function OrdersPage() {
         ) : (
           <ul className="order-list">
             {duLieu?.noiDung.map((dh) => (
-              <li key={dh.id}>
+              <li key={dh.maDonHang}>
                 <Link className="order-row" to={`/tai-khoan/don-hang/${dh.maDonHang}`}>
                   <span className="order-row-icon"><Icon name="package" size={20} /></span>
                   <span className="order-row-main">

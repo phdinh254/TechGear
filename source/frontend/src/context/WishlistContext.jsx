@@ -27,14 +27,16 @@ export function WishlistProvider({ children }) {
   const doiYeuThich = useCallback(async (sanPhamId) => {
     const dangThich = ids.has(sanPhamId);
     try {
-      const res = dangThich ? await wishlistApi.xoa(sanPhamId) : await wishlistApi.them(sanPhamId);
+      // API trả 204 không có nội dung: trạng thái mới là đảo của trạng thái cũ
+      if (dangThich) await wishlistApi.xoa(sanPhamId);
+      else await wishlistApi.them(sanPhamId);
       setIds((cu) => {
         const moi = new Set(cu);
-        if (res.yeuThich) moi.add(sanPhamId);
-        else moi.delete(sanPhamId);
+        if (dangThich) moi.delete(sanPhamId);
+        else moi.add(sanPhamId);
         return moi;
       });
-      return res.yeuThich;
+      return !dangThich;
     } catch (error) {
       throw new Error(layThongBaoLoi(error));
     }

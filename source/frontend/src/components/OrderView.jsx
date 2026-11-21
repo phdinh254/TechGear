@@ -55,10 +55,10 @@ export default function OrderView({ donHang, renderItemExtra, hanhDong }) {
       <div className="order-grid">
         <div className="order-col">
           <section className="panel">
-            <h3 className="panel-title">Sản phẩm ({donHang.chiTiets.length})</h3>
+            <h3 className="panel-title">Sản phẩm ({donHang.dongs.length})</h3>
             <ul className="order-items">
-              {donHang.chiTiets.map((item) => (
-                <li key={item.id} className="order-item">
+              {donHang.dongs.map((item) => (
+                <li key={item.bienTheId ?? item.sku} className="order-item">
                   <span className="order-thumb"><ProductMedia src={item.hinhAnh} ten={item.tenSanPham} size="sm" /></span>
                   <div className="order-item-info">
                     {item.sanPhamSlug ? <Link to={`/san-pham/${item.sanPhamSlug}`}>{item.tenSanPham}</Link> : <span>{item.tenSanPham}</span>}
@@ -72,11 +72,11 @@ export default function OrderView({ donHang, renderItemExtra, hanhDong }) {
             </ul>
           </section>
 
-          {donHang.lichSus?.length > 0 && (
+          {donHang.lichSu?.length > 0 && (
             <section className="panel">
               <h3 className="panel-title">Lịch sử trạng thái</h3>
               <ol className="timeline">
-                {donHang.lichSus.map((item, i) => (
+                {donHang.lichSu.map((item, i) => (
                   <li key={`${item.trangThai}-${i}`}>
                     <strong>{NHAN_TRANG_THAI[item.trangThai]}</strong>
                     <time>{dinhDangThoiGian(item.thoiGian)}</time>
@@ -102,7 +102,7 @@ export default function OrderView({ donHang, renderItemExtra, hanhDong }) {
               <div><dt>Phí vận chuyển</dt><dd>{Number(donHang.phiVanChuyen) === 0 ? 'Miễn phí' : formatTien(donHang.phiVanChuyen)}</dd></div>
             </dl>
             <div className="summary-total"><span>Tổng cộng</span><strong>{formatTien(donHang.tongTien)}</strong></div>
-            <p className="muted">{donHang.phuongThucThanhToan === 'cod' ? 'Thanh toán khi nhận hàng' : donHang.phuongThucThanhToan}</p>
+            <p className="muted">{donHang.phuongThucThanhToan === 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán qua VNPay'}</p>
             {hanhDong}
           </section>
         </aside>

@@ -49,7 +49,9 @@ export default function CheckoutPage() {
   const [loiMa, setLoiMa] = useState('');
   const [ketQua, setKetQua] = useState(null);
 
-  const items = dong.map((item) => ({ bienTheId: item.bienTheId, soLuong: item.soLuong }));
+  const dongs = dong.map((item) => ({ bienTheId: item.bienTheId, soLuong: item.soLuong }));
+  // Email giúp backend kiểm mã giảm giá giới hạn theo khách; chỉ gửi khi đã đúng định dạng
+  const emailTinh = () => (/^\S+@\S+\.\S+$/.test(form.email.trim()) ? form.email.trim() : null);
   const doi = (khoa) => (e) => setForm({ ...form, [khoa]: e.target.value });
 
   const chonDiaChi = (diaChi) => {
@@ -87,7 +89,7 @@ export default function CheckoutPage() {
       return;
     }
     setDangTinh(true);
-    checkoutApi.tinhTien({ maGiamGia: tinhTien?.maGiamGia || null, items })
+    checkoutApi.tinhTien({ maGiamGia: tinhTien?.maGiamGia || null, dongs, email: emailTinh() })
       .then(setTinhTien)
       .catch((error) => setLoi(layThongBaoLoi(error)))
       .finally(() => setDangTinh(false));
@@ -97,7 +99,7 @@ export default function CheckoutPage() {
     setLoiMa('');
     setDangTinh(true);
     try {
-      setTinhTien(await checkoutApi.tinhTien({ maGiamGia: form.maGiamGia.trim() || null, items }));
+      setTinhTien(await checkoutApi.tinhTien({ maGiamGia: form.maGiamGia.trim() || null, dongs, email: emailTinh() }));
     } catch (error) {
       setLoiMa(layThongBaoLoi(error));
     } finally {
@@ -110,7 +112,7 @@ export default function CheckoutPage() {
     setLoiMa('');
     setDangTinh(true);
     try {
-      setTinhTien(await checkoutApi.tinhTien({ maGiamGia: null, items }));
+      setTinhTien(await checkoutApi.tinhTien({ maGiamGia: null, dongs, email: emailTinh() }));
     } catch (error) {
       setLoi(layThongBaoLoi(error));
     } finally {
@@ -125,14 +127,16 @@ export default function CheckoutPage() {
     try {
       const response = await checkoutApi.datHang({
         tenNguoiNhan: form.tenNguoiNhan,
-        email: form.email,
+        email: form.email.trim() || null,
         soDienThoai: form.soDienThoai,
-        diaChiGiaoHang: `${form.diaChiChiTiet}, ${form.phuongXa}, ${form.tinhThanh}`,
+        tinhThanh: form.tinhThanh,
+        phuongXa: form.phuongXa,
+        diaChiChiTiet: form.diaChiChiTiet,
         ghiChu: form.ghiChu || null,
         maGiamGia: tinhTien?.maGiamGia || null,
         phuongThucThanhToan: form.phuongThucThanhToan,
-        items,
-      });
+        dongs,
+      }, Boolean(nguoiDung));
       await xoaHet();
       setKetQua(response);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -157,7 +161,7 @@ export default function CheckoutPage() {
           <div><dt>Tổng thanh toán</dt><dd>{formatTien(ketQua.tongTien)}</dd></div>
           <div><dt>Thanh toán</dt><dd>Khi nhận hàng</dd></div>
         </dl>
-        {!nguoiDung && <p className="muted">Lưu lại mã đơn để tra cứu tình trạng bằng email hoặc số điện thoại.</p>}
+        {!nguoiDung && <p className="muted">Lưu lại mã đơn để tra cứu tình trạng bằng email đặt hàng.</p>}
         <div className="success-actions">
           {nguoiDung ? (
             <Link className="btn btn-primary btn-lg" to={`/tai-khoan/don-hang/${ketQua.maDonHang}`}>Xem đơn hàng</Link>

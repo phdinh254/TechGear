@@ -52,7 +52,7 @@ export function CartProvider({ children }) {
       : cartApi.layGioHang();
     request
       .then((response) => {
-        setDong(response.dong);
+        setDong(response.dongs);
         localStorage.removeItem(CART_KEY);
       })
       .catch((error) => {
@@ -74,7 +74,7 @@ export function CartProvider({ children }) {
     setLoiGio('');
     return promise
       .then((response) => {
-        setDong(response.dong);
+        setDong(response.dongs);
         return response;
       })
       .catch((error) => {

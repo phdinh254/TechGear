@@ -16,7 +16,6 @@ const TRANG_THAI = [
   { giaTri: '', nhan: 'Tất cả trạng thái' },
   { giaTri: 'dang_ban', nhan: 'Đang bán' },
   { giaTri: 'dang_an', nhan: 'Đang ẩn' },
-  { giaTri: 'het_hang', nhan: 'Hết hàng' },
 ];
 
 export default function SanPhamListPage() {
@@ -70,7 +69,7 @@ export default function SanPhamListPage() {
         tuKhoa: tuKhoa || undefined,
         danhMucId: danhMucId || undefined,
         thuongHieuId: thuongHieuId || undefined,
-        trangThai: trangThai || undefined,
+        hienThi: { dang_ban: true, dang_an: false }[trangThai],
         trang,
         kichThuoc: KICH_THUOC,
       });
@@ -123,7 +122,7 @@ export default function SanPhamListPage() {
     { khoa: 'ten', tieuDe: 'Tên', hienThi: (sp) => (
       <div className="admin-product-name">
         <Link to={`/admin/san-pham/${sp.id}`}>{sp.ten}</Link>
-        {sp.thuongHieuTen && <small className="field-hint">{sp.thuongHieuTen}</small>}
+        {sp.tenThuongHieu && <small className="field-hint">{sp.tenThuongHieu}</small>}
       </div>
     ) },
     { khoa: 'danhMucTen', tieuDe: 'Danh mục' },

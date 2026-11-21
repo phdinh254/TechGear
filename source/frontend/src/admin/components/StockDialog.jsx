@@ -85,7 +85,7 @@ export default function StockDialog({ che, bienThe, onClose, onDone }) {
     try {
       const capNhat = nhap
         ? await adminApi.tonKho.nhapKho(bienThe.bienTheId, { soLuong: soLuong === '' ? null : Number(soLuong), ghiChu: ghiChu.trim() || null })
-        : await adminApi.tonKho.dieuChinh(bienThe.bienTheId, { soLuongThucTe: soLuong === '' ? null : Number(soLuong), lyDo: lyDo.trim() });
+        : await adminApi.tonKho.dieuChinh(bienThe.bienTheId, { soLuongMoi: soLuong === '' ? null : Number(soLuong), ghiChu: lyDo.trim() });
       toast.hien(nhap ? 'Đã nhập kho' : 'Đã điều chỉnh tồn kho');
       onDone(capNhat);
     } catch (err) {
@@ -120,12 +120,12 @@ export default function StockDialog({ che, bienThe, onClose, onDone }) {
             <>
               <label>Số lượng thực tế
                 <input type="number" min={0} step={1} value={soLuong} onChange={(e) => setSoLuong(e.target.value)} required autoFocus />
-                {loiTheoO.soLuongThucTe && <small className="field-error">{loiTheoO.soLuongThucTe}</small>}
+                {loiTheoO.soLuongMoi && <small className="field-error">{loiTheoO.soLuongMoi}</small>}
               </label>
               {chenhLech !== null && <p className="field-hint">Chênh lệch: <strong>{dau(chenhLech)}</strong></p>}
               <label>Lý do
                 <textarea rows={3} value={lyDo} onChange={(e) => setLyDo(e.target.value)} required />
-                {loiTheoO.lyDo && <small className="field-error">{loiTheoO.lyDo}</small>}
+                {loiTheoO.ghiChu && <small className="field-error">{loiTheoO.ghiChu}</small>}
               </label>
             </>
           )}
