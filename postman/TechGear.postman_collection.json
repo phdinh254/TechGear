@@ -3826,6 +3826,97 @@
           }
         },
         {
+          "name": "[11] Thương hiệu – danh sách",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Có thương hiệu vừa thêm\", () => pm.expect(pm.response.json().some(t => t.id === Number(pm.collectionVariables.get('thQT')))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/thuong-hieu"
+          }
+        },
+        {
+          "name": "[11] Thương hiệu – sửa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đã sửa tên\", () => pm.expect(pm.response.json().ten === 'Hãng Postman ' + pm.collectionVariables.get('qt') + ' (sửa)').to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/thuong-hieu/{{thQT}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ten\": \"Hãng Postman {{qt}} (sửa)\"}"
+            }
+          }
+        },
+        {
+          "name": "[11] Danh mục – sửa thứ tự",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đã sửa thứ tự\", () => pm.expect(pm.response.json().thuTu === 98).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/danh-muc/{{dmQT}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ten\": \"Phụ kiện Postman {{qt}}\", \"thuTu\": 98}"
+            }
+          }
+        },
+        {
           "name": "Sản phẩm – thêm, mô tả có script bị lọc",
           "event": [
             {
@@ -4016,6 +4107,250 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/san-pham/{{slugQT}}"
+          }
+        },
+        {
+          "name": "[11] Sản phẩm – chi tiết quản trị (lưu tcQT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đúng sản phẩm\", () => pm.expect(pm.response.json().id === Number(pm.collectionVariables.get('spQT'))).to.be.true);",
+                  "pm.test(\"Có 1 biến thể, 1 tùy chọn\", () => pm.expect(pm.response.json().bienThes.length === 1 && pm.response.json().tuyChons.length === 1).to.be.true);",
+                  "pm.collectionVariables.set('tcQT', pm.response.json().tuyChons[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/san-pham/{{spQT}}"
+          }
+        },
+        {
+          "name": "[11] Sản phẩm – sửa (bảo hành 24 tháng)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đã sửa bảo hành\", () => pm.expect(pm.response.json().baoHanhThang === 24).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/san-pham/{{spQT}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ten\": \"Tai nghe Postman {{qt}}\", \"danhMucId\": {{dmQT}}, \"thuongHieuId\": {{thQT}}, \"baoHanhThang\": 24}"
+            }
+          }
+        },
+        {
+          "name": "[11] Tùy chọn – sửa tên giá trị",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đã đổi giá trị\", () => pm.expect(pm.response.json().tuyChons[0].giaTris.some(g => g.giaTri === 'Trắng ngà')).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/tuy-chon/{{tcQT}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ten\": \"Màu sắc\", \"loai\": \"mau_sac\", \"giaTris\": [{\"id\": {{gtDen}}, \"giaTri\": \"Đen\", \"maMau\": \"#000000\"}, {\"id\": {{gtTrang}}, \"giaTri\": \"Trắng ngà\"}]}"
+            }
+          }
+        },
+        {
+          "name": "[11] Tùy chọn – xóa khi biến thể đang dùng → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Giá trị \\\"Đen\\\" đang được dùng ở biến thể\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/tuy-chon/{{tcQT}}"
+          }
+        },
+        {
+          "name": "[11] Biến thể – sửa giá (giá hiển thị theo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Giá biến thể mới\", () => pm.expect(pm.response.json().bienThes[0].giaBan === 189000).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/bien-the/{{btQT}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"sku\": \"pm-{{qt}}-den\", \"giaBan\": 189000, \"giaGoc\": 249000}"
+            }
+          }
+        },
+        {
+          "name": "[11] Ảnh – thêm ảnh phụ (lưu anhQT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "const a = pm.response.json().hinhAnhs.find(h => !h.laAnhChinh);",
+                  "pm.test(\"Có ảnh phụ\", () => pm.expect(a !== undefined).to.be.true);",
+                  "pm.collectionVariables.set('anhQT', a.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/san-pham/{{spQT}}/hinh-anh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"duongDan\": \"https://upload.wikimedia.org/postman.png\"}"
+            }
+          }
+        },
+        {
+          "name": "[11] Ảnh – sửa mô tả",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đã sửa mô tả\", () => pm.expect(pm.response.json().hinhAnhs.some(h => h.moTa === 'Mặt sau')).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/hinh-anh/{{anhQT}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"duongDan\": \"https://upload.wikimedia.org/postman.png\", \"moTa\": \"Mặt sau\"}"
+            }
+          }
+        },
+        {
+          "name": "[11] Ảnh – xóa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Còn 1 ảnh\", () => pm.expect(pm.response.json().hinhAnhs.length === 1).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/hinh-anh/{{anhQT}}"
           }
         },
         {
@@ -4251,6 +4586,32 @@
           }
         },
         {
+          "name": "[11] Đơn – chi tiết quản trị",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đúng đơn\", () => pm.expect(pm.response.json().don.maDonHang === pm.collectionVariables.get('maDonQT')).to.be.true);",
+                  "pm.test(\"Có người đặt\", () => pm.expect(pm.response.json().nguoiDungId === Number(pm.collectionVariables.get('idKhachQT'))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/don-hang/{{maDonQT}}"
+          }
+        },
+        {
           "name": "Đơn – chuyển sang hoan_thanh",
           "event": [
             {
@@ -4415,6 +4776,39 @@
           }
         },
         {
+          "name": "[11] Đơn – thanh toán: COD hoàn thành đã tự thanh toán → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));",
+                  "pm.test('Thông báo', () => pm.expect(pm.response.json().thongBao).to.eql(\"Không cập nhật được trạng thái thanh toán\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/don-hang/{{maDonQT}}/thanh-toan",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"trangThaiThanhToan\": \"da_thanh_toan\"}"
+            }
+          }
+        },
+        {
           "name": "Khách – có thể đánh giá sản phẩm của đơn hoàn thành",
           "event": [
             {
@@ -4507,6 +4901,31 @@
           }
         },
         {
+          "name": "[11] Đánh giá – danh sách quản trị",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Có đánh giá vừa duyệt\", () => pm.expect(pm.response.json().noiDung.some(d => d.id === Number(pm.collectionVariables.get('dgQT')))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/danh-gia?kichThuoc=50"
+          }
+        },
+        {
           "name": "Sản phẩm công khai có điểm trung bình",
           "event": [
             {
@@ -4558,6 +4977,31 @@
               "mode": "raw",
               "raw": "{\"ma\": \"pm{{qt}}\", \"loaiGiam\": \"phan_tram\", \"giaTriGiam\": 20, \"giamToiDa\": 50000, \"batDauLuc\": \"2026-01-01T00:00:00+07:00\", \"ketThucLuc\": \"2030-01-01T00:00:00+07:00\"}"
             }
+          }
+        },
+        {
+          "name": "[11] Mã giảm giá – danh sách",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Có mã vừa thêm\", () => pm.expect(pm.response.json().noiDung.some(m => m.id === Number(pm.collectionVariables.get('mggQT')))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/ma-giam-gia?tuKhoa=pm{{qt}}"
           }
         },
         {
@@ -4680,6 +5124,64 @@
             "body": {
               "mode": "raw",
               "raw": "{\"tieuDe\": \"Postman\", \"hinhAnh\": \"/uploads/banner/postman.png\", \"lienKet\": \"/san-pham\", \"hienThi\": false}"
+            }
+          }
+        },
+        {
+          "name": "[11] Banner – danh sách",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Có banner vừa thêm\", () => pm.expect(pm.response.json().some(b => b.id === Number(pm.collectionVariables.get('bannerQT')))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/banner"
+          }
+        },
+        {
+          "name": "[11] Banner – sửa tiêu đề",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Đã sửa\", () => pm.expect(pm.response.json().tieuDe === 'Postman (sửa)').to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/banner/{{bannerQT}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tieuDe\": \"Postman (sửa)\", \"hinhAnh\": \"/uploads/banner/postman.png\", \"lienKet\": \"/san-pham\", \"hienThi\": false}"
             }
           }
         },
@@ -5070,6 +5572,31 @@
           }
         },
         {
+          "name": "[11] Dọn dẹp – xóa biến thể (mềm)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test(\"Biến thể không còn trong danh sách\", () => pm.expect(pm.response.json().bienThes.every(b => b.id !== Number(pm.collectionVariables.get('btQT')))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/bien-the/{{btQT}}"
+          }
+        },
+        {
           "name": "Dọn dẹp – xóa sản phẩm (mềm)",
           "event": [
             {
@@ -5371,6 +5898,14 @@
     },
     {
       "key": "hotlineCu",
+      "value": ""
+    },
+    {
+      "key": "tcQT",
+      "value": ""
+    },
+    {
+      "key": "anhQT",
       "value": ""
     }
   ]

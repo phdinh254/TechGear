@@ -325,7 +325,8 @@ Nguồn và giấy phép của từng ảnh: [`nguon-anh-mau.md`](nguon-anh-mau.
 
 Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
-để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request), "06 Đánh giá" (12 request), "07 Quản trị" (50 request, chạy một vòng từ tạo sản phẩm tới đơn hoàn thành, đánh giá được duyệt, thống kê).
+để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (19 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request), "06 Đánh giá" (12 request), "07 Quản trị" (68 request, chạy một vòng từ tạo sản phẩm tới đơn hoàn thành, đánh giá được duyệt, thống kê).
+Bộ Postman gọi đủ cả 92 API của backend (đối chiếu với Swagger `/v3/api-docs`).
 
 ## 13. Liên hệ
 
