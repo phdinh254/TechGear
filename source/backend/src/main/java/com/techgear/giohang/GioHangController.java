@@ -45,6 +45,11 @@ class GioHangController {
         return gioHangService.xoa(JwtService.nguoiDungId(jwt), bienTheId);
     }
 
+    @DeleteMapping
+    GioHangResponse xoaHet(@AuthenticationPrincipal Jwt jwt) {
+        return gioHangService.xoaHet(JwtService.nguoiDungId(jwt));
+    }
+
     @PostMapping("/gop")
     GioHangResponse gop(@AuthenticationPrincipal Jwt jwt,
                         @RequestBody @Size(max = 100, message = "Giỏ tạm tối đa 100 dòng") List<@Valid DongGioRequest> gioTam) {

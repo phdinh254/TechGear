@@ -13,6 +13,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -190,5 +191,22 @@ class AdminSanPhamIT extends KiemThuQuanTri {
         assertThat(conLai).isEmpty();
         mvc.perform(post("/api/admin/san-pham").header("Authorization", khach).contentType("application/json")
                 .content("{\"ten\":\"X\",\"danhMucId\":%d}".formatted(danhMuc))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void doiNhanhHienThiGiuNguyenThongTinKhac() throws Exception {
+        qt(patch("/api/admin/san-pham/" + sp + "/hien-thi"), "{\"hienThi\":false}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hienThi").value(false))
+                .andExpect(jsonPath("$.ten").value("Tai nghe Không Dây X"))
+                .andExpect(jsonPath("$.thongSos", hasSize(2)));
+        qt(get("/api/admin/san-pham").param("danhMucId", String.valueOf(danhMuc)).param("hienThi", "false"), null)
+                .andExpect(jsonPath("$.noiDung[*].id", contains((int) sp)));
+        qt(patch("/api/admin/san-pham/" + sp + "/hien-thi"), "{}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.loi.hienThi").value("Vui lòng chọn hiển thị hoặc ẩn"));
+        qt(patch("/api/admin/san-pham/999999999/hien-thi"), "{\"hienThi\":true}").andExpect(status().isNotFound());
+        mvc.perform(patch("/api/admin/san-pham/" + sp + "/hien-thi").header("Authorization", khach)
+                .contentType("application/json").content("{\"hienThi\":true}")).andExpect(status().isForbidden());
     }
 }

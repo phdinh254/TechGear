@@ -185,6 +185,25 @@ class GioHangIT extends KiemThuGioHang {
     }
 
     @Test
+    void xoaCaGioChiXoaGioCuaMinh() throws Exception {
+        long a = bienThe("Cáp", 50_000, 10);
+        long b = bienThe("Ốp", 80_000, 10);
+        them(a, 1);
+        them(b, 2);
+        String nguoiKhac = dangKy();
+        mvc.perform(post("/api/gio-hang").header("Authorization", nguoiKhac).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"bienTheId\":%d,\"soLuong\":1}".formatted(a))).andExpect(status().isOk());
+
+        mvc.perform(delete("/api/gio-hang").header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dongs", hasSize(0)))
+                .andExpect(jsonPath("$.tongSoLuong").value(0));
+        mvc.perform(get("/api/gio-hang").header("Authorization", nguoiKhac))
+                .andExpect(jsonPath("$.dongs", hasSize(1)));
+        mvc.perform(delete("/api/gio-hang")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void canDangNhapVaMoiNguoiMotGio() throws Exception {
         mvc.perform(get("/api/gio-hang")).andExpect(status().isUnauthorized());
         long bt = bienThe("Củ sạc", 100_000, 5);

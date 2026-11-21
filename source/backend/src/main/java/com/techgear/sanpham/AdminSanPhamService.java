@@ -138,6 +138,14 @@ public class AdminSanPhamService {
         return chiTiet(id);
     }
 
+    @Transactional
+    public AdminSanPhamDto.SanPhamQT doiHienThi(Long id, boolean hienThi) {
+        thongTin(id);
+        jdbc.sql("UPDATE san_pham SET hien_thi = :hienThi, updated_at = now() WHERE id = :id")
+                .param("hienThi", hienThi).param("id", id).update();
+        return chiTiet(id);
+    }
+
     /** Xóa mềm sản phẩm và các biến thể (đơn cũ vẫn giữ ảnh chụp và tham chiếu). */
     @Transactional
     public void xoa(Long id) {

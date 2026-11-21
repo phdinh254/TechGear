@@ -100,4 +100,31 @@ class AdminKhoIT extends KiemThuQuanTri {
                 .andExpect(jsonPath("$[?(@.bienTheId == %d)].nguongCanhBao".formatted(it)).value(5));
         mvc.perform(get("/api/admin/kho/sap-het").header("Authorization", khach)).andExpect(status().isForbidden());
     }
+
+    @Test
+    void danhSachTonKhoLocTheoTuKhoaVaTrangThai() throws Exception {
+        String hau = TaoDuLieuSanPham.hauTo();
+        long het = bienThe("Cáp " + hau + " hết", 0);
+        long sap = bienThe("Cáp " + hau + " sắp", 3);
+        long con = bienThe("Cáp " + hau + " còn", 50);
+        long daXoa = bienThe("Cáp " + hau + " xóa", 9);
+        tao.sua("UPDATE bien_the SET deleted_at = now() WHERE id = ?", daXoa);
+        tao.sua("UPDATE bien_the SET sku = ?, hien_thi = FALSE WHERE id = ?", "TIM_" + hau, con);
+
+        qt(get("/api/admin/kho").param("tuKhoa", "cap " + hau), null)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tongSoPhanTu").value(3))
+                .andExpect(jsonPath("$.noiDung[?(@.bienTheId == %d)].trangThai".formatted(het)).value("het_hang"))
+                .andExpect(jsonPath("$.noiDung[?(@.bienTheId == %d)].trangThai".formatted(sap)).value("sap_het"))
+                .andExpect(jsonPath("$.noiDung[?(@.bienTheId == %d)].trangThai".formatted(con)).value("con_hang"))
+                .andExpect(jsonPath("$.noiDung[?(@.bienTheId == %d)].nguongCanhBao".formatted(sap)).value(5))
+                .andExpect(jsonPath("$.noiDung[?(@.bienTheId == %d)].hienThi".formatted(con)).value(false))
+                .andExpect(jsonPath("$.noiDung[?(@.bienTheId == %d)].tenSanPham".formatted(sap)).value("Cáp " + hau + " sắp"));
+        qt(get("/api/admin/kho").param("tuKhoa", hau).param("trangThai", "sap_het"), null)
+                .andExpect(jsonPath("$.noiDung[*].bienTheId", contains((int) sap)));
+        qt(get("/api/admin/kho").param("tuKhoa", "tim_" + hau), null)
+                .andExpect(jsonPath("$.noiDung[*].bienTheId", contains((int) con)));
+        qt(get("/api/admin/kho").param("trangThai", "abc"), null).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/admin/kho").header("Authorization", khach)).andExpect(status().isForbidden());
+    }
 }

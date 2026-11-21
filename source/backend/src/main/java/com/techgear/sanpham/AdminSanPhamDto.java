@@ -20,6 +20,9 @@ public final class AdminSanPhamDto {
     private AdminSanPhamDto() {
     }
 
+    public record HienThiRequest(@NotNull(message = "Vui lòng chọn hiển thị hoặc ẩn") Boolean hienThi) {
+    }
+
     public record ThongSoRequest(
             @NotBlank(message = "Vui lòng nhập tên thông số") @Size(max = 100, message = "Tên thông số tối đa 100 ký tự") String ten,
             @NotBlank(message = "Vui lòng nhập giá trị thông số") @Size(max = 255, message = "Giá trị tối đa 255 ký tự") String giaTri

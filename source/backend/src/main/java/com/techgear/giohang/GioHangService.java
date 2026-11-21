@@ -59,6 +59,11 @@ public class GioHangService {
         return xem(nguoiDungId);
     }
 
+    public GioHangResponse xoaHet(Long nguoiDungId) {
+        gioHangRepository.xoaHet(nguoiDungId);
+        return xem(nguoiDungId);
+    }
+
     /**
      * Gộp giỏ tạm của trình duyệt khi đăng nhập: cộng dồn, cắt theo tồn kho; bỏ dòng không còn bán,
      * hết hàng hoặc vượt số dòng tối đa (không báo lỗi từng dòng).

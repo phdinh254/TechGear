@@ -1950,6 +1950,36 @@
           }
         },
         {
+          "name": "[12] Giỏ hàng – xóa cả giỏ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Giỏ rỗng', () => {",
+                  "    const g = pm.response.json();",
+                  "    pm.expect(g.dongs).to.have.length(0);",
+                  "    pm.expect(g.tongSoLuong).to.eql(0);",
+                  "    pm.expect(g.tamTinh).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGio}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/gio-hang"
+          }
+        },
+        {
           "name": "Yêu thích – thêm",
           "event": [
             {
@@ -4170,6 +4200,109 @@
           }
         },
         {
+          "name": "[12] Sản phẩm – tắt hiển thị nhanh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đã ẩn, giữ thông tin khác', () => {",
+                  "    const sp = pm.response.json();",
+                  "    pm.expect(sp.hienThi).to.eql(false);",
+                  "    pm.expect(sp.baoHanhThang).to.eql(24);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/san-pham/{{spQT}}/hien-thi",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"hienThi\": false}"
+            }
+          }
+        },
+        {
+          "name": "[12] Sản phẩm – bật hiển thị lại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Đã hiện', () => pm.expect(pm.response.json().hienThi).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/san-pham/{{spQT}}/hien-thi",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"hienThi\": true}"
+            }
+          }
+        },
+        {
+          "name": "[12] Sản phẩm – đổi hiển thị thiếu giá trị → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));",
+                  "pm.test('Báo lỗi ô hienThi', () => pm.expect(pm.response.json().loi.hienThi).to.eql('Vui lòng chọn hiển thị hoặc ẩn'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/san-pham/{{spQT}}/hien-thi",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
           "name": "[11] Tùy chọn – sửa tên giá trị",
           "event": [
             {
@@ -4525,6 +4658,62 @@
               }
             ],
             "url": "{{baseUrl}}/api/admin/kho/sap-het"
+          }
+        },
+        {
+          "name": "[12] Kho – danh sách tồn kho tìm theo tên",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('Có biến thể vừa điều chỉnh, còn hàng', () => {",
+                  "    const kq = pm.response.json();",
+                  "    pm.expect(kq).to.include.keys('noiDung', 'trang', 'kichThuoc', 'tongSoPhanTu', 'tongSoTrang');",
+                  "    const d = kq.noiDung.find(x => x.bienTheId === Number(pm.collectionVariables.get('btQT')));",
+                  "    pm.expect(d).to.include.keys('sanPhamId', 'tenSanPham', 'sku', 'soLuongTon', 'nguongCanhBao', 'trangThai', 'hienThi');",
+                  "    pm.expect(d.soLuongTon).to.eql(12);",
+                  "    pm.expect(d.trangThai).to.eql('con_hang');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/kho?tuKhoa=tai+nghe+postman+{{qt}}"
+          }
+        },
+        {
+          "name": "[12] Kho – trạng thái sai → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/admin/kho?trangThai=abc"
           }
         },
         {

@@ -47,6 +47,10 @@ class GioHangRepository {
                 .param("nd", nguoiDungId).param("bt", bienTheId).update();
     }
 
+    void xoaHet(Long nguoiDungId) {
+        jdbc.sql("DELETE FROM gio_hang WHERE nguoi_dung_id = :nd").param("nd", nguoiDungId).update();
+    }
+
     /** Các dòng giỏ kèm giá, tồn kho hiện tại; ảnh ưu tiên ảnh gắn với giá trị tùy chọn (màu) của biến thể. */
     List<DongGioHang> dongs(Long nguoiDungId) {
         return jdbc.sql("SELECT g.bien_the_id, sp.id AS san_pham_id, sp.slug AS san_pham_slug, sp.ten, "

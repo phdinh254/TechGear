@@ -149,6 +149,7 @@ Sản phẩm được hiển thị khi: đang bật, chưa xóa, danh mục (và
 | GET | `/gio-hang` | ĐN | Giỏ hàng (giá, tồn kho hiện tại, tạm tính) |
 | POST | `/gio-hang` | ĐN | Thêm `{ bienTheId, soLuong }` (cộng dồn) |
 | PUT, DELETE | `/gio-hang/{bienTheId}` | ĐN | Sửa số lượng / xóa dòng |
+| DELETE | `/gio-hang` | ĐN | Xóa cả giỏ |
 | POST | `/gio-hang/gop` | ĐN | Gộp giỏ tạm của trình duyệt `[{ bienTheId, soLuong }]` |
 | GET | `/yeu-thich` | ĐN | Danh sách yêu thích |
 | PUT, DELETE | `/yeu-thich/{sanPhamId}` | ĐN | Thêm / bỏ yêu thích |
@@ -172,6 +173,7 @@ Dòng mới thêm đứng đầu. Mỗi giỏ tối đa 50 dòng; số lượng 
 | `POST /gio-hang` | `{ bienTheId, soLuong }` (cộng dồn nếu đã có) | 200 `GioHang` | 404 "Phiên bản sản phẩm không còn bán"; 409 "Sản phẩm đã hết hàng" / "Chỉ còn N sản phẩm trong kho" (tính cả số đã có trong giỏ); 400 "Giỏ hàng tối đa 50 sản phẩm" |
 | `PUT /gio-hang/{bienTheId}` | `{ soLuong }` (đặt lại số lượng) | 200 `GioHang` | 404 "Sản phẩm không có trong giỏ hàng" / "Phiên bản sản phẩm không còn bán"; 409 như trên |
 | `DELETE /gio-hang/{bienTheId}` | – | 200 `GioHang` (không có dòng đó cũng 200) | |
+| `DELETE /gio-hang` | – | 200 `GioHang` rỗng (nút "Xóa tất cả") | |
 | `POST /gio-hang/gop` | `[{ bienTheId, soLuong }]` (≤ 100 phần tử): giỏ tạm của trình duyệt khi đăng nhập | 200 `GioHang` | Không báo lỗi từng dòng: cộng dồn, cắt theo tồn kho, bỏ dòng không còn bán/hết hàng/vượt 50 dòng |
 | `GET /yeu-thich` | – | 200 `SanPhamTomTat[]`, yêu thích sau đứng trước; sản phẩm đã ẩn không hiện | |
 | `PUT /yeu-thich/{sanPhamId}` | – | 204 (đã có cũng 204) | 404 "Không tìm thấy sản phẩm"; 400 "Danh sách yêu thích tối đa 100 sản phẩm" |
@@ -293,11 +295,12 @@ DanhGiaCK  { id, hoTen, soSao, noiDung?, ngayTao }                        (công
 | GET, POST · PUT, DELETE | `/admin/danh-muc` · `/admin/danh-muc/{id}` | Danh mục |
 | GET, POST · PUT, DELETE | `/admin/thuong-hieu` · `/admin/thuong-hieu/{id}` | Thương hiệu |
 | GET, POST · GET, PUT, DELETE | `/admin/san-pham` · `/admin/san-pham/{id}` | Sản phẩm (kèm thông số, tùy chọn, ảnh) |
+| PATCH | `/admin/san-pham/{id}/hien-thi` | Bật / tắt hiển thị nhanh |
 | POST · PUT, DELETE | `/admin/san-pham/{id}/tuy-chon` · `/admin/tuy-chon/{id}` | Tùy chọn và giá trị |
 | POST · PUT, DELETE | `/admin/san-pham/{id}/hinh-anh` · `/admin/hinh-anh/{id}` | Ảnh sản phẩm |
 | POST · PUT, DELETE | `/admin/san-pham/{id}/bien-the` · `/admin/bien-the/{id}` | Biến thể |
 | POST | `/admin/bien-the/{id}/nhap-kho` · `/admin/bien-the/{id}/dieu-chinh` | Nhập kho / điều chỉnh tồn kho |
-| GET | `/admin/kho/lich-su` · `/admin/kho/sap-het` | Lịch sử kho / biến thể sắp hết |
+| GET | `/admin/kho` · `/admin/kho/lich-su` · `/admin/kho/sap-het` | Tồn kho mọi biến thể / lịch sử kho / biến thể sắp hết |
 | GET · GET | `/admin/don-hang` · `/admin/don-hang/{maDonHang}` | Tìm, lọc đơn / chi tiết |
 | PATCH | `/admin/don-hang/{maDonHang}/trang-thai` | Chuyển trạng thái (kèm ghi chú) |
 | PATCH | `/admin/don-hang/{maDonHang}/thanh-toan` | Cập nhật trạng thái thanh toán |
@@ -330,6 +333,7 @@ DanhGiaCK  { id, hoTen, soSao, noiDung?, ngayTao }                        (công
 | `GET /admin/san-pham` | `tuKhoa?` (không dấu), `danhMucId?`, `thuongHieuId?`, `hienThi?`, `trang`, `kichThuoc` (1–50, mặc định 20) | trang `{ id, ten, slug, anhChinh?, tenDanhMuc, tenThuongHieu?, giaBan, tongTon, soBienThe, hienThi, noiBat, luotXem, ngayTao }`, mới nhất trước | |
 | `GET /admin/san-pham/{id}` | – | `SanPhamQT` (dưới) | 404 |
 | `POST /admin/san-pham` · `PUT /admin/san-pham/{id}` | `{ ten, slug?, danhMucId, thuongHieuId?, moTaNgan?, moTa? (HTML), baoHanhThang?, noiBat?, hienThi?, thongSos?: [{ ten, giaTri }] }` – `thongSos` thay toàn bộ | 201 / 200 `SanPhamQT` | 400 danh mục/thương hiệu không tồn tại |
+| `PATCH /admin/san-pham/{id}/hien-thi` | `{ hienThi }` (bắt buộc) | 200 `SanPhamQT` (chỉ đổi `hienThi`) | 404 |
 | `DELETE /admin/san-pham/{id}` | – | 204 (xóa mềm sản phẩm và các biến thể) | |
 | `POST /admin/san-pham/{id}/tuy-chon` | `{ ten, loai, giaTris: [{ giaTri, maMau? }] }` | 201 `SanPhamQT` | 409 "Tùy chọn đã tồn tại" / "Sản phẩm đã có biến thể, xóa biến thể trước khi thêm tùy chọn" (biến thể cũ sẽ thiếu giá trị) |
 | `PUT /admin/tuy-chon/{id}` | `{ ten, loai, giaTris: [{ id?, giaTri, maMau? }] }` – có `id` là sửa, không có là thêm, thiếu là xóa | 200 `SanPhamQT` | 409 "Giá trị \"Đen\" đang được dùng ở biến thể" |
@@ -359,6 +363,7 @@ SanPhamQT { id, ten, slug, danhMucId, thuongHieuId?, moTaNgan?, moTa?, baoHanhTh
 |---|---|---|---|
 | `POST /admin/bien-the/{id}/nhap-kho` | `{ soLuong (1–100000), ghiChu? }` | 200 `{ bienTheId, soLuongTon }` + lịch sử `nhap_kho` | 404 |
 | `POST /admin/bien-the/{id}/dieu-chinh` | `{ soLuongMoi (≥ 0), ghiChu }` (bắt buộc lý do) | 200 như trên + lịch sử `dieu_chinh` (chênh lệch) | 400 "Số lượng mới bằng tồn kho hiện tại" |
+| `GET /admin/kho` | `tuKhoa?` (tên sản phẩm không dấu hoặc SKU), `trangThai?` (`con_hang` \| `sap_het` \| `het_hang`), `trang`, `kichThuoc` (1–100, mặc định 20) | trang `{ bienTheId, sanPhamId, tenSanPham, sku, phanLoai?, soLuongTon, nguongCanhBao, trangThai, hienThi }` biến thể chưa xóa, theo tên sản phẩm. `het_hang` = tồn 0, `sap_het` = 0 < tồn ≤ ngưỡng | 400 trạng thái sai |
 | `GET /admin/kho/lich-su` | `bienTheId?`, `loai?`, `trang`, `kichThuoc` (1–100, mặc định 20) | trang `{ id, bienTheId, sku, tenSanPham, loai, soLuongThayDoi, soLuongSau, ghiChu?, maDonHang?, nguoiThucHien?, thoiGian }`, mới nhất trước | |
 | `GET /admin/kho/sap-het` | – | `[{ bienTheId, sanPhamId, tenSanPham, sku, phanLoai?, soLuongTon, nguongCanhBao }]` biến thể chưa xóa có tồn ≤ ngưỡng, ít hàng trước | |
 

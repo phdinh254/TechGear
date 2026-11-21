@@ -56,6 +56,44 @@ public class AdminKhoService {
                          int nguongCanhBao) {
     }
 
+    public enum TrangThaiKho { con_hang, sap_het, het_hang }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record DongKho(Long bienTheId, Long sanPhamId, String tenSanPham, String sku, String phanLoai, int soLuongTon,
+                          int nguongCanhBao, String trangThai, boolean hienThi) {
+    }
+
+    private static final String TRANG_THAI_KHO = """
+            CASE WHEN bt.so_luong_ton = 0 THEN 'het_hang'
+                 WHEN bt.so_luong_ton <= bt.nguong_canh_bao THEN 'sap_het' ELSE 'con_hang' END""";
+
+    /** Tồn kho mọi biến thể chưa xóa; tìm không dấu theo tên sản phẩm hoặc SKU. */
+    @Transactional(readOnly = true)
+    public PageResponse<DongKho> danhSach(String tuKhoa, TrangThaiKho trangThai, int trang, int kichThuoc) {
+        StringBuilder where = new StringBuilder(" WHERE bt.deleted_at IS NULL AND sp.deleted_at IS NULL");
+        Map<String, Object> ts = new HashMap<>();
+        if (tuKhoa != null && !tuKhoa.isBlank()) {
+            where.append(" AND (lower(unaccent(sp.ten)) LIKE '%' || lower(unaccent(:tuKhoa)) || '%'"
+                    + " OR lower(bt.sku) LIKE '%' || lower(:tuKhoa) || '%')");
+            ts.put("tuKhoa", HienThi.thoatLike(tuKhoa.trim()));
+        }
+        if (trangThai != null) {
+            where.append(" AND ").append(TRANG_THAI_KHO).append(" = :trangThai");
+            ts.put("trangThai", trangThai.name());
+        }
+        String tu = " FROM bien_the bt JOIN san_pham sp ON sp.id = bt.san_pham_id" + where;
+        long tong = jdbc.sql("SELECT count(*)" + tu).params(ts).query(Long.class).single();
+        ts.put("gioiHan", kichThuoc);
+        ts.put("boQua", (long) trang * kichThuoc);
+        List<DongKho> noiDung = tong == 0 ? List.of() : jdbc.sql(
+                        "SELECT bt.id AS bien_the_id, sp.id AS san_pham_id, sp.ten AS ten_san_pham, bt.sku, "
+                        + HienThi.PHAN_LOAI + " AS phan_loai, bt.so_luong_ton, bt.nguong_canh_bao, "
+                        + TRANG_THAI_KHO + " AS trang_thai, bt.hien_thi" + tu
+                        + " ORDER BY sp.ten, bt.id LIMIT :gioiHan OFFSET :boQua")
+                .params(ts).query(DongKho.class).list();
+        return new PageResponse<>(noiDung, trang, kichThuoc, tong, (int) ((tong + kichThuoc - 1) / kichThuoc));
+    }
+
     @Transactional
     public TonKho nhapKho(Long bienTheId, NhapKhoRequest req, Long nguoiThucHienId) {
         int cu = khoaTonKho(bienTheId);
