@@ -20,3 +20,8 @@ uploads/*
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Báo cáo Word/PDF (không đưa lên git)
+docs/BC_HDV*
+~$*
+
