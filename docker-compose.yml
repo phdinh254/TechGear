@@ -1,0 +1,25 @@
+# CSDL PostgreSQL 17 cho backend TechGear: docker compose up -d
+# Lược đồ do Flyway trong backend tạo; xóa sạch dữ liệu: docker compose down -v
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: techgear-postgres
+    environment:
+      POSTGRES_DB: techgear
+      POSTGRES_USER: techgear
+      POSTGRES_PASSWORD: techgear
+      TZ: Asia/Ho_Chi_Minh
+    # Container mặc định UTC → đặt múi giờ phiên để now()/hiển thị theo giờ Việt Nam
+    command: ["postgres", "-c", "timezone=Asia/Ho_Chi_Minh"]
+    ports:
+      - "${TECHGEAR_DB_PORT:-5433}:5432"
+    volumes:
+      - techgear-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U techgear -d techgear"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  techgear-pgdata:

@@ -5,6 +5,7 @@ import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import ProductImages from '../components/ProductImages.jsx';
 import VariantEditor, { loiSku, loiTuyChon } from '../components/VariantEditor.jsx';
 import { ghepBienThe, sinhToHop, skuTrung } from '../utils/bienThe.js';
+import luuSanPham, { tuPhanHoi } from '../utils/luuSanPham.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
 import Loading from '../../components/Loading.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -28,65 +29,7 @@ const trangThaiMoi = () => ({
   slug: null,
 });
 
-const chuan = (s) => String(s ?? '').trim().toLowerCase();
 const rong = (v) => String(v ?? '').trim() === '';
-const soHoacNull = (v) => (rong(v) ? null : Number(v));
-const chuoiSo = (v) => (v === null || v === undefined ? '' : String(v));
-
-/** AdminSanPhamChiTietResponse -> state của form. */
-function tuPhanHoi(sp) {
-  const tuyChons = (sp.tuyChons || []).map((tc) => ({
-    khoa: `tc:${tc.id}`,
-    id: tc.id,
-    ten: tc.ten,
-    loai: tc.loai,
-    giaTris: tc.giaTris.map((gt) => ({ khoa: `id:${gt.id}`, id: gt.id, giaTri: gt.giaTri, maMau: gt.maMau || '' })),
-  }));
-  const bienThes = (sp.bienThes || []).flatMap((bt) => {
-    const giaTris = (bt.giaTris || []).map((ten, i) => tuyChons[i]?.giaTris.find((gt) => chuan(gt.giaTri) === chuan(ten)));
-    // Dữ liệu lệch (tên giá trị không khớp tùy chọn): bỏ qua biến thể thay vì làm trắng trang.
-    if (giaTris.some((gt) => !gt)) return [];
-    return [{
-      khoa: giaTris.map((gt) => gt.khoa).join('|'),
-      giaTris,
-      id: bt.id,
-      sku: bt.sku,
-      giaBan: chuoiSo(bt.giaBan),
-      giaGoc: chuoiSo(bt.giaGoc),
-      tonKhoBanDau: 0,
-      nguongCanhBao: bt.nguongCanhBao,
-      dangBan: bt.dangBan,
-      soLuongTon: bt.soLuongTon,
-    }];
-  });
-  const timKhoaGiaTri = (tenTc, tenGt) => {
-    if (tenTc == null) return '';
-    const tc = tuyChons.find((t) => chuan(t.ten) === chuan(tenTc));
-    return tc?.giaTris.find((gt) => chuan(gt.giaTri) === chuan(tenGt))?.khoa || '';
-  };
-  return {
-    form: {
-      ten: sp.ten,
-      danhMucId: chuoiSo(sp.danhMucId),
-      thuongHieuId: chuoiSo(sp.thuongHieuId),
-      moTaNgan: sp.moTaNgan || '',
-      moTa: sp.moTa || '',
-      giaBan: chuoiSo(sp.giaBan),
-      giaGoc: chuoiSo(sp.giaGoc),
-      baoHanhThang: chuoiSo(sp.baoHanhThang),
-      noiBat: !!sp.noiBat,
-      hienThi: !!sp.hienThi,
-    },
-    anhs: (sp.hinhAnhs || []).map((a) => ({
-      khoa: crypto.randomUUID(), duongDan: a.duongDan, moTa: a.moTa || '', laAnhChinh: a.laAnhChinh, giaTriKhoa: timKhoaGiaTri(a.tuyChon, a.giaTri),
-    })),
-    thongSos: (sp.thongSos || []).map((t) => ({ khoa: crypto.randomUUID(), ten: t.ten, giaTri: t.giaTri })),
-    tuyChons,
-    bienThes,
-    bienTheGoc: bienThes.map((b) => ({ khoa: b.khoa, soLuongTon: b.soLuongTon })),
-    slug: sp.slug,
-  };
-}
 
 const NHAN_MUC = { bienThes: 'Biến thể', hinhAnhs: 'Ảnh', thongSos: 'Thông số', tuyChons: 'Tùy chọn', giaTris: 'Giá trị' };
 const NHAN_TRUONG = {
@@ -109,43 +52,6 @@ function capTuyChonGiaTri(tuyChons) {
   return tuyChons.flatMap((tc) => tc.giaTris
     .filter((gt) => gt.giaTri.trim())
     .map((gt) => ({ khoa: gt.khoa, tuyChon: tc.ten.trim(), giaTri: gt.giaTri.trim() })));
-}
-
-/** State -> AdminSanPhamRequest. */
-function taoYeuCau({ form, anhs, thongSos, tuyChons, bienThes }) {
-  const theoKhoa = new Map(capTuyChonGiaTri(tuyChons).map((g) => [g.khoa, g]));
-  return {
-    ten: form.ten.trim(),
-    danhMucId: Number(form.danhMucId),
-    thuongHieuId: soHoacNull(form.thuongHieuId),
-    moTaNgan: form.moTaNgan.trim() || null,
-    moTa: form.moTa.trim() || null,
-    giaBan: soHoacNull(form.giaBan),
-    giaGoc: soHoacNull(form.giaGoc),
-    baoHanhThang: soHoacNull(form.baoHanhThang),
-    noiBat: form.noiBat,
-    hienThi: form.hienThi,
-    hinhAnhs: anhs.map((a) => {
-      const g = theoKhoa.get(a.giaTriKhoa);
-      return { duongDan: a.duongDan, moTa: a.moTa.trim() || null, laAnhChinh: a.laAnhChinh, tuyChon: g ? g.tuyChon : null, giaTri: g ? g.giaTri : null };
-    }),
-    thongSos: thongSos.filter((t) => !rong(t.ten) || !rong(t.giaTri)).map((t) => ({ ten: t.ten.trim(), giaTri: t.giaTri.trim() })),
-    tuyChons: tuyChons.map((tc) => ({
-      id: tc.id,
-      ten: tc.ten.trim(),
-      loai: tc.loai,
-      giaTris: tc.giaTris.map((gt) => ({ id: gt.id, giaTri: gt.giaTri.trim(), maMau: gt.maMau || null })),
-    })),
-    bienThes: bienThes.map((b) => ({
-      giaTris: b.giaTris.map((gt) => gt.giaTri.trim()),
-      sku: b.sku.trim(),
-      giaBan: soHoacNull(b.giaBan),
-      giaGoc: soHoacNull(b.giaGoc),
-      tonKhoBanDau: b.id == null ? Number(b.tonKhoBanDau || 0) : null,
-      nguongCanhBao: soHoacNull(b.nguongCanhBao),
-      dangBan: b.dangBan,
-    })),
-  };
 }
 
 const laSoNguyenKhongAm = (v) => !rong(v) && Number.isInteger(Number(v)) && Number(v) >= 0;
@@ -269,14 +175,13 @@ export default function SanPhamFormPage() {
     setCanhBaoXoa(null);
     setDangLuu(true);
     try {
-      const yeuCau = taoYeuCau(st);
-      const sp = id ? await adminApi.sanPham.capNhat(id, yeuCau) : await adminApi.sanPham.tao(yeuCau);
+      const sp = await luuSanPham(id, st, (idMoi) => {
+        // Sản phẩm đã tạo: chuyển sang trang sửa ngay (giữ dữ liệu đang nhập) để lần lưu sau không tạo trùng
+        boQuaTai.current = String(idMoi);
+        navigate(`/admin/san-pham/${idMoi}`, { replace: true });
+      });
       setSt(tuPhanHoi(sp));
       toast.hien(id ? 'Đã lưu sản phẩm' : 'Đã thêm sản phẩm');
-      if (String(sp.id) !== id) {
-        boQuaTai.current = String(sp.id);
-        navigate(`/admin/san-pham/${sp.id}`, { replace: true });
-      }
     } catch (err) {
       setLoi(layThongBaoLoi(err));
       setLoiTheoO(err.response?.data?.loi || {});

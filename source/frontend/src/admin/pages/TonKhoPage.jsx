@@ -34,6 +34,7 @@ export default function TonKhoPage() {
   const [loiTai, setLoiTai] = useState('');
   const [hop, setHop] = useState(null); // { che, bienThe }
   const dem = useRef(0);
+  const [lanTai, setLanTai] = useState(0); // tăng để tải lại sau khi nhập/điều chỉnh
 
   const datLoc = useCallback((khoa, giaTri) => {
     setParams((p) => {
@@ -64,13 +65,11 @@ export default function TonKhoPage() {
       .then((kq) => { if (luot === dem.current) { setKetQua(kq); setLoiTai(''); } })
       .catch((err) => { if (luot === dem.current) setLoiTai(layThongBaoLoi(err)); })
       .finally(() => { if (luot === dem.current) setDangTai(false); });
-  }, [tuKhoa, trangThai, trang]);
+  }, [tuKhoa, trangThai, trang, lanTai]);
 
-  const thayDong = (capNhat) => {
-    setKetQua((kq) => kq && ({
-      ...kq,
-      noiDung: kq.noiDung.map((d) => (d.bienTheId === capNhat.bienTheId ? capNhat : d)),
-    }));
+  // API chỉ trả { bienTheId, soLuongTon }: tải lại để trạng thái còn/sắp hết/hết hàng do backend tính
+  const thayDong = () => {
+    setLanTai((n) => n + 1);
     setHop(null);
   };
 
@@ -78,7 +77,7 @@ export default function TonKhoPage() {
     { khoa: 'tenSanPham', tieuDe: 'Sản phẩm', hienThi: (d) => (
       <div className="admin-product-name">
         <span>{d.tenSanPham}</span>
-        {!d.dangBan && <small className="field-hint">Không còn bán</small>}
+        {!d.hienThi && <small className="field-hint">Không còn bán</small>}
       </div>
     ) },
     { khoa: 'phanLoai', tieuDe: 'Phân loại' },

@@ -9,32 +9,22 @@ Nhóm sinh viên thực hiện:
 | Thành phần | Công nghệ |
 |---|---|
 | Frontend | ReactJS 18 + Vite 5, React Router 6, Axios |
-| Backend | Java 17, Spring Boot 3.3.5 (Web, Data JPA, Security, Validation, Mail), JWT (jjwt 0.12.6), Lombok, springdoc-openapi (Swagger UI) |
-| CSDL | MySQL 8.0.16+ hoặc MariaDB 10.4+ (XAMPP) |
+| Backend | Java 21, Spring Boot 4.1 (Web MVC, Data JPA, Security + OAuth2 Resource Server/JWT, Validation, Mail), Flyway, springdoc-openapi (Swagger UI) |
+| CSDL | PostgreSQL 17 (chạy bằng Docker Compose), lược đồ quản lý bằng Flyway |
 
 ## Cấu trúc thư mục
 
 ```
 TechGear/
 ├── database/
-│   └── DB_TechGear.sql          Script tạo CSDL techgear + dữ liệu mẫu
+│   └── DB_TechGear.sql           Lược đồ + dữ liệu mẫu PostgreSQL 17 (xuất bằng pg_dump)
 ├── docs/
 │   ├── so-do-use-case/           9 sơ đồ use case (draw.io)
-│   ├── thiet-ke/                 Sơ đồ thiết kế (draw.io) + đặc tả API
-│   └── TechGear.dbml             Lược đồ CSDL dạng dbdiagram.io
+│   ├── thiet-ke/                 Đặc tả, từ điển dữ liệu, đặc tả API, sơ đồ thiết kế
+│   └── nguon-anh-mau.md          Nguồn, tác giả, giấy phép ảnh dữ liệu mẫu
+├── postman/                      Bộ kiểm thử API (Postman/Newman)
 └── source/
     ├── backend/                  Spring Boot REST API (cổng 8080)
-    │   └── src/main/java/com/techgear/
-    │       ├── config/           SecurityConfig (JWT, CORS, phân quyền), WebConfig (ảnh upload), OpenApiConfig, AsyncConfig
-    │       ├── controller/       REST controller
-    │       ├── dto/              Dữ liệu vào/ra API (Java record)
-    │       ├── entity/           24 entity JPA ánh xạ đúng các bảng (+ enums)
-    │       ├── event/            Sự kiện nghiệp vụ (VD: yêu cầu đặt lại mật khẩu → gửi email)
-    │       ├── exception/        ApiException, ApiError, GlobalExceptionHandler (lỗi trả JSON tiếng Việt)
-    │       ├── repository/       Spring Data JPA repository
-    │       ├── security/         JwtService, JwtAuthFilter, JsonAuthHandlers (401/403), UserDetailsService
-    │       ├── service/          Xử lý nghiệp vụ (tài khoản, mật khẩu, sổ địa chỉ, email, lưu ảnh...)
-    │       └── util/             SlugUtil (tạo slug từ tiếng Việt)
     └── frontend/                 React (cổng 5173)
         └── src/
             ├── api/              axiosClient (tự gắn token), các hàm gọi API
@@ -46,43 +36,84 @@ TechGear/
 
 ## Sơ đồ thiết kế
 
-Sơ đồ thiết kế nằm trong `docs/thiet-ke/`, mỗi sơ đồ có 3 file: `.drawio` (mở bằng [draw.io](https://www.drawio.com/) để sửa), `.drawio.png` (chèn vào Word, vẫn mở lại được bằng draw.io) và `.svg` (ảnh vector). Bấm vào ảnh để xem kích thước đầy đủ.
+Nằm trong `docs/thiet-ke/`, mỗi sơ đồ có `.drawio` (mở bằng [draw.io](https://www.drawio.com/) để sửa), `.drawio.png` và `.svg`.
 
-Đặc tả API đầy đủ (quy ước, mã lỗi, dữ liệu vào/ra, quy tắc nghiệp vụ, biến môi trường): [`docs/thiet-ke/dac-ta-api.md`](docs/thiet-ke/dac-ta-api.md).
+| Tài liệu | Nội dung |
+|---|---|
+| [`dac-ta-yeu-cau.md`](docs/thiet-ke/dac-ta-yeu-cau.md) | Đặc tả yêu cầu: tác nhân, module, quy tắc nghiệp vụ, phi chức năng, kiểm thử |
+| [`tu-dien-du-lieu.md`](docs/thiet-ke/tu-dien-du-lieu.md) | Từ điển dữ liệu 23 bảng PostgreSQL |
+| [`dac-ta-api.md`](docs/thiet-ke/dac-ta-api.md) | Đặc tả API: quy ước, định dạng lỗi, danh sách API |
+| [`bao-cao-cho-frontend.md`](docs/bao-cao-cho-frontend.md) | Báo cáo cho người làm frontend: API đã có, thay đổi so với bản cũ, việc frontend cần làm |
 
 ### 1. Kiến trúc tổng thể
-
-React ↔ các tầng xử lý của Spring Boot ↔ MySQL, cùng cổng thanh toán VNPay và máy chủ email SMTP.
 
 [![Kiến trúc tổng thể](docs/thiet-ke/02_kien_truc_tong_the.drawio.png)](docs/thiet-ke/02_kien_truc_tong_the.drawio.png)
 
 ### 2. Sơ đồ thực thể – liên kết (ERD)
 
-24 bảng, 32 khóa ngoại, gom theo 6 nhóm nghiệp vụ.
+23 bảng, 31 khóa ngoại, gom theo 6 nhóm nghiệp vụ.
 
 [![ERD](docs/thiet-ke/01_erd.drawio.png)](docs/thiet-ke/01_erd.drawio.png)
 
-### 3. Sơ đồ lớp (entity JPA)
+### 3. Sơ đồ gói backend
 
-Thuộc tính, quan hệ và bội số giữa các entity; các kiểu liệt kê (enum).
+12 module (`com.techgear.<module>`) và quan hệ phụ thuộc.
 
-[![Sơ đồ lớp entity](docs/thiet-ke/03_so_do_lop_entity.drawio.png)](docs/thiet-ke/03_so_do_lop_entity.drawio.png)
+[![Sơ đồ gói](docs/thiet-ke/03_so_do_goi.drawio.png)](docs/thiet-ke/03_so_do_goi.drawio.png)
 
-### 4. Sơ đồ hoạt động – Đăng ký
+### 4. Tài khoản: hoạt động và tuần tự
 
-[![Hoạt động đăng ký](docs/thiet-ke/04_hd_dang_ky.drawio.png)](docs/thiet-ke/04_hd_dang_ky.drawio.png)
+| Đăng ký | Đăng nhập | Quên mật khẩu |
+|:---:|:---:|:---:|
+| [![Đăng ký](docs/thiet-ke/04_hd_dang_ky.drawio.png)](docs/thiet-ke/04_hd_dang_ky.drawio.png) | [![Đăng nhập](docs/thiet-ke/05_hd_dang_nhap.drawio.png)](docs/thiet-ke/05_hd_dang_nhap.drawio.png) | [![Quên mật khẩu](docs/thiet-ke/06_hd_quen_mat_khau.drawio.png)](docs/thiet-ke/06_hd_quen_mat_khau.drawio.png) |
 
-### 5. Sơ đồ hoạt động – Đăng nhập
+Tuần tự đăng nhập và kiểm tra JWT:
 
-[![Hoạt động đăng nhập](docs/thiet-ke/05_hd_dang_nhap.drawio.png)](docs/thiet-ke/05_hd_dang_nhap.drawio.png)
+[![Tuần tự đăng nhập JWT](docs/thiet-ke/07_td_dang_nhap_jwt.drawio.png)](docs/thiet-ke/07_td_dang_nhap_jwt.drawio.png)
 
-### 6. Sơ đồ hoạt động – Quên / đặt lại mật khẩu
+### 5. Sản phẩm: tìm kiếm và xem chi tiết
 
-[![Hoạt động quên mật khẩu](docs/thiet-ke/06_hd_quen_mat_khau.drawio.png)](docs/thiet-ke/06_hd_quen_mat_khau.drawio.png)
+| Tìm kiếm, lọc sản phẩm | Xem chi tiết, chọn biến thể |
+|:---:|:---:|
+| [![Tìm kiếm sản phẩm](docs/thiet-ke/08_hd_tim_kiem_san_pham.drawio.png)](docs/thiet-ke/08_hd_tim_kiem_san_pham.drawio.png) | [![Xem chi tiết sản phẩm](docs/thiet-ke/09_hd_xem_chi_tiet_san_pham.drawio.png)](docs/thiet-ke/09_hd_xem_chi_tiet_san_pham.drawio.png) |
 
-### 7. Sơ đồ tuần tự – Đăng nhập JWT và gọi API có token
+### 6. Giỏ hàng
 
-[![Tuần tự đăng nhập JWT](docs/thiet-ke/07_tt_dang_nhap_jwt.drawio.png)](docs/thiet-ke/07_tt_dang_nhap_jwt.drawio.png)
+| Thêm vào giỏ | Gộp giỏ khi đăng nhập |
+|:---:|:---:|
+| [![Thêm vào giỏ](docs/thiet-ke/10_hd_them_vao_gio.drawio.png)](docs/thiet-ke/10_hd_them_vao_gio.drawio.png) | [![Gộp giỏ hàng](docs/thiet-ke/11_hd_gop_gio_hang.drawio.png)](docs/thiet-ke/11_hd_gop_gio_hang.drawio.png) |
+
+### 7. Đặt hàng và đơn hàng
+
+| Đặt hàng | Hủy đơn |
+|:---:|:---:|
+| [![Đặt hàng](docs/thiet-ke/12_hd_dat_hang.drawio.png)](docs/thiet-ke/12_hd_dat_hang.drawio.png) | [![Hủy đơn](docs/thiet-ke/13_hd_huy_don.drawio.png)](docs/thiet-ke/13_hd_huy_don.drawio.png) |
+
+Tuần tự đặt hàng (khóa biến thể và mã giảm giá trong một giao dịch):
+
+[![Tuần tự đặt hàng](docs/thiet-ke/14_td_dat_hang.drawio.png)](docs/thiet-ke/14_td_dat_hang.drawio.png)
+
+Trạng thái đơn hàng:
+
+[![Trạng thái đơn hàng](docs/thiet-ke/15_tt_don_hang.drawio.png)](docs/thiet-ke/15_tt_don_hang.drawio.png)
+
+### 8. Thanh toán VNPay
+
+[![Tuần tự thanh toán VNPay](docs/thiet-ke/16_td_thanh_toan_vnpay.drawio.png)](docs/thiet-ke/16_td_thanh_toan_vnpay.drawio.png)
+
+Trạng thái thanh toán của đơn:
+
+[![Trạng thái thanh toán](docs/thiet-ke/17_tt_thanh_toan.drawio.png)](docs/thiet-ke/17_tt_thanh_toan.drawio.png)
+
+### 9. Đánh giá sản phẩm
+
+[![Viết đánh giá](docs/thiet-ke/18_hd_viet_danh_gia.drawio.png)](docs/thiet-ke/18_hd_viet_danh_gia.drawio.png)
+
+### 10. Quản trị
+
+| Xử lý đơn hàng | Thêm sản phẩm |
+|:---:|:---:|
+| [![Quản trị xử lý đơn hàng](docs/thiet-ke/19_hd_qt_xu_ly_don_hang.drawio.png)](docs/thiet-ke/19_hd_qt_xu_ly_don_hang.drawio.png) | [![Quản trị thêm sản phẩm](docs/thiet-ke/20_hd_qt_them_san_pham.drawio.png)](docs/thiet-ke/20_hd_qt_them_san_pham.drawio.png) |
 
 ## Sơ đồ use case
 
@@ -114,48 +145,45 @@ Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png
 
 | Công cụ | Phiên bản | Ghi chú |
 |---|---|---|
-| JDK | 17 trở lên | VD: Eclipse Temurin 17 |
+| JDK | 21 | VD: Eclipse Temurin 21 |
 | Maven | 3.9+ | IntelliJ IDEA có sẵn Maven |
 | Node.js | 18 trở lên | |
-| XAMPP | MySQL/MariaDB 10.4+ | |
+| Docker Desktop | mới nhất | Chạy PostgreSQL 17 bằng Docker Compose |
 
 ### 1. Cơ sở dữ liệu
-1. Mở XAMPP, bật **MySQL**.
-2. Vào phpMyAdmin → tab **Import** → chọn `database/DB_TechGear.sql` → **Go**.
-   (Script tự xóa và tạo lại CSDL `techgear`.)
 
-Tài khoản mẫu:
-
-| Email | Mật khẩu | Vai trò |
-|---|---|---|
-| admin@techgear.vn | Admin@123 | Quản trị |
-| khachhang@techgear.vn | Khach@123 | Khách hàng |
-
-> Dữ liệu sản phẩm mẫu (tên, giá, thông số) chỉ để minh họa, không phải số liệu chính thức của hãng.
+```bash
+docker compose up -d        # PostgreSQL 17 ở cổng 5433 (đổi bằng biến TECHGEAR_DB_PORT)
+docker compose down -v      # xóa sạch dữ liệu khi cần làm lại từ đầu
+```
+Lược đồ CSDL do Flyway trong backend tự tạo khi khởi động (`source/backend/src/main/resources/db/migration`).
 
 ### 2. Backend
-1. IntelliJ IDEA → **Open** → chọn thư mục `source/backend` (nhận diện `pom.xml`).
-2. Đợi Maven tải thư viện. Nếu IntelliJ hỏi bật *Annotation Processing* cho Lombok → chọn **Enable**.
-3. Chạy `TechGearApplication`. Hoặc dòng lệnh: `mvn spring-boot:run`.
 
-Kiểm tra nhanh:
-- `http://localhost:8080/api/danh-muc` → JSON danh mục.
-- `http://localhost:8080/swagger-ui.html` → tài liệu API, thử gọi API trực tiếp (bấm **Authorize**, dán token nhận được khi đăng nhập).
+```bash
+cd source/backend
+mvn spring-boot:run         # tự bật profile dev (kết nối CSDL ở trên, khóa JWT dùng cho máy cá nhân)
+```
+- Swagger UI: `http://localhost:8080/swagger-ui.html` (bấm **Authorize**, dán token nhận được khi đăng nhập).
+- Dữ liệu mẫu (chỉ profile dev, nạp khi CSDL chưa có sản phẩm/đơn hàng; muốn nạp lại: `docker compose down -v`): 35 sản phẩm
+  có ảnh, 4 banner, 12 tài khoản, 43 đơn trong 90 ngày qua (đủ trạng thái, COD/VNPay), 27 đánh giá. Chi tiết:
+  [`docs/bao-cao-cho-frontend.md`](docs/bao-cao-cho-frontend.md) mục 11. Ảnh là link Wikimedia Commons (cần internet),
+  nguồn và giấy phép: [`docs/nguon-anh-mau.md`](docs/nguon-anh-mau.md).
+- Tài khoản mẫu: `admin@techgear.vn` / `Admin@123` (quản trị), `khach@techgear.vn` / `Khach@123` (khách hàng),
+  10 khách `*@example.com` / `Khach@123` (`ngo.long@example.com` bị khóa).
+- Mã giảm giá mẫu: `GIAM10`, `GIAM50K`, `MOILAN1` (mỗi khách 1 lần), `HETHAN` (đã hết hạn).
+- Không chạy backend mà chỉ cần CSDL (VD để chấm/nộp bài): nạp `database/DB_TechGear.sql` vào CSDL trống, cách nạp ghi ở đầu file.
+- VNPay: dev dùng mã website và khóa giả (đủ để test IPN bằng Postman). Thanh toán thật trên sandbox: đặt `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` do sandbox.vnpayment.vn cấp.
+- Chưa cấu hình `MAIL_USERNAME` thì ở profile dev liên kết đặt lại mật khẩu được ghi ra log của backend thay vì gửi email (môi trường khác chỉ cảnh báo, không ghi liên kết).
+- Biến môi trường khi triển khai: xem `source/backend/.env.example` (bắt buộc `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
 
-Chạy kiểm thử: `mvn test`.
+Kiểm thử:
 
-#### Cấu hình (biến môi trường)
-
-Không cần khai báo gì khi chạy trên máy cá nhân với XAMPP mặc định. Khi cần thay đổi, đặt biến môi trường (đầy đủ trong [đặc tả API](docs/thiet-ke/dac-ta-api.md#3-biến-môi-trường)):
-
-| Biến | Mặc định | Ý nghĩa |
-|---|---|---|
-| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | `localhost:3306/techgear`, `root`, rỗng | Kết nối CSDL |
-| `JWT_SECRET` | khóa dev có sẵn | Khóa ký JWT – **bắt buộc đổi khi triển khai thật** |
-| `FRONTEND_URL` | `http://localhost:5173` | Địa chỉ frontend (CORS, liên kết trong email) |
-| `MAIL_USERNAME`, `MAIL_PASSWORD` | rỗng | Gmail + [App Password](https://myaccount.google.com/apppasswords) để gửi email thật |
-
-> Chưa cấu hình `MAIL_USERNAME` thì hệ thống **không gửi email**, mà ghi liên kết đặt lại mật khẩu ra log của backend (tiện chạy thử).
+| Lệnh | Nội dung |
+|---|---|
+| `mvn test` | Unit test |
+| `mvn verify` | Unit test + kiểm thử tích hợp trên PostgreSQL thật (Testcontainers, cần Docker) |
+| `npx -y newman@6 run postman/TechGear.postman_collection.json -e postman/TechGear.local.postman_environment.json` | Kiểm thử API bằng bộ Postman (chạy ở gốc repo, backend đang chạy). Có thể import 2 file này vào Postman để gọi thử |
 
 ### 3. Frontend
 
@@ -167,72 +195,27 @@ npm run dev
 ```
 Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env` (`VITE_API_URL`).
 
-## Danh sách API hiện có
+## Danh sách API
 
-Gốc: `http://localhost:8080/api`. Gửi token: header `Authorization: Bearer <token>`.
-Lỗi trả về dạng `{ "thoiGian": "...", "trangThai": 400, "thongBao": "...", "loi": { ... } }`.
+Đặc tả đầy đủ (dữ liệu gửi lên, trả về, mã lỗi): `docs/thiet-ke/dac-ta-api.md`. Backend mới giữ nguyên các API mà
+frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/auth/toi`, `/api/danh-muc`, `/api/thuong-hieu`,
+`/api/san-pham`, `/api/san-pham/noi-bat`, `/api/san-pham/{slug}`). Đã có: tài khoản (`/api/auth/**`, `/api/tai-khoan/**`), sản phẩm và cửa hàng (`/api/danh-muc`, `/api/thuong-hieu`,
+`/api/san-pham/**`, `/api/banner`, `/api/cai-dat`), giỏ hàng và yêu thích (`/api/gio-hang/**`, `/api/yeu-thich/**`), đơn hàng (`/api/don-hang/**`), thanh toán VNPay (`/api/thanh-toan/vnpay/**`), đánh giá (`/api/danh-gia/**`, `/api/san-pham/{slug}/danh-gia`), quản trị (`/api/admin/**`).
 
-| Phương thức | Đường dẫn | Quyền | Mô tả |
-|---|---|---|---|
-| POST | `/auth/dang-ky` | Công khai | Đăng ký, trả về token |
-| POST | `/auth/dang-nhap` | Công khai | Đăng nhập, trả về token |
-| GET | `/auth/toi` | Đã đăng nhập | Thông tin tài khoản hiện tại |
-| POST | `/auth/quen-mat-khau` | Công khai | Gửi liên kết đặt lại mật khẩu qua email (hiệu lực 15 phút) |
-| POST | `/auth/dat-lai-mat-khau` | Công khai | Đặt mật khẩu mới bằng mã trong liên kết |
-| GET / PUT | `/tai-khoan` | Đã đăng nhập | Xem / cập nhật hồ sơ (họ tên, SĐT, giới tính, ngày sinh) |
-| PUT | `/tai-khoan/mat-khau` | Đã đăng nhập | Đổi mật khẩu |
-| POST | `/tai-khoan/anh-dai-dien` | Đã đăng nhập | Đổi ảnh đại diện (multipart) |
-| GET / POST | `/tai-khoan/dia-chi` | Đã đăng nhập | Sổ địa chỉ: danh sách / thêm |
-| PUT / DELETE | `/tai-khoan/dia-chi/{id}` | Đã đăng nhập | Sửa / xóa địa chỉ |
-| PATCH | `/tai-khoan/dia-chi/{id}/mac-dinh` | Đã đăng nhập | Đặt địa chỉ mặc định |
-| GET | `/danh-muc` | Công khai | Cây danh mục (cha – con) |
-| GET | `/thuong-hieu` | Công khai | Thương hiệu đang hiển thị |
-| GET | `/san-pham` | Công khai | Tìm kiếm, lọc, sắp xếp, phân trang |
-| GET | `/san-pham/noi-bat` | Công khai | 8 sản phẩm nổi bật |
-| GET | `/san-pham/{slug}` | Công khai | Chi tiết sản phẩm (tùy chọn, biến thể, thông số) |
-| GET | `/san-pham/{slug}/danh-gia` | Công khai | Tổng quan và danh sách đánh giá đã duyệt |
-| GET | `/ma-giam-gia` | Công khai | Mã giảm giá đang áp dụng |
-| GET / DELETE | `/gio-hang` | Đã đăng nhập | Xem / xóa toàn bộ giỏ hàng |
-| POST | `/gio-hang/items` | Đã đăng nhập | Thêm biến thể vào giỏ |
-| PUT / DELETE | `/gio-hang/items/{bienTheId}` | Đã đăng nhập | Sửa số lượng / xóa khỏi giỏ |
-| POST | `/gio-hang/gop` | Đã đăng nhập | Gộp giỏ localStorage khi đăng nhập |
-| POST | `/dat-hang/tinh-tien` | Công khai | Tính tạm tính, giảm giá, phí vận chuyển |
-| POST | `/dat-hang` | Công khai | Đặt hàng (khách vãng lai hoặc đã đăng nhập) |
-| GET | `/don-hang-cua-toi` | Đã đăng nhập | Danh sách đơn hàng của tôi |
-| GET | `/don-hang-cua-toi/{maDonHang}` | Đã đăng nhập | Chi tiết đơn hàng |
-| PATCH | `/don-hang-cua-toi/{maDonHang}/huy` | Đã đăng nhập | Hủy đơn hàng |
-| POST | `/tra-cuu-don-hang` | Công khai | Tra cứu đơn bằng mã đơn + email hoặc số điện thoại đặt hàng |
-| GET | `/banner` | Công khai | Banner đang hiển thị (lọc theo khung thời gian, sắp theo thứ tự) |
-| GET | `/cai-dat` | Công khai | Cài đặt công khai: tên cửa hàng, hotline, email, phí vận chuyển |
-| GET | `/yeu-thich` | Đã đăng nhập | Danh sách sản phẩm yêu thích |
-| GET / POST / DELETE | `/yeu-thich/{sanPhamId}` | Đã đăng nhập | Kiểm tra / thêm / bỏ yêu thích |
-| POST | `/danh-gia` | Đã đăng nhập | Đánh giá sản phẩm trong đơn đã hoàn thành (chờ duyệt) |
-| GET/POST/PUT/DELETE | `/admin/thuong-hieu` | Quản trị | Quản lý thương hiệu |
-| POST | `/admin/upload?thuMuc=` | Quản trị | Tải ảnh (JPG/PNG/WEBP/GIF, tối đa 5MB) |
-
-Tham số `/san-pham`: `tuKhoa`, `danhMuc` (slug, gồm cả danh mục con), `thuongHieu` (slug), `giaTu`, `giaDen`, `sapXep` (`moi_nhat` | `gia_tang` | `gia_giam` | `pho_bien`), `trang` (bắt đầu từ 0), `kichThuoc` (tối đa 48).
-
-## Thay đổi so với file CSDL ban đầu
-
-- Đổi tên đề tài, công nghệ, tên CSDL `shop_thoi_trang` → `techgear`.
-- Bỏ các cột riêng của Laravel (`remember_token`, `email_verified_at`); thêm bảng `ma_dat_lai_mat_khau` cho chức năng quên mật khẩu.
-- `tuy_chon.loai`: `mau_sac, kich_co, khac` → `mau_sac, dung_luong, phien_ban, khac`.
-- Thêm `san_pham.bao_hanh_thang` (thời gian bảo hành).
-- `gio_hang`: chỉ lưu giỏ của khách đã đăng nhập (bỏ `ma_phien`, `het_han_luc`); khách vãng lai lưu giỏ ở localStorage của React.
-- `don_hang`: thêm ràng buộc `tien_giam_gia <= tam_tinh`.
-- Cột thời gian dùng `DATETIME` với `created_at` mặc định `CURRENT_TIMESTAMP`.
-- Thêm dữ liệu mẫu: 2 tài khoản, 11 danh mục, 6 thương hiệu, 8 sản phẩm, 15 biến thể, 2 mã giảm giá, cài đặt cửa hàng.
-
-## Tiến độ hoàn thiện backend
+## Tiến độ viết lại backend
 
 | Giai đoạn | Nội dung | Trạng thái |
 |---|---|---|
-| 1. Nền tảng | ERD, kiến trúc, sơ đồ lớp; chuẩn hóa lỗi; cấu hình biến môi trường; Swagger; upload ảnh | Xong |
-| 2. Tài khoản | Hồ sơ, đổi mật khẩu, ảnh đại diện, quên / đặt lại mật khẩu, sổ địa chỉ | Xong |
-| 3. Sản phẩm | Tìm kiếm theo giá biến thể, banner, cài đặt cửa hàng, đánh giá theo sản phẩm | Xong |
-| 4. Giỏ hàng | Giỏ hàng trên server, gộp giỏ localStorage khi đăng nhập, yêu thích | Xong |
-| 5. Đặt hàng | Mã giảm giá, phí vận chuyển, tồn kho, đơn của tôi, hủy đơn, tra cứu đơn | Xong |
-| 6. Thanh toán | VNPay (sandbox) | Chưa |
-| 7. Đánh giá | Đánh giá sản phẩm đã mua, chờ duyệt | Xong |
-| 8. Quản trị | Sản phẩm + biến thể, kho, đơn hàng, mã giảm giá, banner, người dùng, thống kê | Chưa |
-| 9. Bàn giao | Kiểm thử tích hợp, hoàn thiện tài liệu | Chưa |
+| 0. Dọn sạch | Xóa backend, script CSDL MySQL và tài liệu thiết kế cũ | Xong |
+| 1. Thiết kế | Đặc tả yêu cầu, ERD PostgreSQL, kiến trúc, danh sách API | Xong |
+| 2. Nền tảng | Spring Boot 4, Docker Compose, Flyway, bảo mật JWT, xử lý lỗi, Swagger, upload | Xong |
+| 3. Tài khoản | Đăng ký, đăng nhập, hồ sơ, mật khẩu, sổ địa chỉ | Xong |
+| 4. Sản phẩm | Danh mục, thương hiệu, tìm kiếm/lọc, chi tiết, banner, cài đặt | Xong |
+| 5. Giỏ hàng | Giỏ hàng trên server, gộp giỏ, yêu thích | Xong |
+| 6. Đặt hàng | Mã giảm giá, phí vận chuyển, tồn kho, đơn hàng, hủy, tra cứu | Xong |
+| 7. Thanh toán | VNPay (sandbox) | Xong |
+| 8. Đánh giá | Đánh giá sản phẩm đã mua, chờ duyệt | Xong |
+| 9. Quản trị | Sản phẩm, kho, đơn hàng, khuyến mãi, người dùng, thống kê | Xong |
+| 10. Dữ liệu mẫu | Dữ liệu mẫu đầy đủ + file `database/DB_TechGear.sql` | Xong |
+| 11. Bàn giao | Kiểm thử toàn bộ, tài liệu, review | Xong |
+| 12. Tích hợp `main` | Gộp frontend mới, nối mọi trang với backend mới, thêm 3 API giao diện cần | Xong |

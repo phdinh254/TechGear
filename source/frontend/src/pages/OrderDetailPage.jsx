@@ -9,7 +9,7 @@ import Icon from '../components/ui/Icon.jsx';
 import { SkeletonBlock } from '../components/ui/Skeleton.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 
-function ReviewForm({ item, donHangId }) {
+function ReviewForm({ item, maDonHang }) {
   const toast = useToast();
   const [soSao, setSoSao] = useState(5);
   const [noiDung, setNoiDung] = useState('');
@@ -19,7 +19,7 @@ function ReviewForm({ item, donHangId }) {
   const gui = async () => {
     setDangGui(true);
     try {
-      await reviewApi.tao({ donHangId, sanPhamId: item.sanPhamId, soSao, noiDung });
+      await reviewApi.tao({ maDonHang, sanPhamId: item.sanPhamId, soSao, noiDung });
       setDaGui(true);
       toast.hien('Cảm ơn bạn! Đánh giá đang chờ duyệt');
     } catch (error) {
@@ -79,8 +79,8 @@ export default function OrderDetailPage() {
       {donHang && (
         <OrderView
           donHang={donHang}
-          renderItemExtra={(item) => donHang.trangThai === 'hoan_thanh' && item.sanPhamId && <ReviewForm item={item} donHangId={donHang.id} />}
-          hanhDong={donHang.trangThai === 'cho_xac_nhan' && (
+          renderItemExtra={(item) => donHang.trangThai === 'hoan_thanh' && item.sanPhamId && <ReviewForm item={item} maDonHang={donHang.maDonHang} />}
+          hanhDong={donHang.coTheHuy && (
             <button type="button" className="btn btn-outline btn-block btn-cancel" onClick={huyDon} disabled={dangHuy}>
               {dangHuy ? 'Đang hủy...' : 'Hủy đơn hàng'}
             </button>
