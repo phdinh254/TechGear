@@ -60,16 +60,16 @@ public class TaiKhoanService {
     public XacThucResponse dangNhap(DangNhapRequest req, String ip) {
         String email = chuanHoaEmail(req.email());
         String khoa = "dang-nhap:" + email + "|" + ip;
-        gioiHanSoLan.kiemTra(khoa, TOI_DA_DANG_NHAP_SAI, CUA_SO_DANG_NHAP);
+        java.time.Instant lan = gioiHanSoLan.giuCho(khoa, TOI_DA_DANG_NHAP_SAI, CUA_SO_DANG_NHAP);
 
         Optional<NguoiDung> timThay = nguoiDungRepository.findByEmail(email);
         boolean dungMatKhau = passwordEncoder.matches(req.matKhau(), timThay.map(NguoiDung::getMatKhau).orElse(bamGia));
         if (timThay.isEmpty() || !dungMatKhau) {
-            gioiHanSoLan.ghiNhan(khoa);
             throw ApiException.chuaXacThuc("Email hoặc mật khẩu không đúng");
         }
         NguoiDung n = timThay.get();
         if (n.getTrangThai() == NguoiDung.TrangThai.bi_khoa) {
+            gioiHanSoLan.traLai(khoa, lan); // chỉ đếm lần sai mật khẩu
             throw ApiException.khongCoQuyen("Tài khoản đã bị khóa");
         }
         gioiHanSoLan.xoa(khoa);

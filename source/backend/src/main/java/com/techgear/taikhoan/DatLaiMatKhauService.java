@@ -53,10 +53,13 @@ public class DatLaiMatKhauService {
         String email = TaiKhoanService.chuanHoaEmail(emailVao);
         String khoaIp = "quen-mat-khau-ip:" + ip;
         String khoaEmail = "quen-mat-khau:" + email;
-        gioiHanSoLan.kiemTra(khoaIp, 10, Duration.ofMinutes(15));
-        gioiHanSoLan.kiemTra(khoaEmail, 1, Duration.ofSeconds(60));
-        gioiHanSoLan.ghiNhan(khoaIp);
-        gioiHanSoLan.ghiNhan(khoaEmail);
+        java.time.Instant lanIp = gioiHanSoLan.giuCho(khoaIp, 10, Duration.ofMinutes(15));
+        try {
+            gioiHanSoLan.giuCho(khoaEmail, 1, Duration.ofSeconds(60));
+        } catch (ApiException e) {
+            gioiHanSoLan.traLai(khoaIp, lanIp);
+            throw e;
+        }
 
         nguoiDungRepository.findByEmail(email)
                 .filter(n -> n.getTrangThai() == NguoiDung.TrangThai.hoat_dong)

@@ -72,14 +72,17 @@ public class DonHangService {
     @Transactional
     public DonHangResponse.ChiTiet datHangVangLai(DatHangRequest req, String ip) {
         String khoa = "dat-hang-vang-lai:" + ip;
-        gioiHanSoLan.kiemTra(khoa, GIOI_HAN_IP, CUA_SO_IP);
         String email = chuanHoaEmail(req.email());
         if (email == null) {
             throw ApiException.yeuCauKhongHopLe("Vui lòng nhập email để nhận thông tin đơn hàng");
         }
-        DonHangResponse.ChiTiet don = dat(null, email, req);
-        gioiHanSoLan.ghiNhan(khoa);
-        return don;
+        java.time.Instant lan = gioiHanSoLan.giuCho(khoa, GIOI_HAN_IP, CUA_SO_IP);
+        try {
+            return dat(null, email, req);
+        } catch (RuntimeException e) {
+            gioiHanSoLan.traLai(khoa, lan); // chỉ đếm đơn đặt được
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -112,12 +115,12 @@ public class DonHangService {
     @Transactional(readOnly = true)
     public DonHangResponse.ChiTiet traCuu(YeuCauDonHang.TraCuu req, String ip) {
         String khoa = "tra-cuu-don:" + ip;
-        gioiHanSoLan.kiemTra(khoa, GIOI_HAN_IP, CUA_SO_IP);
+        java.time.Instant lan = gioiHanSoLan.giuCho(khoa, GIOI_HAN_IP, CUA_SO_IP);
         Long id = donHangRepository.idTheoEmail(req.maDonHang().trim(), req.email().trim()).orElse(null);
         if (id == null) {
-            gioiHanSoLan.ghiNhan(khoa);
             throw khongTimThay();
         }
+        gioiHanSoLan.traLai(khoa, lan); // chỉ đếm lần tra sai
         return donHangRepository.chiTiet(id, false);
     }
 

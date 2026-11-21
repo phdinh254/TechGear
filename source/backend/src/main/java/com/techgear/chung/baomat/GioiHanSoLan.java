@@ -29,30 +29,35 @@ public class GioiHanSoLan {
         this.clock = clock;
     }
 
-    /** Ném 429 nếu khóa đã có từ {@code toiDa} lần thử trở lên trong {@code cuaSo} gần nhất. */
-    public void kiemTra(String khoa, int toiDa, Duration cuaSo) {
-        Deque<Instant> ds = lanThu.get(khoa);
-        if (ds == null) {
-            return;
-        }
-        Instant moc = clock.instant().minus(cuaSo);
-        synchronized (ds) {
-            long trongCuaSo = ds.stream().filter(t -> t.isAfter(moc)).count();
-            if (trongCuaSo >= toiDa) {
-                throw ApiException.quaNhieuYeuCau("Bạn thao tác quá nhiều lần, vui lòng thử lại sau ít phút");
-            }
-        }
-    }
-
-    public void ghiNhan(String khoa) {
+    /**
+     * Kiểm tra và ghi nhận một lần thử trong cùng một khóa đồng bộ (gửi song song không vượt được giới hạn).
+     * Ném 429 nếu khóa đã có từ {@code toiDa} lần trong {@code cuaSo}; trả mốc để {@link #traLai} khi lần đó không tính.
+     */
+    public Instant giuCho(String khoa, int toiDa, Duration cuaSo) {
         if (lanThu.size() > TOI_DA_SO_KHOA) {
             donKhoaCu();
         }
         Deque<Instant> ds = lanThu.computeIfAbsent(khoa, k -> new ArrayDeque<>());
+        Instant bayGio = clock.instant();
+        Instant moc = bayGio.minus(cuaSo);
         synchronized (ds) {
-            ds.addLast(clock.instant());
+            if (ds.stream().filter(t -> t.isAfter(moc)).count() >= toiDa) {
+                throw ApiException.quaNhieuYeuCau("Bạn thao tác quá nhiều lần, vui lòng thử lại sau ít phút");
+            }
+            ds.addLast(bayGio);
             while (ds.size() > TOI_DA_MOI_KHOA) {
                 ds.removeFirst();
+            }
+        }
+        return bayGio;
+    }
+
+    /** Bỏ lần đã giữ chỗ (VD đăng nhập đúng, tra cứu thấy đơn) để nó không bị tính. */
+    public void traLai(String khoa, Instant lan) {
+        Deque<Instant> ds = lanThu.get(khoa);
+        if (ds != null) {
+            synchronized (ds) {
+                ds.removeLastOccurrence(lan);
             }
         }
     }
