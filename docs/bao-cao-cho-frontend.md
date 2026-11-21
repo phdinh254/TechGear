@@ -18,7 +18,7 @@ cd source/backend && mvn spring-boot:run
   Dữ liệu mẫu đầy đủ (sản phẩm có ảnh, đơn hàng, đánh giá...): xem mục 11, cần xóa CSDL dev cũ một lần.
 - CORS chỉ cho phép `http://localhost:5173`. Vite tự đổi sang cổng khác khi 5173 bận (VD 5174) thì mọi lệnh gọi bị chặn.
   Gặp vậy thì tắt tiến trình đang chiếm 5173, hoặc chạy backend với `FRONTEND_URL=http://localhost:5174`.
-- Chưa cấu hình email thì liên kết đặt lại mật khẩu được in ra log của backend (dòng `Chưa cấu hình MAIL_USERNAME …`).
+- Chưa cấu hình email thì (profile dev) liên kết đặt lại mật khẩu được in ra log của backend (dòng `Chưa cấu hình MAIL_USERNAME …`).
 
 ## 2. Tình trạng
 

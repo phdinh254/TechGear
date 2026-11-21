@@ -96,7 +96,7 @@ Token bị từ chối (401 "Phiên đăng nhập không hợp lệ hoặc đã 
 tài khoản bị khóa, hoặc phát hành trước lần đổi/đặt lại mật khẩu gần nhất (so theo giây).
 Liên kết đặt lại mật khẩu: `FRONTEND_URL/dat-lai-mat-khau?ma=<mã>` – mã ngẫu nhiên 256 bit, CSDL chỉ lưu SHA-256,
 hiệu lực 15 phút, dùng một lần; đặt lại thành công thì mọi mã khác của tài khoản cũng hết hiệu lực.
-Email gửi sau khi giao dịch lưu thành công, không chặn phản hồi; chưa cấu hình `MAIL_USERNAME` thì ghi liên kết ra log.
+Email gửi sau khi giao dịch lưu thành công, không chặn phản hồi; chưa cấu hình `MAIL_USERNAME` thì profile dev ghi liên kết ra log (môi trường khác chỉ cảnh báo – liên kết chứa mã dùng được ngay).
 
 ### 3.2 Danh mục, thương hiệu, sản phẩm, cửa hàng – Phase 4
 | PT | Đường dẫn | Quyền | Mô tả |
@@ -420,7 +420,7 @@ Mọi số liệu tính theo **ngày đặt hàng** (giờ Việt Nam); doanh th
 | `JWT_SECRET` | khóa dev (chỉ profile `dev`; thiếu ở môi trường khác thì không khởi động) | Khóa ký JWT, ≥ 32 byte |
 | `FRONTEND_URL` | `http://localhost:5173` | Liên kết trong email |
 | `CORS_ALLOWED_ORIGINS` | = `FRONTEND_URL` | Origin được phép, phân cách dấu phẩy |
-| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | Gmail SMTP, rỗng | Chưa có `MAIL_USERNAME` thì ghi liên kết ra log |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | Gmail SMTP, rỗng | Chưa có `MAIL_USERNAME`: profile dev ghi liên kết ra log, nơi khác chỉ cảnh báo |
 | `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` | rỗng (dev: giá trị giả để test IPN bằng Postman) | Mã website và khóa bí mật VNPay sandbox (đăng ký tại sandbox.vnpayment.vn) |
 | `VNPAY_PAY_URL` | `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html` | Cổng thanh toán |
 | `VNPAY_RETURN_URL` | `FRONTEND_URL/thanh-toan/ket-qua` | Trang frontend VNPay chuyển khách về |

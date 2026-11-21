@@ -24,13 +24,13 @@ class GuiEmailDatLaiMatKhauTest {
 
     @Test
     void chuaCauHinhSmtpThiKhongGui() {
-        new GuiEmailDatLaiMatKhau(mailSender, "", "TechGear <no-reply@techgear.vn>").gui(yeuCau);
+        new GuiEmailDatLaiMatKhau(mailSender, "", "TechGear <no-reply@techgear.vn>", false).gui(yeuCau);
         verify(mailSender, never()).send(any(SimpleMailMessage.class));
     }
 
     @Test
     void daCauHinhThiGuiEmailCoLienKet() {
-        new GuiEmailDatLaiMatKhau(mailSender, "shop@gmail.com", "TechGear <no-reply@techgear.vn>").gui(yeuCau);
+        new GuiEmailDatLaiMatKhau(mailSender, "shop@gmail.com", "TechGear <no-reply@techgear.vn>", false).gui(yeuCau);
         ArgumentCaptor<SimpleMailMessage> thu = ArgumentCaptor.forClass(SimpleMailMessage.class);
         verify(mailSender).send(thu.capture());
         assertArrayEquals(new String[]{"an@vi-du.vn"}, thu.getValue().getTo());
@@ -42,6 +42,6 @@ class GuiEmailDatLaiMatKhauTest {
     @Test
     void loiSmtpChiGhiLogKhongNem() {
         doThrow(new MailSendException("SMTP lỗi")).when(mailSender).send(any(SimpleMailMessage.class));
-        assertDoesNotThrow(() -> new GuiEmailDatLaiMatKhau(mailSender, "shop@gmail.com", "x@y.vn").gui(yeuCau));
+        assertDoesNotThrow(() -> new GuiEmailDatLaiMatKhau(mailSender, "shop@gmail.com", "x@y.vn", false).gui(yeuCau));
     }
 }

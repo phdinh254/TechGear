@@ -17,19 +17,27 @@ class GuiEmailDatLaiMatKhau {
     private final JavaMailSender mailSender;
     private final String taiKhoanSmtp;
     private final String nguoiGui;
+    private final boolean ghiLienKetRaLog;
 
     GuiEmailDatLaiMatKhau(JavaMailSender mailSender, @Value("${spring.mail.username:}") String taiKhoanSmtp,
-                          @Value("${app.mail.from}") String nguoiGui) {
+                          @Value("${app.mail.from}") String nguoiGui,
+                          @Value("${app.mail.ghi-lien-ket-ra-log:false}") boolean ghiLienKetRaLog) {
         this.mailSender = mailSender;
         this.taiKhoanSmtp = taiKhoanSmtp;
         this.nguoiGui = nguoiGui;
+        this.ghiLienKetRaLog = ghiLienKetRaLog;
     }
 
     @Async
     @TransactionalEventListener
     void gui(YeuCauDatLaiMatKhau yeuCau) {
         if (taiKhoanSmtp.isBlank()) {
-            log.info("Chưa cấu hình MAIL_USERNAME – liên kết đặt lại mật khẩu cho {}: {}", yeuCau.email(), yeuCau.lienKet());
+            // Liên kết chứa mã dùng được ngay: chỉ ghi ra log ở dev, nơi khác ai đọc log cũng chiếm được tài khoản
+            if (ghiLienKetRaLog) {
+                log.info("Chưa cấu hình MAIL_USERNAME – liên kết đặt lại mật khẩu cho {}: {}", yeuCau.email(), yeuCau.lienKet());
+            } else {
+                log.warn("Chưa cấu hình MAIL_USERNAME – không gửi được email đặt lại mật khẩu cho {}", yeuCau.email());
+            }
             return;
         }
         SimpleMailMessage thu = new SimpleMailMessage();

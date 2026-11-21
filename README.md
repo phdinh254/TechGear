@@ -174,7 +174,7 @@ mvn spring-boot:run         # tự bật profile dev (kết nối CSDL ở trên
 - Mã giảm giá mẫu: `GIAM10`, `GIAM50K`, `MOILAN1` (mỗi khách 1 lần), `HETHAN` (đã hết hạn).
 - Không chạy backend mà chỉ cần CSDL (VD để chấm/nộp bài): nạp `database/DB_TechGear.sql` vào CSDL trống, cách nạp ghi ở đầu file.
 - VNPay: dev dùng mã website và khóa giả (đủ để test IPN bằng Postman). Thanh toán thật trên sandbox: đặt `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` do sandbox.vnpayment.vn cấp.
-- Chưa cấu hình `MAIL_USERNAME` thì liên kết đặt lại mật khẩu được ghi ra log của backend thay vì gửi email.
+- Chưa cấu hình `MAIL_USERNAME` thì ở profile dev liên kết đặt lại mật khẩu được ghi ra log của backend thay vì gửi email (môi trường khác chỉ cảnh báo, không ghi liên kết).
 - Biến môi trường khi triển khai: xem `source/backend/.env.example` (bắt buộc `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
 
 Kiểm thử:
