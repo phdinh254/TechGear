@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Dữ liệu mẫu profile dev (db/du-lieu-mau) nạp được trên CSDL trống. Container riêng vì các IT khác cần CSDL trống.
- * Khởi động được nghĩa là 5 bước tự kiểm cuối R__du_lieu_mau_van_hanh.sql (RAISE EXCEPTION) đã qua.
+ * Khởi động được nghĩa là 5 bước tự kiểm cuối R__du_lieu_mau_van_hanh.sql (SIGNAL) đã qua.
  */
 @SpringBootTest
 @TestPropertySource(properties = {
