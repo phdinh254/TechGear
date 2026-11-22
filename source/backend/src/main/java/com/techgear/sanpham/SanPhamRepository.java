@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Truy vấn đọc sản phẩm cho phía khách (SQL thuần: tìm không dấu bằng unaccent, mỗi trang 2 truy vấn). */
+/** Truy vấn đọc sản phẩm cho phía khách (SQL thuần: tìm không dấu nhờ collation utf8mb4_0900_ai_ci, mỗi trang 2 truy vấn). */
 @Repository
 @RequiredArgsConstructor
 class SanPhamRepository {
@@ -41,8 +40,8 @@ class SanPhamRepository {
         Map<String, Object> thamSo = new HashMap<>();
         StringBuilder where = new StringBuilder(" WHERE ").append(DANG_HIEN_THI);
         for (int i = 0; i < dk.tuKhoas().size(); i++) {
-            where.append(" AND lower(unaccent(sp.ten || ' ' || coalesce(th.ten, ''))) LIKE '%' || lower(unaccent(:tu")
-                    .append(i).append(")) || '%'");
+            where.append(" AND CONCAT(sp.ten, ' ', coalesce(th.ten, '')) LIKE CONCAT('%', :tu")
+                    .append(i).append(", '%')");
             thamSo.put("tu" + i, HienThi.thoatLike(dk.tuKhoas().get(i)));
         }
         if (dk.danhMuc() != null) {
@@ -103,7 +102,7 @@ class SanPhamRepository {
                                th.id AS th_id, th.ten AS th_ten, th.slug AS th_slug,
                                (SELECT count(*) FROM danh_gia dg WHERE dg.san_pham_id = sp.id
                                 AND dg.trang_thai = 'da_duyet') AS so_danh_gia,
-                               (SELECT round(avg(dg.so_sao), 1)::float8 FROM danh_gia dg WHERE dg.san_pham_id = sp.id
+                               (SELECT CAST(round(avg(dg.so_sao), 1) AS DOUBLE) FROM danh_gia dg WHERE dg.san_pham_id = sp.id
                                 AND dg.trang_thai = 'da_duyet') AS diem_trung_binh
                         """ + TU_BANG + " WHERE " + DANG_HIEN_THI + " AND sp.slug = :slug")
                 .param("slug", slug).query(ThongTinChung.class).optional();
@@ -155,20 +154,20 @@ class SanPhamRepository {
     List<SanPhamChiTiet.BienThe> bienThes(Long sanPhamId) {
         return jdbc.sql("""
                         SELECT bt.id, bt.sku, bt.gia_ban, bt.gia_goc, bt.so_luong_ton,
-                               COALESCE(array_agg(btg.gia_tri_tuy_chon_id ORDER BY btg.gia_tri_tuy_chon_id)
-                                        FILTER (WHERE btg.gia_tri_tuy_chon_id IS NOT NULL), '{}'::bigint[]) AS gia_tri_ids
+                               GROUP_CONCAT(btg.gia_tri_tuy_chon_id ORDER BY btg.gia_tri_tuy_chon_id) AS gia_tri_ids
                         FROM bien_the bt LEFT JOIN bien_the_gia_tri btg ON btg.bien_the_id = bt.id
                         WHERE bt.san_pham_id = :id AND bt.hien_thi AND bt.deleted_at IS NULL
                         GROUP BY bt.id
                         ORDER BY bt.id
                         """)
                 .param("id", sanPhamId)
-                .query((rs, i) -> {
-                    Array mang = rs.getArray("gia_tri_ids");
-                    return new SanPhamChiTiet.BienThe(rs.getLong("id"), rs.getString("sku"), rs.getLong("gia_ban"),
-                            rs.getObject("gia_goc", Long.class), rs.getInt("so_luong_ton"),
-                            Arrays.asList((Long[]) mang.getArray()));
-                })
+                .query((rs, i) -> new SanPhamChiTiet.BienThe(rs.getLong("id"), rs.getString("sku"), rs.getLong("gia_ban"),
+                        rs.getObject("gia_goc", Long.class), rs.getInt("so_luong_ton"), danhSachId(rs.getString("gia_tri_ids"))))
                 .list();
+    }
+
+    /** Chuỗi id GROUP_CONCAT ("3,7") thành danh sách; NULL (không có dòng nào) thành danh sách rỗng. */
+    static List<Long> danhSachId(String chuoi) {
+        return chuoi == null ? List.of() : Arrays.stream(chuoi.split(",")).map(Long::valueOf).toList();
     }
 }
