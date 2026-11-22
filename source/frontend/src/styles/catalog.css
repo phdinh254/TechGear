@@ -53,21 +53,36 @@
 .sheet-foot { padding: var(--sp-4) var(--sp-5) calc(var(--sp-4) + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
 
 /* ---------- Detail ---------- */
+/* Một nhịp khoảng cách dọc chung cho mọi khối của trang chi tiết (ảnh, thông số, mô tả, đánh giá) */
+.detail { --detail-gap: var(--sp-6); }
 .detail-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 72px); align-items: start; margin-top: var(--sp-2); }
 .gallery { position: sticky; top: calc(64px + var(--sp-6)); display: grid; gap: var(--sp-3); }
 .gallery-main { position: relative; aspect-ratio: 1 / 1; border-radius: var(--r-xl); background: var(--surface-2); overflow: hidden; }
 .gallery-stage { width: 100%; height: 100%; animation: fade-in 360ms var(--ease-out); }
-.gallery-stage .media-img { padding: 10%; mix-blend-mode: multiply; transition: transform 600ms var(--ease-out); }
+/* Ảnh mẫu là ảnh chụp chữ nhật có nền: phủ kín khung vuông như thẻ sản phẩm */
+.gallery-stage .media-img { object-fit: cover; object-position: center; transition: transform 600ms var(--ease-out); }
 .gallery-main:hover .gallery-stage .media-img { transform: scale(1.06); }
 .gallery-stage .media-placeholder svg { width: 46%; height: 46%; max-width: 280px; max-height: 280px; }
 .gallery-badge { position: absolute; top: var(--sp-5); left: var(--sp-5); z-index: 1; height: 28px; padding: 0 12px; font-size: var(--fs-xs); }
 .gallery-thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: var(--sp-3); }
 .gallery-thumbs button { aspect-ratio: 1; padding: 0; border: 2px solid transparent; border-radius: var(--r-md); background: var(--surface-2); overflow: hidden; transition: border-color var(--dur-fast); }
-.gallery-thumbs button .media-img { padding: 10%; mix-blend-mode: multiply; }
+.gallery-thumbs button .media-img { object-fit: cover; object-position: center; }
 .gallery-thumbs button:hover { border-color: var(--line-strong); }
 .gallery-thumbs button.is-active { border-color: var(--ink); }
 
 .detail-info { display: flex; flex-direction: column; }
+/* Có thông số: thông số nằm dưới ảnh, cột thông tin kéo dài bằng cột trái (khối ưu đãi giãn xuống cho đều đáy) */
+.detail-grid.has-specs { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: "gallery info" "specs info"; row-gap: var(--detail-gap); align-items: stretch; }
+.detail-grid.has-specs .gallery { grid-area: gallery; position: static; }
+.detail-grid.has-specs .detail-specs { grid-area: specs; }
+.detail-grid.has-specs .detail-info { grid-area: info; }
+.detail-grid.has-specs .perks { flex: 1; grid-auto-rows: 1fr; }
+.detail-grid.has-specs .perks li { align-items: center; }
+.detail-specs { padding: var(--sp-5) var(--sp-6); border-radius: var(--r-lg); }
+.detail-specs .detail-block-title { margin-bottom: var(--sp-2); padding-bottom: var(--sp-3); font-size: var(--fs-md); }
+.detail-specs .spec-list { grid-template-columns: 1fr; }
+.detail-specs .spec-list div { padding: var(--sp-3) 0; }
+.detail-specs .spec-list div:last-child { border-bottom: 0; padding-bottom: 0; }
 .detail-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); margin-bottom: var(--sp-3); }
 .detail-brand { color: var(--blue-500); font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
 .detail-brand:hover { color: var(--blue-600); }
@@ -108,14 +123,11 @@
 .perks svg { flex: none; margin-top: 2px; color: var(--blue-500); }
 .perks strong { display: block; color: var(--ink); font-weight: 600; }
 
-.detail-tabs { margin-top: var(--section-gap); scroll-margin-top: calc(64px + var(--sp-6)); }
-.tabs { display: flex; gap: var(--sp-6); border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
-.tabs button { position: relative; padding: var(--sp-4) 0; border: 0; background: none; color: var(--muted); font-size: var(--fs-base); font-weight: 600; white-space: nowrap; transition: color var(--dur-fast); }
-.tabs button::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--ink); transform: scaleX(0); transition: transform var(--dur) var(--ease-out); }
-.tabs button:hover { color: var(--ink); }
-.tabs button.is-active { color: var(--ink); }
-.tabs button.is-active::after { transform: scaleX(1); }
-.tab-panel { padding-top: var(--sp-8); animation: fade-in 260ms; }
+/* Các khối thông tin dưới phần mua hàng: mỗi mục một khối riêng, xếp dọc */
+.detail-sections { display: grid; gap: var(--detail-gap); margin-top: var(--detail-gap); }
+.detail-block { padding: clamp(20px, 3vw, 36px); border: 1px solid var(--line); border-radius: var(--r-xl); background: var(--surface); scroll-margin-top: calc(64px + var(--sp-6)); }
+.detail-block-title { display: flex; align-items: center; gap: var(--sp-3); margin: 0 0 var(--sp-6); padding-bottom: var(--sp-4); border-bottom: 1px solid var(--line); font-size: var(--fs-lg); letter-spacing: -0.02em; }
+.detail-block-count { display: inline-grid; place-items: center; min-width: 28px; height: 24px; padding: 0 8px; border-radius: var(--r-pill); background: var(--surface-2); color: var(--muted); font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0; }
 .prose { max-width: 72ch; color: var(--text); line-height: 1.8; }
 .prose > :first-child { margin-top: 0; }
 .prose h2, .prose h3 { margin-top: var(--sp-8); }
@@ -147,6 +159,9 @@
   .listing-filter-btn { display: inline-flex; }
   .detail-grid { grid-template-columns: 1fr; }
   .gallery { position: static; }
+  .detail-grid { row-gap: var(--detail-gap, var(--sp-6)); }
+  .detail-grid.has-specs { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "gallery" "info" "specs"; }
+  .detail-grid.has-specs .perks { flex: none; grid-auto-rows: auto; }
   .spec-list { grid-template-columns: 1fr; }
 }
 @media (max-width: 767px) {

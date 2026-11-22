@@ -117,11 +117,10 @@ export default function ProductDetailPage() {
   const [soLuong, setSoLuong] = useState(1);
   const [anhDangXem, setAnhDangXem] = useState(0);
   const [dangThem, setDangThem] = useState(false);
-  const [tab, setTab] = useState('mo-ta');
   const [tongQuan, setTongQuan] = useState(null);
   const [lienQuan, setLienQuan] = useState([]);
   const [dangTaiLienQuan, setDangTaiLienQuan] = useState(true);
-  const tabsRef = useRef(null);
+  const danhGiaRef = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -145,7 +144,6 @@ export default function ProductDetailPage() {
         setChon(chonBanDau);
         const viTriAnhChinh = data.hinhAnhs.findIndex((anh) => anh.laAnhChinh);
         setAnhDangXem(viTriAnhChinh >= 0 ? viTriAnhChinh : 0);
-        setTab(data.moTa ? 'mo-ta' : data.thongSos.length ? 'thong-so' : 'danh-gia');
       })
       .catch((e) => { if (e.code !== 'ERR_CANCELED') setLoi(layThongBaoLoi(e)); });
     return () => controller.abort();
@@ -220,15 +218,8 @@ export default function ProductDetailPage() {
   };
 
   const xemDanhGia = () => {
-    setTab('danh-gia');
-    tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    danhGiaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-
-  const tabs = [
-    moTaAnToan && { id: 'mo-ta', nhan: 'Mô tả' },
-    sp.thongSos.length > 0 && { id: 'thong-so', nhan: 'Thông số kỹ thuật' },
-    { id: 'danh-gia', nhan: `Đánh giá${tongQuan?.tongDanhGia ? ` (${tongQuan.tongDanhGia})` : ''}` },
-  ].filter(Boolean);
 
   const breadcrumb = [{ nhan: 'Sản phẩm', to: '/san-pham' }, { nhan: sp.danhMuc.ten, to: `/san-pham?danhMuc=${sp.danhMuc.slug}` }, { nhan: sp.ten }];
 
@@ -236,7 +227,7 @@ export default function ProductDetailPage() {
     <div className="detail">
       <Breadcrumb items={breadcrumb} />
 
-      <div className="detail-grid">
+      <div className={`detail-grid${sp.thongSos.length > 0 ? ' has-specs' : ''}`}>
         <div className="gallery">
           <div className="gallery-main">
             {giam > 0 && <span className="badge badge-sale gallery-badge">-{giam}%</span>}
@@ -254,6 +245,17 @@ export default function ProductDetailPage() {
             </div>
           )}
         </div>
+
+        {sp.thongSos.length > 0 && (
+          <section className="detail-block detail-specs" aria-labelledby="thong-so-title">
+            <h2 id="thong-so-title" className="detail-block-title">Thông số nổi bật</h2>
+            <dl className="spec-list">
+              {sp.thongSos.map((ts) => (
+                <div key={ts.ten}><dt>{ts.ten}</dt><dd>{ts.giaTri}</dd></div>
+              ))}
+            </dl>
+          </section>
+        )}
 
         <div className="detail-info">
           <div className="detail-meta">
@@ -326,34 +328,30 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      <section className="detail-tabs" ref={tabsRef}>
-        <div className="tabs" role="tablist" aria-label="Thông tin sản phẩm">
-          {tabs.map((t) => (
-            <button type="button" role="tab" key={t.id} id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={`panel-${t.id}`} className={tab === t.id ? 'is-active' : undefined} onClick={() => setTab(t.id)}>
-              {t.nhan}
-            </button>
-          ))}
-        </div>
-        <div className="tab-panel" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
-          {tab === 'mo-ta' && moTaAnToan && <div className="prose" dangerouslySetInnerHTML={{ __html: moTaAnToan }} />}
-          {tab === 'thong-so' && (
-            <dl className="spec-list">
-              {sp.thongSos.map((ts) => (
-                <div key={ts.ten}><dt>{ts.ten}</dt><dd>{ts.giaTri}</dd></div>
-              ))}
-            </dl>
-          )}
-          <div hidden={tab !== 'danh-gia'}><Reviews slug={slug} tongQuan={tongQuan} /></div>
-        </div>
-      </section>
+      <div className="detail-sections">
+        {moTaAnToan && (
+          <section className="detail-block" aria-labelledby="mo-ta-title">
+            <h2 id="mo-ta-title" className="detail-block-title">Mô tả sản phẩm</h2>
+            <div className="prose" dangerouslySetInnerHTML={{ __html: moTaAnToan }} />
+          </section>
+        )}
+
+        <section className="detail-block" aria-labelledby="danh-gia-title" ref={danhGiaRef}>
+          <h2 id="danh-gia-title" className="detail-block-title">
+            Đánh giá và bình luận
+            {tongQuan?.tongDanhGia > 0 && <span className="detail-block-count">{tongQuan.tongDanhGia}</span>}
+          </h2>
+          <Reviews slug={slug} tongQuan={tongQuan} />
+        </section>
+      </div>
 
       {(dangTaiLienQuan || lienQuan.length > 0) && (
         <section className="section">
           <div className="section-head">
-            <h2>Có thể bạn cũng thích</h2>
+            <h2>Sản phẩm tương tự</h2>
             <Link to={`/san-pham?danhMuc=${sp.danhMuc.slug}`} className="link-arrow">Xem thêm <Icon name="arrowRight" size={16} /></Link>
           </div>
-          <ProductCarousel sanPhams={lienQuan} dangTai={dangTaiLienQuan} nhan="Sản phẩm liên quan" />
+          <ProductCarousel sanPhams={lienQuan} dangTai={dangTaiLienQuan} nhan="Sản phẩm tương tự" dieuHuong="khong" />
         </section>
       )}
 

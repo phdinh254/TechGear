@@ -66,6 +66,9 @@
   --sp-16: 64px;
   --sp-20: 80px;
   --section-gap: clamp(56px, 4vw + 32px, 104px);
+  /* Section có tiêu đề: khoảng trên tiêu đề và từ tiêu đề xuống nội dung, cân đối hơn (trên vẫn lớn hơn một chút để tiêu đề gắn với nội dung của nó) */
+  --section-head-top: clamp(48px, 3vw + 24px, 72px);
+  --section-head-gap: clamp(24px, 2vw + 20px, 48px);
 
   /* Bo góc */
   --r-xs: 6px;

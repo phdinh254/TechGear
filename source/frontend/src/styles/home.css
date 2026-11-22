@@ -1,7 +1,8 @@
 /* =========================================================
    HOME: hero, brand strip, bento categories, statement, why-us
    ========================================================= */
-.section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-6); margin-bottom: var(--sp-8); }
+.section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-6); margin-bottom: var(--section-head-gap); }
+.section:has(> .section-head) { margin-top: var(--section-head-top); }
 .section-head h2 { margin: 0; font-size: var(--fs-xl); line-height: 1.1; letter-spacing: var(--tracking-tight); }
 .section-head:has(+ .carousel-nav-tren) { padding-right: 112px; }
 .section-head-center { flex-direction: column; align-items: center; text-align: center; }
@@ -26,8 +27,9 @@ a.showcase-card:hover { border-color: rgba(255, 255, 255, 0.24); }
 a.showcase-card:hover::before { transform: translate(-50%, -50%) scale(1.12); }
 .showcase-tag { position: relative; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.1); color: #fff; font-size: var(--fs-xs); font-weight: 600; }
 .showcase-tag svg { color: var(--cyan-400); }
-.showcase-media { position: relative; flex: 1; display: grid; place-items: center; min-height: 0; }
-.showcase-media .media-img { width: 82%; height: 82%; object-fit: contain; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.45)); animation: float 7s ease-in-out infinite; }
+.showcase-media { position: relative; flex: 1; display: grid; place-items: center; min-height: 0; margin-block: var(--sp-4); }
+/* Ảnh sản phẩm là ảnh chụp chữ nhật có nền: phủ kín vùng ảnh, bo góc theo thẻ */
+.showcase-media .media-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; border-radius: var(--r-lg); box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35); }
 .showcase-media .media-placeholder svg { animation: float 7s ease-in-out infinite; }
 .showcase-empty .showcase-media { color: rgba(255, 255, 255, 0.35); }
 .showcase-info { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid rgba(255, 255, 255, 0.1); }
@@ -39,6 +41,7 @@ a.showcase-card:hover::before { transform: translate(-50%, -50%) scale(1.12); }
 .showcase-info .price-old { color: rgba(255, 255, 255, 0.45); }
 .showcase-thumbs { display: flex; gap: var(--sp-3); }
 .showcase-thumbs button { width: 64px; height: 64px; padding: 0; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--r-md); background: rgba(255, 255, 255, 0.04); overflow: hidden; transition: border-color var(--dur), background var(--dur); }
+.showcase-thumbs button .media-img { object-fit: cover; }
 .showcase-thumbs button .media-placeholder { background: none; color: rgba(255, 255, 255, 0.45); }
 .showcase-thumbs button:hover { border-color: rgba(255, 255, 255, 0.35); }
 .showcase-thumbs button.is-active { border-color: var(--blue-400); background: rgba(47, 107, 255, 0.16); }
@@ -70,6 +73,13 @@ a.brand-name:hover { color: var(--ink); }
 .bento-tile:hover .bento-art { transform: scale(1.08) rotate(-5deg); color: var(--blue-400); }
 .bento-img { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-slow) var(--ease-out); }
 .bento-tile:hover .bento-img { transform: scale(1.05); }
+/* Ô có ảnh nền: phủ tối dần từ dưới lên để chữ trắng luôn đọc được trên mọi ảnh */
+.bento-tile:has(.bento-img) { border-color: transparent; color: #fff; }
+.bento-tile:has(.bento-img)::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(8, 12, 24, 0.05) 0%, rgba(8, 12, 24, 0.35) 45%, rgba(8, 12, 24, 0.85) 100%); pointer-events: none; }
+.bento-tile:has(.bento-img) h3 { color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+.bento-tile:has(.bento-img) p, .bento-tile:has(.bento-img) .bento-count { color: rgba(255, 255, 255, 0.82); }
+.bento-tile:has(.bento-img) .bento-arrow { background: rgba(255, 255, 255, 0.92); color: var(--ink); }
+.bento-tile:has(.bento-img):hover .bento-arrow { background: var(--blue-500); color: #fff; }
 .bento-body { max-width: 34ch; }
 .bento-count { display: inline-block; margin-bottom: var(--sp-2); color: var(--muted); font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 .bento-tile h3 { margin: 0 0 6px; font-size: var(--fs-lg); letter-spacing: -0.02em; }
@@ -120,7 +130,7 @@ a.promo-banner:hover img { transform: scale(1.03); }
   .why-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 767px) {
-  .section-head { align-items: flex-start; flex-direction: column; gap: var(--sp-3); margin-bottom: var(--sp-6); }
+  .section-head { align-items: flex-start; flex-direction: column; gap: var(--sp-3); }
   .section-head:has(+ .carousel-nav-tren) { padding-right: 0; }
   .section-head-center { align-items: center; }
   .brand-strip-inner { gap: var(--sp-5); min-height: 84px; }
@@ -129,6 +139,7 @@ a.promo-banner:hover img { transform: scale(1.03); }
   .hero-inner { padding-block: 48px 56px; }
   .hero-actions .btn { flex: 1; }
   .showcase-card { aspect-ratio: auto; min-height: 360px; padding: var(--sp-5); }
+  .showcase-media { flex: none; aspect-ratio: 4 / 3; }
   .showcase-info { flex-direction: column; align-items: flex-start; }
   .showcase-info .price { align-items: flex-start; }
   .showcase-thumbs button { width: 56px; height: 56px; }

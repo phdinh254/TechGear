@@ -31,9 +31,10 @@
 /* ---------- Product card ---------- */
 .product-card { position: relative; display: flex; flex-direction: column; min-width: 0; height: 100%; border-radius: var(--r-lg); background: var(--surface); border: 1px solid transparent; transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out), border-color var(--dur); }
 .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--line); }
-.product-card-media { position: relative; display: block; aspect-ratio: 1 / 1; margin: 8px 8px 0; border-radius: calc(var(--r-lg) - 6px); overflow: hidden; background: var(--surface-2); }
+.product-card-media { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 1 / 1; margin: 8px 8px 0; border-radius: calc(var(--r-lg) - 6px); overflow: hidden; background: var(--surface-2); }
 .product-card-media > * { transition: transform 600ms var(--ease-out); }
-.product-card-media .media-img { padding: 12%; mix-blend-mode: multiply; }
+/* Ảnh mẫu là ảnh chụp chữ nhật có nền: phủ kín khung vuông (cắt bớt mép nền) để sản phẩm to, rõ */
+.product-card-media .media-img { object-fit: cover; object-position: center; }
 .product-card:hover .product-card-media > * { transform: scale(1.06); }
 .product-card.is-out .product-card-media > * { opacity: 0.55; }
 .product-card-badges { position: absolute; top: 18px; left: 18px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
@@ -61,7 +62,7 @@
 
 /* ---------- Carousel ngang ---------- */
 .carousel { position: relative; }
-.carousel-nav { position: absolute; top: -64px; right: 0; display: flex; gap: 8px; }
+.carousel-nav { position: absolute; top: calc(-34px - var(--section-head-gap)); right: 0; display: flex; gap: 8px; }
 .carousel-nav button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line-strong); border-radius: 50%; background: var(--surface); color: var(--ink); transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast), opacity var(--dur-fast); }
 .carousel-nav button:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); color: #fff; }
 .carousel-nav button:disabled { color: var(--subtle); border-color: var(--line-strong); cursor: default; }
@@ -93,8 +94,7 @@
 }
 @media (max-width: 520px) {
   .product-card { border-radius: var(--r-md); }
-  .product-card-media { margin: 6px 6px 0; border-radius: calc(var(--r-md) - 4px); }
-  .product-card-body { padding: var(--sp-3); }
+  .product-card-media { margin: 6px 6px 0; border-radius: calc(var(--r-md) - 4px); }  .product-card-body { padding: var(--sp-3); }
   .product-card-title { font-size: var(--fs-sm); }
   .product-card-foot { align-items: flex-end; }
   .price-md .price-current { font-size: var(--fs-sm); }
