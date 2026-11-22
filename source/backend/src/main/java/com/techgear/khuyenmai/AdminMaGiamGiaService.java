@@ -1,6 +1,7 @@
 package com.techgear.khuyenmai;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.techgear.chung.Csdl;
 import com.techgear.chung.PageResponse;
 import com.techgear.chung.loi.ApiException;
 import com.techgear.sanpham.HienThi;
@@ -63,8 +64,7 @@ public class AdminMaGiamGiaService {
         StringBuilder where = new StringBuilder();
         Map<String, Object> ts = new HashMap<>();
         if (tuKhoa != null && !tuKhoa.isBlank()) {
-            where.append(" AND (upper(ma) LIKE '%' || upper(:tuKhoa) || '%' OR lower(unaccent(coalesce(mo_ta, '')))")
-                    .append(" LIKE '%' || lower(unaccent(:tuKhoa)) || '%')");
+            where.append(" AND (ma LIKE CONCAT('%', :tuKhoa, '%') OR mo_ta LIKE CONCAT('%', :tuKhoa, '%'))");
             ts.put("tuKhoa", HienThi.thoatLike(tuKhoa.trim()));
         }
         if (kichHoat != null) {
@@ -109,13 +109,13 @@ public class AdminMaGiamGiaService {
         cot.put("ketThuc", req.ketThucLuc());
         cot.put("kichHoat", req.kichHoat() == null || req.kichHoat());
         if (id == null) {
-            id = jdbc.sql("""
+            id = Csdl.themLayId(jdbc.sql("""
                             INSERT INTO ma_giam_gia (ma, mo_ta, loai_giam, gia_tri_giam, don_toi_thieu, giam_toi_da,
                                                      tong_luot_dung, luot_dung_moi_nguoi, bat_dau_luc, ket_thuc_luc, kich_hoat)
                             VALUES (:ma, :moTa, :loai, :giaTri, :toiThieu, :toiDa, :tongLuot, :moiNguoi, :batDau, :ketThuc,
-                                    :kichHoat) RETURNING id
+                                    :kichHoat)
                             """)
-                    .params(cot).query(Long.class).single();
+                    .params(cot));
         } else {
             int daDung = jdbc.sql("SELECT da_dung FROM ma_giam_gia WHERE id = :id AND deleted_at IS NULL FOR UPDATE")
                     .param("id", id).query(Integer.class).optional()

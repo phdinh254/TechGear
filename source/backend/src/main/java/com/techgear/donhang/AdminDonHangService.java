@@ -70,7 +70,7 @@ public class AdminDonHangService {
             where.append(" ").append("""
                      AND (dh.ma_don_hang = upper(:tuKhoaGoc) OR dh.so_dien_thoai = :tuKhoaGoc
                           OR lower(dh.email) = lower(:tuKhoaGoc)
-                          OR lower(unaccent(dh.ten_nguoi_nhan)) LIKE '%' || lower(unaccent(:tuKhoa)) || '%')""");
+                          OR dh.ten_nguoi_nhan LIKE CONCAT('%', :tuKhoa, '%'))""");
             ts.put("tuKhoaGoc", tuKhoa.trim());
             ts.put("tuKhoa", HienThi.thoatLike(tuKhoa.trim()));
         }

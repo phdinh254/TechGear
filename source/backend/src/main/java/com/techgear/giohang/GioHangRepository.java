@@ -31,13 +31,12 @@ class GioHangRepository {
                 .param("nd", nguoiDungId).query(Integer.class).single();
     }
 
-    /** Thêm dòng hoặc đặt lại số lượng; clock_timestamp để dòng thêm sau đứng trước kể cả trong cùng giao dịch. */
+    /** Thêm dòng hoặc đặt lại số lượng; SYSDATE(6) (giờ thực, không phải giờ đầu câu lệnh) để dòng thêm sau đứng trước. */
     void datSoLuong(Long nguoiDungId, Long bienTheId, int soLuong) {
         jdbc.sql("""
                         INSERT INTO gio_hang (nguoi_dung_id, bien_the_id, so_luong, created_at, updated_at)
-                        VALUES (:nd, :bt, :sl, clock_timestamp(), clock_timestamp())
-                        ON CONFLICT (nguoi_dung_id, bien_the_id)
-                        DO UPDATE SET so_luong = EXCLUDED.so_luong, updated_at = clock_timestamp()
+                        VALUES (:nd, :bt, :sl, SYSDATE(6), SYSDATE(6)) AS moi
+                        ON DUPLICATE KEY UPDATE so_luong = moi.so_luong, updated_at = SYSDATE(6)
                         """)
                 .param("nd", nguoiDungId).param("bt", bienTheId).param("sl", soLuong).update();
     }

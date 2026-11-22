@@ -61,7 +61,7 @@ class ThanhToanRepository {
     void ketThucGiaoDich(Long id, boolean thanhCong, String maGiaoDich, String duLieuJson, OffsetDateTime luc) {
         jdbc.sql("""
                         UPDATE thanh_toan SET trang_thai = :tt, ma_giao_dich = :maGiaoDich,
-                               du_lieu_phan_hoi = CAST(:duLieu AS jsonb), thanh_toan_luc = :luc, updated_at = now()
+                               du_lieu_phan_hoi = CAST(:duLieu AS JSON), thanh_toan_luc = :luc, updated_at = now()
                         WHERE id = :id
                         """)
                 .param("tt", thanhCong ? "thanh_cong" : "that_bai").param("maGiaoDich", maGiaoDich)

@@ -130,7 +130,7 @@ class ThanhToanVnPayIT extends KiemThuTichHop {
                 .andExpect(content().json("{\"RspCode\":\"02\",\"Message\":\"Order already confirmed\"}", true));
 
         Map<String, Object> tt = jdbc.queryForMap(
-                "SELECT trang_thai, ma_giao_dich, thanh_toan_luc, du_lieu_phan_hoi::text AS du_lieu FROM thanh_toan WHERE ma_tham_chieu = ?",
+                "SELECT trang_thai, ma_giao_dich, thanh_toan_luc, CAST(du_lieu_phan_hoi AS CHAR) AS du_lieu FROM thanh_toan WHERE ma_tham_chieu = ?",
                 ma + "01");
         assertThat(tt).containsEntry("trang_thai", "thanh_cong").containsEntry("ma_giao_dich", m.get("vnp_TransactionNo"));
         assertThat(tt.get("thanh_toan_luc")).isNotNull();
@@ -231,7 +231,7 @@ class ThanhToanVnPayIT extends KiemThuTichHop {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.thongBao").value("Đơn hàng không còn chờ thanh toán"));
         String quaHan = datHang("vnpay");
-        jdbc.update("UPDATE don_hang SET created_at = now() - interval '31 minutes' WHERE ma_don_hang = ?", quaHan);
+        jdbc.update("UPDATE don_hang SET created_at = now() - INTERVAL 31 MINUTE WHERE ma_don_hang = ?", quaHan);
         mvc.perform(post("/api/thanh-toan/vnpay/" + quaHan))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.thongBao").value("Đơn hàng đã quá hạn thanh toán"));
@@ -244,7 +244,7 @@ class ThanhToanVnPayIT extends KiemThuTichHop {
         String cod = datHang("cod");
         String daTra = datHang("vnpay");
         goi("/api/thanh-toan/vnpay/ipn", ipn(taoUrl(daTra), "00", KHOA)).andExpect(content().json("{\"RspCode\":\"00\"}"));
-        jdbc.update("UPDATE don_hang SET created_at = now() - interval '36 minutes' WHERE ma_don_hang IN (?, ?, ?)",
+        jdbc.update("UPDATE don_hang SET created_at = now() - INTERVAL 36 MINUTE WHERE ma_don_hang IN (?, ?, ?)",
                 quaHan, cod, daTra);
         int tonTruoc = jdbc.queryForObject("SELECT so_luong_ton FROM bien_the WHERE id = ?", Integer.class, bienThe);
 
