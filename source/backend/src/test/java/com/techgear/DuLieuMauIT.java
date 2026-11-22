@@ -6,7 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.mysql.MySQLContainer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -23,11 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class DuLieuMauIT {
 
     @ServiceConnection
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17-alpine")
-            .withCommand("postgres", "-c", "timezone=Asia/Ho_Chi_Minh");
+    static final MySQLContainer MYSQL = new MySQLContainer("mysql:8.4")
+            .withCommand("--default-time-zone=+07:00", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci");
 
     static {
-        POSTGRES.start();
+        MYSQL.start();
     }
 
     @Autowired

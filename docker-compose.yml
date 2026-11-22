@@ -1,25 +1,26 @@
-# CSDL PostgreSQL 17 cho backend TechGear: docker compose up -d
+# CSDL MySQL 8.4 cho backend TechGear: docker compose up -d
 # Lược đồ do Flyway trong backend tạo; xóa sạch dữ liệu: docker compose down -v
 services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: techgear-postgres
+  mysql:
+    image: mysql:8.4
+    container_name: techgear-mysql
     environment:
-      POSTGRES_DB: techgear
-      POSTGRES_USER: techgear
-      POSTGRES_PASSWORD: techgear
+      MYSQL_DATABASE: techgear
+      MYSQL_USER: techgear
+      MYSQL_PASSWORD: techgear
+      MYSQL_ROOT_PASSWORD: techgear-root
       TZ: Asia/Ho_Chi_Minh
-    # Container mặc định UTC → đặt múi giờ phiên để now()/hiển thị theo giờ Việt Nam
-    command: ["postgres", "-c", "timezone=Asia/Ho_Chi_Minh"]
+    # Giờ Việt Nam cho NOW()/CURRENT_TIMESTAMP; utf8mb4 không phân biệt hoa thường + dấu
+    command: ["--default-time-zone=+07:00", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
     ports:
-      - "${TECHGEAR_DB_PORT:-5433}:5432"
+      - "${TECHGEAR_DB_PORT:-3307}:3306"
     volumes:
-      - techgear-pgdata:/var/lib/postgresql/data
+      - techgear-mysqldata:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U techgear -d techgear"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u techgear -ptechgear --silent"]
       interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 20
 
 volumes:
-  techgear-pgdata:
+  techgear-mysqldata:
