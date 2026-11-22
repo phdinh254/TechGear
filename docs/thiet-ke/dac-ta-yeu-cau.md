@@ -9,7 +9,7 @@ Xây dựng lại từ đầu backend (REST API) và CSDL cho website thương m
 gọi backend qua HTTP/JSON.
 
 Thành công khi:
-- Đủ các use case trong `docs/so-do-use-case/` (9 sơ đồ) có API tương ứng, chạy được trên PostgreSQL.
+- Đủ các use case trong `docs/so-do-use-case/` (9 sơ đồ) có API tương ứng, chạy được trên MySQL.
 - Frontend hiện có (`source/frontend`) chạy được với backend mới mà không phải sửa (giữ hợp đồng API – mục 8).
 - Mọi API có request Postman kèm kiểm thử tự động; logic tính toán có unit test; tất cả xanh trên CSDL sạch.
 - Có tài liệu: đặc tả này, từ điển dữ liệu, ERD, sơ đồ kiến trúc/gói, sơ đồ hoạt động – tuần tự – trạng thái, đặc tả API.
@@ -129,8 +129,8 @@ danhgia → phần quản trị của từng module → thongke.
   `/api/admin/**` chỉ quản trị viên; CORS theo danh sách origin cấu hình; truy vấn tham số hóa; upload chỉ nhận ảnh
   JPG/PNG/WEBP/GIF ≤ 5MB kiểm theo nội dung file, chặn path traversal; lỗi không lộ chi tiết nội bộ; giới hạn số lần ở
   đăng nhập, quên mật khẩu, tra cứu đơn.
-- **Dữ liệu:** PostgreSQL 17; lược đồ do Flyway quản lý; ràng buộc CHECK/UNIQUE/FK ở CSDL cho các bất biến quan trọng
-  (tồn kho ≥ 0, tổng tiền đúng công thức, một địa chỉ mặc định...). Thời gian lưu `TIMESTAMPTZ`, trả về ISO-8601 múi giờ +07:00.
+- **Dữ liệu:** MySQL 8.4 (utf8mb4, InnoDB); lược đồ do Flyway quản lý; ràng buộc CHECK/UNIQUE/FK ở CSDL cho các bất biến quan trọng
+  (tồn kho ≥ 0, tổng tiền đúng công thức, một địa chỉ mặc định...). Thời gian lưu `DATETIME(6)` theo giờ Việt Nam, trả về ISO-8601 múi giờ +07:00.
   Tiền là số nguyên đồng (`BIGINT`).
 - **Hiệu năng:** không có truy vấn N+1 ở danh sách; trang danh sách sản phẩm ≤ 2 truy vấn chính + truy vấn theo lô.
 - **Ngôn ngữ:** thông báo lỗi, comment tiếng Việt; tên bảng/cột/trường JSON tiếng Việt không dấu kiểu camelCase/snake_case.
@@ -140,7 +140,7 @@ danhgia → phần quản trị của từng module → thongke.
 |---|---|
 | Java / Maven | 21 / 3.9 |
 | Spring Boot | 4.1.2 (Web MVC, Data JPA, Security + OAuth2 Resource Server, Validation, Mail) |
-| PostgreSQL / Flyway | 17 / 12.4 |
+| MySQL / Flyway | 8.4 / 12.4 |
 | springdoc-openapi | 3.2.0 |
 | Kiểm thử | JUnit 5, Testcontainers 2.0.5, Postman + Newman |
 
@@ -178,7 +178,7 @@ public DiaChiResponse tao(Long nguoiDungId, DiaChiRequest req) {
 | Mức | Công cụ | Phạm vi |
 |---|---|---|
 | Unit | JUnit 5 + Mockito (`mvn test`) | Logic: tính tiền, mã giảm giá, chuyển trạng thái đơn, chữ ký VNPay, slug, kiểm tra ảnh |
-| Tích hợp | Testcontainers PostgreSQL (`mvn verify`) | Khởi động với Flyway thật + `ddl-auto=validate`; đặt hàng đồng thời không bán quá tồn kho |
+| Tích hợp | Testcontainers MySQL (`mvn verify`) | Khởi động với Flyway thật + `ddl-auto=validate`; đặt hàng đồng thời không bán quá tồn kho |
 | API | Postman + Newman | Mọi API: mã trạng thái, hình dạng JSON, quy tắc nghiệp vụ, 401/403/404/409/429, hợp đồng frontend |
 
 ## 8. Hợp đồng API phải giữ cho frontend hiện có

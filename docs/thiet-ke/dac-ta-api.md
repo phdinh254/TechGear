@@ -421,7 +421,7 @@ Mọi số liệu tính theo **ngày đặt hàng** (giờ Việt Nam); doanh th
 ## 4. Biến môi trường
 | Biến | Mặc định (profile `dev`) | Ý nghĩa |
 |---|---|---|
-| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | `jdbc:postgresql://localhost:5433/techgear`, `techgear`, `techgear` | Kết nối CSDL (khớp `docker-compose.yml`) |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | `jdbc:mysql://localhost:3307/techgear`, `techgear`, `techgear` | Kết nối CSDL (khớp `docker-compose.yml`) |
 | `JWT_SECRET` | khóa dev (chỉ profile `dev`; thiếu ở môi trường khác thì không khởi động) | Khóa ký JWT, ≥ 32 byte |
 | `FRONTEND_URL` | `http://localhost:5173` | Liên kết trong email |
 | `CORS_ALLOWED_ORIGINS` | = `FRONTEND_URL` | Origin được phép, phân cách dấu phẩy |
