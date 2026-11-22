@@ -1,4 +1,4 @@
-# Xây dựng website bán phụ kiện công nghê - TechGear
+# Xây dựng website bán phụ kiện công nghệ - TechGear
 
 Nhóm sinh viên thực hiện:
 
