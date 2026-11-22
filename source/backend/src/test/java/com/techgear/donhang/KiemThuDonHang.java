@@ -57,11 +57,11 @@ abstract class KiemThuDonHang extends KiemThuTichHop {
 
     long maGiamGia(String ma, String loai, long giaTri, long donToiThieu, Long giamToiDa, Integer tongLuot,
                    Integer luotMoiNguoi) {
-        return jdbc.queryForObject("""
+        return tao.them("""
                 INSERT INTO ma_giam_gia (ma, loai_giam, gia_tri_giam, don_toi_thieu, giam_toi_da, tong_luot_dung,
                                          luot_dung_moi_nguoi, bat_dau_luc, ket_thuc_luc)
-                VALUES (?, ?, ?, ?, ?, ?, ?, now() - interval '1 day', now() + interval '1 day') RETURNING id
-                """, Long.class, ma, loai, giaTri, donToiThieu, giamToiDa, tongLuot, luotMoiNguoi);
+                VALUES (?, ?, ?, ?, ?, ?, ?, now() - INTERVAL 1 DAY, now() + INTERVAL 1 DAY)
+                """, ma, loai, giaTri, donToiThieu, giamToiDa, tongLuot, luotMoiNguoi);
     }
 
     static String dong(long bienTheId, int soLuong) {

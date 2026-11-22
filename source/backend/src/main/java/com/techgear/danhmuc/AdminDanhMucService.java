@@ -1,6 +1,7 @@
 package com.techgear.danhmuc;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.techgear.chung.Csdl;
 import com.techgear.chung.SlugService;
 import com.techgear.chung.loi.ApiException;
 import jakarta.validation.constraints.NotBlank;
@@ -41,9 +42,9 @@ public class AdminDanhMucService {
 
     private static final String CHON = """
             SELECT dm.id, dm.ten, dm.slug, dm.mo_ta, dm.hinh_anh, dm.thu_tu, dm.hien_thi, dm.danh_muc_cha_id,
-                   (SELECT count(*) FROM danh_muc c WHERE c.danh_muc_cha_id = dm.id AND c.deleted_at IS NULL)::int
+                   (SELECT count(*) FROM danh_muc c WHERE c.danh_muc_cha_id = dm.id AND c.deleted_at IS NULL)
                        AS so_danh_muc_con,
-                   (SELECT count(*) FROM san_pham sp WHERE sp.danh_muc_id = dm.id AND sp.deleted_at IS NULL)::int
+                   (SELECT count(*) FROM san_pham sp WHERE sp.danh_muc_id = dm.id AND sp.deleted_at IS NULL)
                        AS so_san_pham
             FROM danh_muc dm WHERE dm.deleted_at IS NULL
             """;
@@ -56,15 +57,14 @@ public class AdminDanhMucService {
     @Transactional
     public DanhMucQT tao(DanhMucRequest req) {
         kiemTraCha(req.danhMucChaId(), null);
-        Long id = jdbc.sql("""
+        Long id = Csdl.themLayId(jdbc.sql("""
                         INSERT INTO danh_muc (ten, slug, mo_ta, hinh_anh, thu_tu, hien_thi, danh_muc_cha_id)
-                        VALUES (:ten, :slug, :moTa, :hinhAnh, :thuTu, :hienThi, :cha) RETURNING id
+                        VALUES (:ten, :slug, :moTa, :hinhAnh, :thuTu, :hienThi, :cha)
                         """)
                 .param("ten", req.ten().trim()).param("slug", slugService.chon("danh_muc", req.slug(), req.ten(), null))
                 .param("moTa", rong(req.moTa())).param("hinhAnh", rong(req.hinhAnh()))
                 .param("thuTu", req.thuTu() == null ? 0 : req.thuTu())
-                .param("hienThi", req.hienThi() == null || req.hienThi()).param("cha", req.danhMucChaId())
-                .query(Long.class).single();
+                .param("hienThi", req.hienThi() == null || req.hienThi()).param("cha", req.danhMucChaId()));
         return mot(id);
     }
 

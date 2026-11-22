@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Khởi động toàn bộ ứng dụng trên PostgreSQL thật: Flyway chạy migration, ddl-auto=validate qua. */
+/** Khởi động toàn bộ ứng dụng trên MySQL thật: Flyway chạy migration, ddl-auto=validate qua. */
 class KhoiDongIT extends KiemThuTichHop {
 
     @Autowired
@@ -19,9 +19,11 @@ class KhoiDongIT extends KiemThuTichHop {
     MockMvc mvc;
 
     @Test
-    void flywayDaChayVaUnaccentHoatDong() {
-        assertEquals("Sac du phong", jdbc.queryForObject("SELECT unaccent('Sạc dự phòng')", String.class));
-        assertEquals("Asia/Ho_Chi_Minh", jdbc.queryForObject("SHOW timezone", String.class));
+    void flywayDaChayVaCollationKhongDau() {
+        // Bảng tạo bởi Flyway dùng utf8mb4_0900_ai_ci: so sánh bỏ qua hoa thường và dấu
+        assertEquals(1, jdbc.queryForObject(
+                "SELECT count(*) FROM cai_dat WHERE mo_ta LIKE '%PHI VAN CHUYEN%' AND khoa = 'phi_van_chuyen'", Integer.class));
+        assertEquals("+07:00", jdbc.queryForObject("SELECT @@session.time_zone", String.class));
     }
 
     @Test

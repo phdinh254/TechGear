@@ -5,11 +5,11 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.mysql.MySQLContainer;
 
 /**
  * Lớp cha cho kiểm thử tích hợp (*IT, chạy bằng mvn verify, cần Docker):
- * một PostgreSQL 17 dùng chung, lược đồ do Flyway thật tạo; mỗi test chạy trong giao dịch và được rollback.
+ * một MySQL 8.4 dùng chung, lược đồ do Flyway thật tạo; mỗi test chạy trong giao dịch và được rollback.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -23,10 +23,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 public abstract class KiemThuTichHop {
 
     @ServiceConnection
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17-alpine")
-            .withCommand("postgres", "-c", "timezone=Asia/Ho_Chi_Minh");
+    static final MySQLContainer MYSQL = new MySQLContainer("mysql:8.4")
+            .withCommand("--default-time-zone=+07:00", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci");
 
     static {
-        POSTGRES.start();
+        MYSQL.start();
     }
 }

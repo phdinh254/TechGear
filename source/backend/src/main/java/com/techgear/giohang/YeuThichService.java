@@ -49,7 +49,7 @@ public class YeuThichService {
         if (soLuong >= TOI_DA) {
             throw ApiException.yeuCauKhongHopLe("Danh sách yêu thích tối đa " + TOI_DA + " sản phẩm");
         }
-        jdbc.sql("INSERT INTO yeu_thich (nguoi_dung_id, san_pham_id, created_at) VALUES (:nd, :sp, clock_timestamp())")
+        jdbc.sql("INSERT INTO yeu_thich (nguoi_dung_id, san_pham_id, created_at) VALUES (:nd, :sp, SYSDATE(6))")
                 .param("nd", nguoiDungId).param("sp", sanPhamId).update();
     }
 

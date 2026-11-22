@@ -30,10 +30,10 @@ class GioHangIT extends KiemThuGioHang {
     void themCongDonTraGioDungHinhDang() throws Exception {
         String h = TaoDuLieuSanPham.hauTo();
         long sp = tao.sanPham("Tai nghe X", "tai-nghe-x-" + h, danhMuc, null);
-        long mau = jdbc.queryForObject(
-                "INSERT INTO tuy_chon (san_pham_id, ten, loai) VALUES (?, 'Màu sắc', 'mau_sac') RETURNING id", Long.class, sp);
-        long den = jdbc.queryForObject(
-                "INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri) VALUES (?, 'Đen') RETURNING id", Long.class, mau);
+        long mau = tao.them(
+                "INSERT INTO tuy_chon (san_pham_id, ten, loai) VALUES (?, 'Màu sắc', 'mau_sac')", sp);
+        long den = tao.them(
+                "INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri) VALUES (?, 'Đen')", mau);
         long bt = tao.bienThe(sp, "TNX-DEN-" + h, 500_000, 600_000L, 10);
         jdbc.update("INSERT INTO bien_the_gia_tri VALUES (?, ?)", bt, den);
         jdbc.update("""

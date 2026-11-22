@@ -1,5 +1,6 @@
 package com.techgear.donhang;
 
+import com.techgear.chung.Csdl;
 import com.techgear.sanpham.HienThi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -26,7 +27,7 @@ class DonHangRepository {
 
     /**
      * {@code khoa} = true: khóa dòng các biến thể (FOR UPDATE) theo thứ tự id để hai đơn chung biến thể không khóa chéo;
-     * chờ khóa xong PostgreSQL đọc lại tồn kho mới nhất.
+     * đọc có khóa của InnoDB luôn lấy tồn kho mới nhất.
      */
     Map<Long, DongKho> dongKho(Collection<Long> bienTheIds, boolean khoa) {
         return jdbc.sql("SELECT bt.id AS bien_the_id, sp.id AS san_pham_id, sp.slug AS san_pham_slug, "
@@ -39,13 +40,11 @@ class DonHangRepository {
                 .collect(Collectors.toMap(DongKho::bienTheId, Function.identity()));
     }
 
-    /** Trừ (âm) hoặc cộng (dương) tồn kho; trả tồn kho sau thay đổi. CSDL chặn tồn kho âm. */
+    /** Trừ (âm) hoặc cộng (dương) tồn kho; trả tồn kho sau thay đổi (dòng đang bị khóa bởi UPDATE). CSDL chặn tồn kho âm. */
     int doiTonKho(Long bienTheId, int thayDoi) {
-        return jdbc.sql("""
-                        UPDATE bien_the SET so_luong_ton = so_luong_ton + :thayDoi, updated_at = now()
-                        WHERE id = :id RETURNING so_luong_ton
-                        """)
-                .param("thayDoi", thayDoi).param("id", bienTheId).query(Integer.class).single();
+        jdbc.sql("UPDATE bien_the SET so_luong_ton = so_luong_ton + :thayDoi, updated_at = now() WHERE id = :id")
+                .param("thayDoi", thayDoi).param("id", bienTheId).update();
+        return jdbc.sql("SELECT so_luong_ton FROM bien_the WHERE id = :id").param("id", bienTheId).query(Integer.class).single();
     }
 
     void ghiLichSuKho(Long bienTheId, Long donHangId, String loai, int thayDoi, int sau, Long nguoiThucHienId) {
@@ -64,15 +63,14 @@ class DonHangRepository {
     }
 
     Long themDonHang(Map<String, Object> cot) {
-        return jdbc.sql("""
+        return Csdl.themLayId(jdbc.sql("""
                         INSERT INTO don_hang (ma_don_hang, nguoi_dung_id, ma_giam_gia_id, ten_nguoi_nhan, email,
                                               so_dien_thoai, dia_chi_giao_hang, ghi_chu, tam_tinh, tien_giam_gia,
                                               phi_van_chuyen, tong_tien, phuong_thuc_thanh_toan)
                         VALUES (:ma, :nd, :maGiamGiaId, :tenNguoiNhan, :email, :soDienThoai, :diaChi, :ghiChu, :tamTinh,
                                 :tienGiamGia, :phiVanChuyen, :tongTien, :phuongThuc)
-                        RETURNING id
                         """)
-                .params(cot).query(Long.class).single();
+                .params(cot));
     }
 
     void themDong(Long donHangId, DonHangResponse.Dong d) {
@@ -87,11 +85,11 @@ class DonHangRepository {
                 .param("thanhTien", d.thanhTien()).update();
     }
 
-    /** clock_timestamp: các bước trong cùng giao dịch vẫn có thứ tự thời gian. */
+    /** SYSDATE(6): các bước trong cùng giao dịch vẫn có thứ tự thời gian. */
     void ghiLichSuDon(Long donHangId, TrangThaiDonHang trangThai, String ghiChu, Long nguoiThucHienId) {
         jdbc.sql("""
                         INSERT INTO lich_su_don_hang (don_hang_id, trang_thai, ghi_chu, nguoi_thuc_hien_id, created_at)
-                        VALUES (:dh, :tt, :ghiChu, :nguoi, clock_timestamp())
+                        VALUES (:dh, :tt, :ghiChu, :nguoi, SYSDATE(6))
                         """)
                 .param("dh", donHangId).param("tt", trangThai.name()).param("ghiChu", ghiChu)
                 .param("nguoi", nguoiThucHienId).update();
@@ -148,7 +146,7 @@ class DonHangRepository {
     /** Các dòng còn biến thể để hoàn kho, theo thứ tự id biến thể (cùng thứ tự khóa với đặt hàng). */
     List<DongHoan> dongHoanKho(Long donHangId) {
         return jdbc.sql("""
-                        SELECT bien_the_id, sum(so_luong)::int AS so_luong FROM chi_tiet_don_hang
+                        SELECT bien_the_id, sum(so_luong) AS so_luong FROM chi_tiet_don_hang
                         WHERE don_hang_id = :id AND bien_the_id IS NOT NULL
                         GROUP BY bien_the_id ORDER BY bien_the_id
                         """)

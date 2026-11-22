@@ -1,5 +1,6 @@
 package com.techgear.sanpham;
 
+import com.techgear.chung.Csdl;
 import com.techgear.chung.PageResponse;
 import com.techgear.chung.SlugService;
 import com.techgear.chung.VanBan;
@@ -9,8 +10,6 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Array;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +38,7 @@ public class AdminSanPhamService {
         StringBuilder where = new StringBuilder(" WHERE sp.deleted_at IS NULL");
         Map<String, Object> ts = new HashMap<>();
         if (tuKhoa != null && !tuKhoa.isBlank()) {
-            where.append(" AND lower(unaccent(sp.ten)) LIKE '%' || lower(unaccent(:tuKhoa)) || '%'");
+            where.append(" AND sp.ten LIKE CONCAT('%', :tuKhoa, '%')");
             ts.put("tuKhoa", HienThi.thoatLike(tuKhoa.trim()));
         }
         if (danhMucId != null) {
@@ -64,7 +63,7 @@ public class AdminSanPhamService {
                                dm.ten AS ten_danh_muc, th.ten AS ten_thuong_hieu, sp.gia_ban,
                                (SELECT coalesce(sum(bt.so_luong_ton), 0) FROM bien_the bt
                                 WHERE bt.san_pham_id = sp.id AND bt.deleted_at IS NULL) AS tong_ton,
-                               (SELECT count(*) FROM bien_the bt WHERE bt.san_pham_id = sp.id AND bt.deleted_at IS NULL)::int
+                               (SELECT count(*) FROM bien_the bt WHERE bt.san_pham_id = sp.id AND bt.deleted_at IS NULL)
                                    AS so_bien_the,
                                sp.hien_thi, sp.noi_bat, sp.luot_xem, sp.created_at AS ngay_tao
                         FROM san_pham sp JOIN danh_muc dm ON dm.id = sp.danh_muc_id
@@ -90,19 +89,15 @@ public class AdminSanPhamService {
                 .param("id", id).query(AdminSanPhamDto.HinhAnhQT.class).list();
         List<AdminSanPhamDto.BienTheQT> bienThes = jdbc.sql("""
                         SELECT bt.id, bt.sku, bt.gia_ban, bt.gia_goc, bt.so_luong_ton, bt.nguong_canh_bao, bt.hien_thi,
-                               COALESCE(array_agg(btg.gia_tri_tuy_chon_id ORDER BY btg.gia_tri_tuy_chon_id)
-                                        FILTER (WHERE btg.gia_tri_tuy_chon_id IS NOT NULL), '{}'::bigint[]) AS gia_tri_ids
+                               GROUP_CONCAT(btg.gia_tri_tuy_chon_id ORDER BY btg.gia_tri_tuy_chon_id) AS gia_tri_ids
                         FROM bien_the bt LEFT JOIN bien_the_gia_tri btg ON btg.bien_the_id = bt.id
                         WHERE bt.san_pham_id = :id AND bt.deleted_at IS NULL
                         GROUP BY bt.id ORDER BY bt.id
                         """)
                 .param("id", id)
-                .query((rs, i) -> {
-                    Array mang = rs.getArray("gia_tri_ids");
-                    return new AdminSanPhamDto.BienTheQT(rs.getLong("id"), rs.getString("sku"), rs.getLong("gia_ban"),
-                            rs.getObject("gia_goc", Long.class), rs.getInt("so_luong_ton"), rs.getInt("nguong_canh_bao"),
-                            rs.getBoolean("hien_thi"), Arrays.asList((Long[]) mang.getArray()));
-                }).list();
+                .query((rs, i) -> new AdminSanPhamDto.BienTheQT(rs.getLong("id"), rs.getString("sku"), rs.getLong("gia_ban"),
+                        rs.getObject("gia_goc", Long.class), rs.getInt("so_luong_ton"), rs.getInt("nguong_canh_bao"),
+                        rs.getBoolean("hien_thi"), SanPhamRepository.danhSachId(rs.getString("gia_tri_ids")))).list();
         return new AdminSanPhamDto.SanPhamQT(t.id(), t.ten(), t.slug(), t.danhMucId(), t.thuongHieuId(), t.moTaNgan(),
                 t.moTa(), t.baoHanhThang(), t.noiBat(), t.hienThi(), t.giaBan(), t.giaGoc(),
                 sanPhamRepository.thongSos(id), sanPhamRepository.tuyChons(id), hinhAnhs, bienThes);
@@ -111,12 +106,12 @@ public class AdminSanPhamService {
     @Transactional
     public AdminSanPhamDto.SanPhamQT tao(AdminSanPhamDto.SanPhamRequest req) {
         kiemTraThamChieu(req);
-        Long id = jdbc.sql("""
+        Long id = Csdl.themLayId(jdbc.sql("""
                         INSERT INTO san_pham (ten, slug, danh_muc_id, thuong_hieu_id, mo_ta_ngan, mo_ta, bao_hanh_thang,
                                               noi_bat, hien_thi)
-                        VALUES (:ten, :slug, :dm, :th, :moTaNgan, :moTa, :baoHanh, :noiBat, :hienThi) RETURNING id
+                        VALUES (:ten, :slug, :dm, :th, :moTaNgan, :moTa, :baoHanh, :noiBat, :hienThi)
                         """)
-                .params(cotSanPham(req, null, null)).query(Long.class).single();
+                .params(cotSanPham(req, null, null)));
         ghiThongSo(id, req.thongSos());
         return chiTiet(id);
     }
@@ -164,11 +159,11 @@ public class AdminSanPhamService {
             throw ApiException.xungDot("Sản phẩm đã có biến thể, xóa biến thể trước khi thêm tùy chọn");
         }
         kiemTraGiaTriTrung(req);
-        Long tc = jdbc.sql("""
+        Long tc = Csdl.themLayId(jdbc.sql("""
                         INSERT INTO tuy_chon (san_pham_id, ten, loai, thu_tu)
-                        VALUES (:sp, :ten, :loai, (SELECT count(*) FROM tuy_chon WHERE san_pham_id = :sp)) RETURNING id
+                        SELECT :sp, :ten, :loai, count(*) FROM tuy_chon WHERE san_pham_id = :sp
                         """)
-                .param("sp", sanPhamId).param("ten", req.ten().trim()).param("loai", req.loai()).query(Long.class).single();
+                .param("sp", sanPhamId).param("ten", req.ten().trim()).param("loai", req.loai()));
         for (int i = 0; i < req.giaTris().size(); i++) {
             themGiaTri(tc, req.giaTris().get(i), i);
         }
@@ -233,9 +228,8 @@ public class AdminSanPhamService {
         }
         jdbc.sql("""
                         INSERT INTO hinh_anh_san_pham (san_pham_id, gia_tri_tuy_chon_id, duong_dan, mo_ta, thu_tu, la_anh_chinh)
-                        VALUES (:sp, :gt, :duongDan, :moTa,
-                                coalesce(:thuTu, (SELECT coalesce(max(thu_tu) + 1, 0) FROM hinh_anh_san_pham WHERE san_pham_id = :sp)),
-                                :chinh)
+                        SELECT :sp, :gt, :duongDan, :moTa, coalesce(:thuTu, coalesce(max(thu_tu) + 1, 0)), :chinh
+                        FROM hinh_anh_san_pham WHERE san_pham_id = :sp
                         """)
                 .params(cotAnh(sanPhamId, req)).update();
         return chiTiet(sanPhamId);
@@ -276,13 +270,13 @@ public class AdminSanPhamService {
         kiemTraGiaVaSku(req, sku, null);
         List<Long> toHop = kiemTraToHop(sanPhamId, req.giaTriIds() == null ? List.of() : req.giaTriIds());
         int ton = req.soLuongTon() == null ? 0 : req.soLuongTon();
-        Long id = jdbc.sql("""
+        Long id = Csdl.themLayId(jdbc.sql("""
                         INSERT INTO bien_the (san_pham_id, sku, gia_ban, gia_goc, so_luong_ton, nguong_canh_bao, hien_thi)
-                        VALUES (:sp, :sku, :giaBan, :giaGoc, :ton, :nguong, :hienThi) RETURNING id
+                        VALUES (:sp, :sku, :giaBan, :giaGoc, :ton, :nguong, :hienThi)
                         """)
                 .param("sp", sanPhamId).param("sku", sku).param("giaBan", req.giaBan()).param("giaGoc", req.giaGoc())
                 .param("ton", ton).param("nguong", req.nguongCanhBao() == null ? 5 : req.nguongCanhBao())
-                .param("hienThi", req.hienThi() == null || req.hienThi()).query(Long.class).single();
+                .param("hienThi", req.hienThi() == null || req.hienThi()));
         for (Long gt : toHop) {
             jdbc.sql("INSERT INTO bien_the_gia_tri (bien_the_id, gia_tri_tuy_chon_id) VALUES (:bt, :gt)")
                     .param("bt", id).param("gt", gt).update();
@@ -326,7 +320,7 @@ public class AdminSanPhamService {
         jdbc.sql("""
                         INSERT INTO lich_su_ton_kho (bien_the_id, loai, so_luong_thay_doi, so_luong_sau, ghi_chu,
                                                      nguoi_thuc_hien_id, created_at)
-                        VALUES (:bt, :loai, :thayDoi, :sau, :ghiChu, :nguoi, clock_timestamp())
+                        VALUES (:bt, :loai, :thayDoi, :sau, :ghiChu, :nguoi, SYSDATE(6))
                         """)
                 .param("bt", bienTheId).param("loai", loai).param("thayDoi", thayDoi).param("sau", sau)
                 .param("ghiChu", ghiChu).param("nguoi", nguoiThucHienId).update();
@@ -527,12 +521,11 @@ public class AdminSanPhamService {
                         SELECT EXISTS (
                             SELECT 1 FROM bien_the bt
                             WHERE bt.san_pham_id = :sp AND bt.deleted_at IS NULL
-                              AND coalesce((SELECT array_agg(btg.gia_tri_tuy_chon_id ORDER BY btg.gia_tri_tuy_chon_id)
-                                            FROM bien_the_gia_tri btg WHERE btg.bien_the_id = bt.id), '{}'::bigint[])
-                                  = CAST(:toHop AS bigint[]))
+                              AND coalesce((SELECT GROUP_CONCAT(btg.gia_tri_tuy_chon_id ORDER BY btg.gia_tri_tuy_chon_id)
+                                            FROM bien_the_gia_tri btg WHERE btg.bien_the_id = bt.id), '') = :toHop)
                         """)
                 .param("sp", sanPhamId)
-                .param("toHop", "{" + String.join(",", toHop.stream().map(String::valueOf).toList()) + "}")
+                .param("toHop", String.join(",", toHop.stream().map(String::valueOf).toList()))
                 .query(Boolean.class).single();
         if (trung) {
             throw ApiException.xungDot("Đã có biến thể với tổ hợp này");

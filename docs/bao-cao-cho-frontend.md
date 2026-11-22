@@ -13,7 +13,7 @@ xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên,
 ## 1. Chạy backend để thử
 
 ```bash
-docker compose up -d                 # ở gốc repo: PostgreSQL 17, cổng 5433
+docker compose up -d                 # ở gốc repo: MySQL 8.4, cổng 3307
 cd source/backend && mvn spring-boot:run
 ```
 - API: `http://localhost:8080/api`, trùng `VITE_API_URL` mặc định của frontend nên không phải sửa `.env`.
@@ -345,7 +345,7 @@ Hạn chế đã biết (cố ý giữ, ghi lại để không bất ngờ):
 
 ## 13. Kiểm thử phía backend
 
-Mọi API ở trên đã có kiểm thử tự động (JUnit trên PostgreSQL thật) và bộ Postman
+Mọi API ở trên đã có kiểm thử tự động (JUnit trên MySQL thật) và bộ Postman
 `postman/TechGear.postman_collection.json`. Có thể import bộ Postman cùng `postman/TechGear.local.postman_environment.json`
 để xem request và response mẫu của từng API: thư mục "01 Tài khoản" (29 request), "02 Sản phẩm" (16 request), "03 Giỏ hàng" (20 request), "04 Đơn hàng" (24 request), "05 Thanh toán" (15 request), "06 Đánh giá" (12 request), "07 Quản trị" (73 request, chạy một vòng từ tạo sản phẩm tới đơn hoàn thành, đánh giá được duyệt, thống kê).
 Bộ Postman gọi đủ cả 95 API của backend (đối chiếu với Swagger `/v3/api-docs`).

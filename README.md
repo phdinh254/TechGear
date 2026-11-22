@@ -10,14 +10,14 @@ Nhóm sinh viên thực hiện:
 |---|---|
 | Frontend | ReactJS 18 + Vite 5, React Router 6, Axios |
 | Backend | Java 21, Spring Boot 4.1 (Web MVC, Data JPA, Security + OAuth2 Resource Server/JWT, Validation, Mail), Flyway, springdoc-openapi (Swagger UI) |
-| CSDL | PostgreSQL 17 (chạy bằng Docker Compose), lược đồ quản lý bằng Flyway |
+| CSDL | MySQL 8.4 (chạy bằng Docker Compose), lược đồ quản lý bằng Flyway |
 
 ## Cấu trúc thư mục
 
 ```
 TechGear/
 ├── database/
-│   └── DB_TechGear.sql           Lược đồ + dữ liệu mẫu PostgreSQL 17 (xuất bằng pg_dump)
+│   └── DB_TechGear.sql           Lược đồ + dữ liệu mẫu MySQL 8.4 (xuất bằng mysqldump)
 ├── docs/
 │   ├── so-do-use-case/           9 sơ đồ use case (draw.io)
 │   ├── thiet-ke/                 Đặc tả, từ điển dữ liệu, đặc tả API, sơ đồ thiết kế
@@ -41,7 +41,7 @@ Nằm trong `docs/thiet-ke/`, mỗi sơ đồ có `.drawio` (mở bằng [draw.i
 | Tài liệu | Nội dung |
 |---|---|
 | [`dac-ta-yeu-cau.md`](docs/thiet-ke/dac-ta-yeu-cau.md) | Đặc tả yêu cầu: tác nhân, module, quy tắc nghiệp vụ, phi chức năng, kiểm thử |
-| [`tu-dien-du-lieu.md`](docs/thiet-ke/tu-dien-du-lieu.md) | Từ điển dữ liệu 23 bảng PostgreSQL |
+| [`tu-dien-du-lieu.md`](docs/thiet-ke/tu-dien-du-lieu.md) | Từ điển dữ liệu 23 bảng MySQL |
 | [`dac-ta-api.md`](docs/thiet-ke/dac-ta-api.md) | Đặc tả API: quy ước, định dạng lỗi, danh sách API |
 | [`bao-cao-cho-frontend.md`](docs/bao-cao-cho-frontend.md) | Báo cáo cho người làm frontend: API đã có, thay đổi so với bản cũ, việc frontend cần làm |
 
@@ -148,15 +148,17 @@ Nằm trong `docs/so-do-use-case/`, vẽ bằng draw.io (`.drawio`, `.drawio.png
 | JDK | 21 | VD: Eclipse Temurin 21 |
 | Maven | 3.9+ | IntelliJ IDEA có sẵn Maven |
 | Node.js | 18 trở lên | |
-| Docker Desktop | mới nhất | Chạy PostgreSQL 17 bằng Docker Compose |
+| Docker Desktop | mới nhất | Chạy MySQL 8.4 bằng Docker Compose |
 
 ### 1. Cơ sở dữ liệu
 
 ```bash
-docker compose up -d        # PostgreSQL 17 ở cổng 5433 (đổi bằng biến TECHGEAR_DB_PORT)
+docker compose up -d        # MySQL 8.4 ở cổng 3307 (đổi bằng biến TECHGEAR_DB_PORT), CSDL/user/mật khẩu: techgear
 docker compose down -v      # xóa sạch dữ liệu khi cần làm lại từ đầu
 ```
 Lược đồ CSDL do Flyway trong backend tự tạo khi khởi động (`source/backend/src/main/resources/db/migration`).
+Dùng MySQL cài sẵn trên máy (không qua Docker): tạo CSDL trống `utf8mb4` rồi đặt `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
+(VD `jdbc:mysql://localhost:3306/techgear`); user cần quyền tạo bảng và thủ tục (`CREATE ROUTINE`) cho dữ liệu mẫu.
 
 ### 2. Backend
 
@@ -182,7 +184,7 @@ Kiểm thử:
 | Lệnh | Nội dung |
 |---|---|
 | `mvn test` | Unit test |
-| `mvn verify` | Unit test + kiểm thử tích hợp trên PostgreSQL thật (Testcontainers, cần Docker) |
+| `mvn verify` | Unit test + kiểm thử tích hợp trên MySQL thật (Testcontainers, cần Docker) |
 | `npx -y newman@6 run postman/TechGear.postman_collection.json -e postman/TechGear.local.postman_environment.json` | Kiểm thử API bằng bộ Postman (chạy ở gốc repo, backend đang chạy). Có thể import 2 file này vào Postman để gọi thử |
 
 ### 3. Frontend
@@ -207,7 +209,7 @@ frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/a
 | Giai đoạn | Nội dung | Trạng thái |
 |---|---|---|
 | 0. Dọn sạch | Xóa backend, script CSDL MySQL và tài liệu thiết kế cũ | Xong |
-| 1. Thiết kế | Đặc tả yêu cầu, ERD PostgreSQL, kiến trúc, danh sách API | Xong |
+| 1. Thiết kế | Đặc tả yêu cầu, ERD, kiến trúc, danh sách API | Xong |
 | 2. Nền tảng | Spring Boot 4, Docker Compose, Flyway, bảo mật JWT, xử lý lỗi, Swagger, upload | Xong |
 | 3. Tài khoản | Đăng ký, đăng nhập, hồ sơ, mật khẩu, sổ địa chỉ | Xong |
 | 4. Sản phẩm | Danh mục, thương hiệu, tìm kiếm/lọc, chi tiết, banner, cài đặt | Xong |
@@ -219,3 +221,4 @@ frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/a
 | 10. Dữ liệu mẫu | Dữ liệu mẫu đầy đủ + file `database/DB_TechGear.sql` | Xong |
 | 11. Bàn giao | Kiểm thử toàn bộ, tài liệu, review | Xong |
 | 12. Tích hợp `main` | Gộp frontend mới, nối mọi trang với backend mới, thêm 3 API giao diện cần | Xong |
+| 13. Chuyển MySQL | Chuyển CSDL từ PostgreSQL 17 sang MySQL 8.4 (lược đồ, SQL, dữ liệu mẫu, `DB_TechGear.sql`), giữ nguyên API | Xong |

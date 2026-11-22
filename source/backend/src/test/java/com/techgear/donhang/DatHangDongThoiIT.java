@@ -113,7 +113,7 @@ class DatHangDongThoiIT extends KiemThuTichHop {
         long bt = tao.bienThe(sp, "NHIEU-" + hauTo, 100_000, null, 10);
         jdbc.update("""
                 INSERT INTO ma_giam_gia (ma, loai_giam, gia_tri_giam, tong_luot_dung, bat_dau_luc, ket_thuc_luc)
-                VALUES (?, 'so_tien', 10000, 1, now() - interval '1 day', now() + interval '1 day')
+                VALUES (?, 'so_tien', 10000, 1, now() - INTERVAL 1 DAY, now() + INTERVAL 1 DAY)
                 """, "MOTLUOT" + hauTo);
 
         List<String> ma = haiNguoiDatCungLuc(

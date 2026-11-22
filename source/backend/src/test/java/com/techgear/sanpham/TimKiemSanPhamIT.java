@@ -107,7 +107,7 @@ class TimKiemSanPhamIT extends KiemThuTichHop {
     void phoBienTheoLuotXemMoiNhatTheoNgayTao() throws Exception {
         long cu = tao.sanPhamCoBan("Cũ nhiều lượt xem", danhMuc, null, 100_000);
         tao.sanPhamCoBan("Mới", danhMuc, null, 100_000);
-        tao.sua("UPDATE san_pham SET luot_xem = 50, created_at = now() - interval '1 day' WHERE id = ?", cu);
+        tao.sua("UPDATE san_pham SET luot_xem = 50, created_at = now() - INTERVAL 1 DAY WHERE id = ?", cu);
 
         mvc.perform(get("/api/san-pham").param("danhMuc", slugDanhMuc))
                 .andExpect(jsonPath("$.noiDung[*].ten", contains("Mới", "Cũ nhiều lượt xem")));
@@ -120,7 +120,7 @@ class TimKiemSanPhamIT extends KiemThuTichHop {
         for (int i = 0; i < 7; i++) {
             tao.sanPhamCoBan("Cùng giá " + i, danhMuc, null, 100_000);
         }
-        tao.sua("UPDATE san_pham SET created_at = '2026-01-01T00:00:00+07' WHERE danh_muc_id = ?", danhMuc);
+        tao.sua("UPDATE san_pham SET created_at = '2026-01-01 00:00:00' WHERE danh_muc_id = ?", danhMuc);
 
         List<Integer> ids = new ArrayList<>();
         for (int trang = 0; trang < 3; trang++) {

@@ -6,11 +6,11 @@ INSERT INTO ma_giam_gia (ma, mo_ta, loai_giam, gia_tri_giam, don_toi_thieu, giam
                          bat_dau_luc, ket_thuc_luc)
 -- Khung giờ tính theo lúc nạp (đơn mẫu đặt trong 90 ngày qua phải áp được mã; dữ liệu mẫu không hết hạn theo năm)
 VALUES ('GIAM10', 'Giảm 10% tối đa 100.000đ cho đơn từ 200.000đ', 'phan_tram', 10, 200000, 100000, NULL,
-        now() - interval '1 year', now() + interval '5 years'),
+        now() - INTERVAL 1 YEAR, now() + INTERVAL 5 YEAR),
        ('GIAM50K', 'Giảm 50.000đ cho đơn từ 500.000đ', 'so_tien', 50000, 500000, NULL, NULL,
-        now() - interval '1 year', now() + interval '5 years'),
+        now() - INTERVAL 1 YEAR, now() + INTERVAL 5 YEAR),
        ('MOILAN1', 'Giảm 20.000đ, mỗi khách dùng 1 lần', 'so_tien', 20000, 0, NULL, 1,
-        now() - interval '1 year', now() + interval '5 years'),
+        now() - INTERVAL 1 YEAR, now() + INTERVAL 5 YEAR),
        ('HETHAN', 'Mã đã hết hạn (để thử)', 'so_tien', 10000, 0, NULL, NULL,
-        now() - interval '2 years', now() - interval '1 year')
-ON CONFLICT ((upper(ma))) WHERE deleted_at IS NULL DO NOTHING;
+        now() - INTERVAL 2 YEAR, now() - INTERVAL 1 YEAR)
+ON DUPLICATE KEY UPDATE id = id; -- mã đã có: bỏ qua

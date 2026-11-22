@@ -151,8 +151,8 @@ class AdminSanPhamIT extends KiemThuQuanTri {
                 .andExpect(jsonPath("$.hinhAnhs[?(@.laAnhChinh == true)].duongDan", contains("/uploads/san-pham/2.png")));
         long khac = tao.danhMuc("K", "k-" + TaoDuLieuSanPham.hauTo(), null, 0, true);
         long spKhac = tao.sanPhamCoBan("Khác", khac, null, 1);
-        long tcKhac = jdbc.queryForObject("INSERT INTO tuy_chon (san_pham_id, ten, loai) VALUES (?, 'Màu', 'mau_sac') RETURNING id", Long.class, spKhac);
-        long gtKhac = jdbc.queryForObject("INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri) VALUES (?, 'Đỏ') RETURNING id", Long.class, tcKhac);
+        long tcKhac = tao.them("INSERT INTO tuy_chon (san_pham_id, ten, loai) VALUES (?, 'Màu', 'mau_sac')", spKhac);
+        long gtKhac = tao.them("INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri) VALUES (?, 'Đỏ')", tcKhac);
         qt(put("/api/admin/hinh-anh/" + a1Id), "{\"duongDan\":\"/uploads/san-pham/1.png\",\"giaTriTuyChonId\":%d}".formatted(gtKhac))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.thongBao").value("Giá trị tùy chọn không thuộc sản phẩm này"));

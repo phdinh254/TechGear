@@ -73,8 +73,7 @@ public class AdminKhoService {
         StringBuilder where = new StringBuilder(" WHERE bt.deleted_at IS NULL AND sp.deleted_at IS NULL");
         Map<String, Object> ts = new HashMap<>();
         if (tuKhoa != null && !tuKhoa.isBlank()) {
-            where.append(" AND (lower(unaccent(sp.ten)) LIKE '%' || lower(unaccent(:tuKhoa)) || '%'"
-                    + " OR lower(bt.sku) LIKE '%' || lower(:tuKhoa) || '%')");
+            where.append(" AND (sp.ten LIKE CONCAT('%', :tuKhoa, '%') OR bt.sku LIKE CONCAT('%', :tuKhoa, '%'))");
             ts.put("tuKhoa", HienThi.thoatLike(tuKhoa.trim()));
         }
         if (trangThai != null) {

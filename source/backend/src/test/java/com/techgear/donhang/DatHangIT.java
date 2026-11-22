@@ -30,10 +30,10 @@ class DatHangIT extends KiemThuDonHang {
     void datHangTinhTienLuuAnhChupTruKhoGhiLichSuXoaGio() throws Exception {
         String h = TaoDuLieuSanPham.hauTo();
         long sp = tao.sanPham("Tai nghe Y", "tai-nghe-y-" + h, danhMuc, null);
-        long mau = jdbc.queryForObject(
-                "INSERT INTO tuy_chon (san_pham_id, ten, loai) VALUES (?, 'Màu sắc', 'mau_sac') RETURNING id", Long.class, sp);
-        long den = jdbc.queryForObject(
-                "INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri) VALUES (?, 'Đen') RETURNING id", Long.class, mau);
+        long mau = tao.them(
+                "INSERT INTO tuy_chon (san_pham_id, ten, loai) VALUES (?, 'Màu sắc', 'mau_sac')", sp);
+        long den = tao.them(
+                "INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri) VALUES (?, 'Đen')", mau);
         long bt1 = tao.bienThe(sp, "TNY-DEN-" + h, 200_000, 250_000L, 5);
         jdbc.update("INSERT INTO bien_the_gia_tri VALUES (?, ?)", bt1, den);
         jdbc.update("INSERT INTO hinh_anh_san_pham (san_pham_id, duong_dan, la_anh_chinh) VALUES (?, '/uploads/san-pham/y.png', TRUE)", sp);
@@ -136,7 +136,7 @@ class DatHangIT extends KiemThuDonHang {
         String h = TaoDuLieuSanPham.hauTo();
         maGiamGia("TOITHIEU" + h, "so_tien", 10_000, 500_000, null, null, null);
         long hetHan = maGiamGia("HETHAN" + h, "so_tien", 10_000, 0, null, null, null);
-        jdbc.update("UPDATE ma_giam_gia SET bat_dau_luc = now() - interval '3 day', ket_thuc_luc = now() - interval '1 day' WHERE id = ?", hetHan);
+        jdbc.update("UPDATE ma_giam_gia SET bat_dau_luc = now() - INTERVAL 3 DAY, ket_thuc_luc = now() - INTERVAL 1 DAY WHERE id = ?", hetHan);
 
         tinhThu("{\"dongs\":[" + dong(bt, 1) + "],\"maGiamGia\":\"KHONGCO" + h + "\"}")
                 .andExpect(status().isBadRequest())

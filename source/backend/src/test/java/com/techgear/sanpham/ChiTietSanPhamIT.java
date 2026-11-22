@@ -36,15 +36,12 @@ class ChiTietSanPhamIT extends KiemThuTichHop {
         long th = tao.thuongHieu("Sony", "sony-" + h, true);
         long sp = tao.sanPham("Tai nghe WH-1000XM5", "wh-" + h, dm, th);
         jdbc.update("UPDATE san_pham SET mo_ta_ngan = 'Chống ồn', mo_ta = '<p>Mô tả</p>', bao_hanh_thang = 12 WHERE id = ?", sp);
-        long mau = jdbc.queryForObject(
-                "INSERT INTO tuy_chon (san_pham_id, ten, loai, thu_tu) VALUES (?, 'Màu sắc', 'mau_sac', 0) RETURNING id",
-                Long.class, sp);
-        long den = jdbc.queryForObject(
-                "INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri, ma_mau, thu_tu) VALUES (?, 'Đen', '#000000', 0) RETURNING id",
-                Long.class, mau);
-        long bac = jdbc.queryForObject(
-                "INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri, thu_tu) VALUES (?, 'Bạc', 1) RETURNING id",
-                Long.class, mau);
+        long mau = tao.them(
+                "INSERT INTO tuy_chon (san_pham_id, ten, loai, thu_tu) VALUES (?, 'Màu sắc', 'mau_sac', 0)", sp);
+        long den = tao.them(
+                "INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri, ma_mau, thu_tu) VALUES (?, 'Đen', '#000000', 0)", mau);
+        long bac = tao.them(
+                "INSERT INTO gia_tri_tuy_chon (tuy_chon_id, gia_tri, thu_tu) VALUES (?, 'Bạc', 1)", mau);
         long btDen = tao.bienThe(sp, "WH-DEN-" + h, 8_000_000, 9_000_000L, 3);
         long btBac = tao.bienThe(sp, "WH-BAC-" + h, 7_500_000, null, 0);
         long btAn = tao.bienThe(sp, "WH-AN-" + h, 1_000, null, 9);

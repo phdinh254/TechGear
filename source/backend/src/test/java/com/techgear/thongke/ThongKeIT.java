@@ -19,12 +19,12 @@ class ThongKeIT extends KiemThuQuanTri {
     /** Đơn đặt lúc {@code luc} (giờ VN) gồm (sản phẩm, số lượng, đơn giá) ; trả id đơn. */
     long don(String trangThai, String luc, long sp, int soLuong, long donGia) {
         long tong = soLuong * donGia;
-        long id = jdbc.queryForObject("""
+        long id = tao.them("""
                 INSERT INTO don_hang (ma_don_hang, ten_nguoi_nhan, email, so_dien_thoai, dia_chi_giao_hang, tam_tinh,
                                       tong_tien, phuong_thuc_thanh_toan, trang_thai, created_at)
-                VALUES (?, 'A', 'a@vi-du.vn', '0912345678', 'HN', ?, ?, 'cod', ?, CAST(? AS timestamptz)) RETURNING id
-                """, Long.class, "DH" + TaoDuLieuSanPham.hauTo().toUpperCase().substring(0, 8) + "TK", tong, tong, trangThai,
-                luc + "+07");
+                VALUES (?, 'A', 'a@vi-du.vn', '0912345678', 'HN', ?, ?, 'cod', ?, CAST(? AS DATETIME))
+                """, "DH" + TaoDuLieuSanPham.hauTo().toUpperCase().substring(0, 8) + "TK", tong, tong, trangThai,
+                luc);
         jdbc.update("""
                 INSERT INTO chi_tiet_don_hang (don_hang_id, san_pham_id, ten_san_pham, sku, don_gia, so_luong, thanh_tien)
                 VALUES (?, ?, (SELECT ten FROM san_pham WHERE id = ?), 'SKU', ?, ?, ?)

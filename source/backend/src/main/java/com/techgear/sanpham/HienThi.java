@@ -26,7 +26,7 @@ public final class HienThi {
 
     /** Các giá trị tùy chọn của biến thể {@code bt} nối bằng " / " (VD "Đen / 2m"); NULL nếu không có tùy chọn. */
     public static final String PHAN_LOAI = """
-            (SELECT string_agg(gt.gia_tri, ' / ' ORDER BY tc.thu_tu, tc.id)
+            (SELECT GROUP_CONCAT(gt.gia_tri ORDER BY tc.thu_tu, tc.id SEPARATOR ' / ')
              FROM bien_the_gia_tri btg
              JOIN gia_tri_tuy_chon gt ON gt.id = btg.gia_tri_tuy_chon_id
              JOIN tuy_chon tc ON tc.id = gt.tuy_chon_id

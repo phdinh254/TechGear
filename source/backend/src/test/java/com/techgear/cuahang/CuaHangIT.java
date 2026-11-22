@@ -40,9 +40,9 @@ class CuaHangIT extends KiemThuTichHop {
         jdbc.update("""
                 INSERT INTO banner (tieu_de, hinh_anh, thu_tu, hien_thi, bat_dau_luc, ket_thuc_luc) VALUES
                   ('Không giới hạn', '/uploads/banner/a.png', 2, TRUE, NULL, NULL),
-                  ('Đang chạy', '/uploads/banner/b.png', 1, TRUE, now() - interval '1 day', now() + interval '1 day'),
-                  ('Chưa tới giờ', '/uploads/banner/c.png', 0, TRUE, now() + interval '1 hour', NULL),
-                  ('Đã hết hạn', '/uploads/banner/d.png', 0, TRUE, NULL, now() - interval '1 hour'),
+                  ('Đang chạy', '/uploads/banner/b.png', 1, TRUE, now() - INTERVAL 1 DAY, now() + INTERVAL 1 DAY),
+                  ('Chưa tới giờ', '/uploads/banner/c.png', 0, TRUE, now() + INTERVAL 1 HOUR, NULL),
+                  ('Đã hết hạn', '/uploads/banner/d.png', 0, TRUE, NULL, now() - INTERVAL 1 HOUR),
                   ('Đang tắt', '/uploads/banner/e.png', 0, FALSE, NULL, NULL)
                 """);
 
