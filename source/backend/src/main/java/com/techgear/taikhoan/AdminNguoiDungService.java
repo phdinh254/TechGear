@@ -43,8 +43,7 @@ public class AdminNguoiDungService {
         StringBuilder where = new StringBuilder();
         Map<String, Object> ts = new HashMap<>();
         if (tuKhoa != null && !tuKhoa.isBlank()) {
-            where.append(" AND (lower(nd.email) = lower(:goc) OR nd.so_dien_thoai = :goc")
-                    .append(" OR lower(unaccent(nd.ho_ten)) LIKE '%' || lower(unaccent(:tuKhoa)) || '%')");
+            where.append(" AND (nd.email = :goc OR nd.so_dien_thoai = :goc OR nd.ho_ten LIKE CONCAT('%', :tuKhoa, '%'))");
             ts.put("goc", tuKhoa.trim());
             ts.put("tuKhoa", HienThi.thoatLike(tuKhoa.trim()));
         }

@@ -1,5 +1,6 @@
 package com.techgear.taikhoan;
 
+import com.techgear.chung.ThoiGian;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -9,7 +10,7 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -42,10 +43,10 @@ class DatLaiMatKhauIT extends KiemThuTaiKhoan {
                 .andExpect(jsonPath("$.thongBao").value(DA_GUI));
     }
 
-    void taoMa(String email, String ma, String hetHan) {
+    void taoMa(String email, String ma, int hetHanSauPhut) {
         suaCsdl("INSERT INTO ma_dat_lai_mat_khau (nguoi_dung_id, ma_bam, het_han_luc) "
-                + "SELECT id, encode(sha256(convert_to(?, 'UTF8')), 'hex'), now() + ?::interval FROM nguoi_dung WHERE email = ?",
-                ma, hetHan, email);
+                + "SELECT id, SHA2(?, 256), now() + INTERVAL ? MINUTE FROM nguoi_dung WHERE email = ?",
+                ma, hetHanSauPhut, email);
     }
 
     @Test
@@ -66,8 +67,9 @@ class DatLaiMatKhauIT extends KiemThuTaiKhoan {
                 "SELECT ma_bam, het_han_luc, da_su_dung FROM ma_dat_lai_mat_khau WHERE nguoi_dung_id = ?", idCua(email));
         assertEquals(sha256(ma), dong.get("ma_bam"));
         assertEquals(false, dong.get("da_su_dung"));
-        OffsetDateTime hetHan = ((java.sql.Timestamp) dong.get("het_han_luc")).toInstant().atOffset(java.time.ZoneOffset.UTC);
-        long phut = Duration.between(OffsetDateTime.now(), hetHan).toMinutes();
+        // DATETIME lưu giờ Việt Nam
+        LocalDateTime hetHan = (LocalDateTime) dong.get("het_han_luc");
+        long phut = Duration.between(LocalDateTime.now(ThoiGian.VIET_NAM), hetHan).toMinutes();
         assertTrue(phut >= 14 && phut <= 15, "hết hạn sau 15 phút: " + phut);
     }
 
@@ -91,8 +93,8 @@ class DatLaiMatKhauIT extends KiemThuTaiKhoan {
         String email = emailMoi();
         dangKy(email);
         String tokenCu = tokenCu(idCua(email));
-        taoMa(email, "ma-thu-1", "10 minutes");
-        taoMa(email, "ma-thu-2", "10 minutes");
+        taoMa(email, "ma-thu-1", 10);
+        taoMa(email, "ma-thu-2", 10);
 
         mvc.perform(post("/api/auth/dat-lai-mat-khau").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"ma\":\"ma-thu-1\",\"matKhauMoi\":\"matkhaumoi789\"}"))
@@ -118,7 +120,7 @@ class DatLaiMatKhauIT extends KiemThuTaiKhoan {
     void maHetHanHoacKhongTonTaiLa400() throws Exception {
         String email = emailMoi();
         dangKy(email);
-        taoMa(email, "ma-het-han", "-1 minute");
+        taoMa(email, "ma-het-han", -1);
         for (String ma : new String[]{"ma-het-han", "ma-khong-co"}) {
             mvc.perform(post("/api/auth/dat-lai-mat-khau").contentType(MediaType.APPLICATION_JSON)
                             .content("{\"ma\":\"%s\",\"matKhauMoi\":\"matkhaumoi789\"}".formatted(ma)))

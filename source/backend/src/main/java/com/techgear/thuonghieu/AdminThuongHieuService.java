@@ -1,6 +1,7 @@
 package com.techgear.thuonghieu;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.techgear.chung.Csdl;
 import com.techgear.chung.SlugService;
 import com.techgear.chung.loi.ApiException;
 import jakarta.validation.constraints.NotBlank;
@@ -37,7 +38,7 @@ class AdminThuongHieuService {
 
     private static final String CHON = """
             SELECT th.id, th.ten, th.slug, th.logo, th.mo_ta, th.hien_thi,
-                   (SELECT count(*) FROM san_pham sp WHERE sp.thuong_hieu_id = th.id AND sp.deleted_at IS NULL)::int
+                   (SELECT count(*) FROM san_pham sp WHERE sp.thuong_hieu_id = th.id AND sp.deleted_at IS NULL)
                        AS so_san_pham
             FROM thuong_hieu th WHERE th.deleted_at IS NULL
             """;
@@ -56,12 +57,12 @@ class AdminThuongHieuService {
         String moTa = req.moTa() == null || req.moTa().isBlank() ? null : req.moTa().trim();
         boolean hienThi = req.hienThi() != null ? req.hienThi() : cu == null || cu.hienThi();
         if (cu == null) {
-            id = jdbc.sql("""
+            id = Csdl.themLayId(jdbc.sql("""
                             INSERT INTO thuong_hieu (ten, slug, logo, mo_ta, hien_thi)
-                            VALUES (:ten, :slug, :logo, :moTa, :hienThi) RETURNING id
+                            VALUES (:ten, :slug, :logo, :moTa, :hienThi)
                             """)
                     .param("ten", req.ten().trim()).param("slug", slug).param("logo", logo).param("moTa", moTa)
-                    .param("hienThi", hienThi).query(Long.class).single();
+                    .param("hienThi", hienThi));
         } else {
             jdbc.sql("""
                             UPDATE thuong_hieu SET ten = :ten, slug = :slug, logo = :logo, mo_ta = :moTa,

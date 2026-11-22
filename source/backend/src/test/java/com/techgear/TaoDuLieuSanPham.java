@@ -1,6 +1,8 @@
 package com.techgear;
 
+import com.techgear.chung.Csdl;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 import java.util.UUID;
 
@@ -19,39 +21,40 @@ public class TaoDuLieuSanPham {
     }
 
     public long danhMuc(String ten, String slug, Long chaId, int thuTu, boolean hienThi) {
-        return jdbc.queryForObject("""
-                INSERT INTO danh_muc (ten, slug, danh_muc_cha_id, thu_tu, hien_thi) VALUES (?, ?, ?, ?, ?) RETURNING id
-                """, Long.class, ten, slug, chaId, thuTu, hienThi);
+        return them("""
+                INSERT INTO danh_muc (ten, slug, danh_muc_cha_id, thu_tu, hien_thi) VALUES (?, ?, ?, ?, ?)
+                """, ten, slug, chaId, thuTu, hienThi);
     }
 
     public long thuongHieu(String ten, String slug, boolean hienThi) {
-        return jdbc.queryForObject("""
-                INSERT INTO thuong_hieu (ten, slug, hien_thi) VALUES (?, ?, ?) RETURNING id
-                """, Long.class, ten, slug, hienThi);
+        return them("""
+                INSERT INTO thuong_hieu (ten, slug, hien_thi) VALUES (?, ?, ?)
+                """, ten, slug, hienThi);
     }
 
     /** Sản phẩm đang bật, chưa có biến thể (chưa hiển thị cho tới khi thêm biến thể). */
     public long sanPham(String ten, String slug, long danhMucId, Long thuongHieuId) {
-        return jdbc.queryForObject("""
-                INSERT INTO san_pham (ten, slug, danh_muc_id, thuong_hieu_id) VALUES (?, ?, ?, ?) RETURNING id
-                """, Long.class, ten, slug, danhMucId, thuongHieuId);
+        return them("""
+                INSERT INTO san_pham (ten, slug, danh_muc_id, thuong_hieu_id) VALUES (?, ?, ?, ?)
+                """, ten, slug, danhMucId, thuongHieuId);
     }
 
     /** Thêm biến thể đang bán và cập nhật giá hiển thị của sản phẩm = biến thể rẻ nhất. */
     public long bienThe(long sanPhamId, String sku, long giaBan, Long giaGoc, int ton) {
-        long id = jdbc.queryForObject("""
-                INSERT INTO bien_the (san_pham_id, sku, gia_ban, gia_goc, so_luong_ton) VALUES (?, ?, ?, ?, ?) RETURNING id
-                """, Long.class, sanPhamId, sku, giaBan, giaGoc, ton);
+        long id = them("""
+                INSERT INTO bien_the (san_pham_id, sku, gia_ban, gia_goc, so_luong_ton) VALUES (?, ?, ?, ?, ?)
+                """, sanPhamId, sku, giaBan, giaGoc, ton);
         capNhatGiaHienThi(sanPhamId);
         return id;
     }
 
     public void capNhatGiaHienThi(long sanPhamId) {
         jdbc.update("""
-                UPDATE san_pham sp SET gia_ban = r.gia_ban, gia_goc = r.gia_goc
-                FROM (SELECT gia_ban, gia_goc FROM bien_the
+                UPDATE san_pham sp
+                JOIN (SELECT gia_ban, gia_goc FROM bien_the
                       WHERE san_pham_id = ? AND hien_thi AND deleted_at IS NULL
                       ORDER BY gia_ban, id LIMIT 1) r
+                SET sp.gia_ban = r.gia_ban, sp.gia_goc = r.gia_goc
                 WHERE sp.id = ?
                 """, sanPhamId, sanPhamId);
     }
@@ -70,5 +73,10 @@ public class TaoDuLieuSanPham {
 
     public void sua(String sql, Object... thamSo) {
         jdbc.update(sql, thamSo);
+    }
+
+    /** INSERT với tham số theo vị trí, trả id vừa sinh. */
+    public long them(String sql, Object... thamSo) {
+        return Csdl.themLayId(JdbcClient.create(jdbc).sql(sql).params(thamSo));
     }
 }

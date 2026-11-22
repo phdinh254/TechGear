@@ -1,6 +1,7 @@
 package com.techgear.cuahang;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.techgear.chung.Csdl;
 import com.techgear.chung.loi.ApiException;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -71,11 +72,11 @@ public class AdminCuaHangService {
         cot.put("batDau", req.batDauLuc());
         cot.put("ketThuc", req.ketThucLuc());
         if (cu == null) {
-            id = jdbc.sql("""
+            id = Csdl.themLayId(jdbc.sql("""
                             INSERT INTO banner (tieu_de, hinh_anh, lien_ket, thu_tu, hien_thi, bat_dau_luc, ket_thuc_luc)
-                            VALUES (:tieuDe, :hinhAnh, :lienKet, :thuTu, :hienThi, :batDau, :ketThuc) RETURNING id
+                            VALUES (:tieuDe, :hinhAnh, :lienKet, :thuTu, :hienThi, :batDau, :ketThuc)
                             """)
-                    .params(cot).query(Long.class).single();
+                    .params(cot));
         } else {
             cot.put("id", id);
             jdbc.sql("""

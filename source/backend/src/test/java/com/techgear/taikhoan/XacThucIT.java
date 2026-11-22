@@ -119,7 +119,7 @@ class XacThucIT extends KiemThuTaiKhoan {
     void tokenPhatHanhTruocLanDoiMatKhauBiTuChoi() throws Exception {
         String email = emailMoi();
         dangKy(email);
-        suaCsdl("UPDATE nguoi_dung SET doi_mat_khau_luc = now() - interval '30 seconds' WHERE email = ?", email);
+        suaCsdl("UPDATE nguoi_dung SET doi_mat_khau_luc = now() - INTERVAL 30 SECOND WHERE email = ?", email);
         String tokenCu = tokenCu(idCua(email));
         mvc.perform(get("/api/auth/toi").header("Authorization", "Bearer " + tokenCu))
                 .andExpect(status().isUnauthorized())
