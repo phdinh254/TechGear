@@ -1,4 +1,4 @@
-# TechGear – Website thương mại điện tử bán phụ kiện công nghệ
+# Xây dựng website bán phụ kiện công nghê - TechGear
 
 Nhóm sinh viên thực hiện:
 
