@@ -21,7 +21,8 @@ public class ThongKeService {
 
     public enum Theo { ngay, thang }
 
-    private static final String NGAY_VN = "(dh.created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date";
+    /** created_at lưu giờ Việt Nam nên ngày đặt là phần ngày của nó. */
+    private static final String NGAY_VN = "DATE(dh.created_at)";
     private static final List<String> TRANG_THAI = List.of("cho_xac_nhan", "da_xac_nhan", "dang_giao", "hoan_thanh", "da_huy");
 
     private final JdbcClient jdbc;
@@ -46,16 +47,23 @@ public class ThongKeService {
         if (theo == Theo.thang && ChronoUnit.MONTHS.between(tu.withDayOfMonth(1), den.withDayOfMonth(1)) >= 60) {
             throw ApiException.yeuCauKhongHopLe("Thống kê theo tháng tối đa 60 tháng");
         }
-        String buoc = theo == Theo.ngay ? "day" : "month";
-        String dinhDang = theo == Theo.ngay ? "YYYY-MM-DD" : "YYYY-MM";
+        String buoc = theo == Theo.ngay ? "DAY" : "MONTH";
+        String dinhDang = theo == Theo.ngay ? "%Y-%m-%d" : "%Y-%m";
+        // Mốc = ngày, hoặc ngày đầu tháng; CTE đệ quy sinh đủ các mốc từ :tu tới :den
+        String moc = theo == Theo.ngay ? "CAST(%s AS DATE)" : "CAST(DATE_FORMAT(%s, '%%Y-%%m-01') AS DATE)";
         return jdbc.sql("""
-                        SELECT to_char(m.moc, '%s') AS moc, coalesce(sum(dh.tong_tien), 0) AS doanh_thu, count(dh.id) AS so_don
-                        FROM generate_series(date_trunc('%s', CAST(:tu AS date)), CAST(:den AS date), interval '1 %s') AS m(moc)
+                        WITH RECURSIVE m (moc) AS (
+                            SELECT %s
+                            UNION ALL
+                            SELECT moc + INTERVAL 1 %s FROM m WHERE moc + INTERVAL 1 %s <= CAST(:den AS DATE)
+                        )
+                        SELECT DATE_FORMAT(m.moc, '%s') AS moc, coalesce(sum(dh.tong_tien), 0) AS doanh_thu, count(dh.id) AS so_don
+                        FROM m
                         LEFT JOIN don_hang dh ON dh.trang_thai = 'hoan_thanh'
-                             AND date_trunc('%s', %s) = m.moc
-                             AND %s BETWEEN CAST(:tu AS date) AND CAST(:den AS date)
+                             AND %s = m.moc
+                             AND %s BETWEEN CAST(:tu AS DATE) AND CAST(:den AS DATE)
                         GROUP BY m.moc ORDER BY m.moc
-                        """.formatted(dinhDang, buoc, buoc, buoc, NGAY_VN, NGAY_VN))
+                        """.formatted(moc.formatted(":tu"), buoc, buoc, dinhDang, moc.formatted(NGAY_VN), NGAY_VN))
                 .param("tu", tu).param("den", den).query(Moc.class).list();
     }
 
