@@ -134,7 +134,6 @@ function CategoryBento({ danhMucs, dangTai }) {
                 <span className="bento-art" aria-hidden="true"><Icon name={iconTheoSlug(dm.slug)} size={i === 0 ? 180 : 112} strokeWidth={0.9} /></span>
               )}
               <div className="bento-body">
-                <span className="bento-count">{dm.danhMucCons?.length ? `${dm.danhMucCons.length} dòng sản phẩm` : 'Danh mục'}</span>
                 <h3>{dm.ten}</h3>
                 {dm.danhMucCons?.length > 0 && <p>{dm.danhMucCons.map((c) => c.ten).join(' · ')}</p>}
               </div>

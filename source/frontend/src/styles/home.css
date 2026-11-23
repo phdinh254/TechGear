@@ -77,18 +77,17 @@ a.brand-name:hover { color: var(--ink); }
 .bento-tile:has(.bento-img) { border-color: transparent; color: #fff; }
 .bento-tile:has(.bento-img)::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(8, 12, 24, 0.05) 0%, rgba(8, 12, 24, 0.35) 45%, rgba(8, 12, 24, 0.85) 100%); pointer-events: none; }
 .bento-tile:has(.bento-img) h3 { color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
-.bento-tile:has(.bento-img) p, .bento-tile:has(.bento-img) .bento-count { color: rgba(255, 255, 255, 0.82); }
+.bento-tile:has(.bento-img) p { color: rgba(255, 255, 255, 0.82); }
 .bento-tile:has(.bento-img) .bento-arrow { background: rgba(255, 255, 255, 0.92); color: var(--ink); }
 .bento-tile:has(.bento-img):hover .bento-arrow { background: var(--blue-500); color: #fff; }
 .bento-body { max-width: 34ch; }
-.bento-count { display: inline-block; margin-bottom: var(--sp-2); color: var(--muted); font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 .bento-tile h3 { margin: 0 0 6px; font-size: var(--fs-lg); letter-spacing: -0.02em; }
 .bento-tile p { margin: 0; color: var(--muted); font-size: var(--fs-sm); }
 .bento-arrow { position: absolute; top: var(--sp-5); left: var(--sp-5); display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); color: var(--ink); transition: background var(--dur), color var(--dur), transform var(--dur) var(--ease-out); }
 .bento-tile:hover .bento-arrow { background: var(--blue-500); color: #fff; transform: rotate(-45deg); }
 .bento-tile-feature { background: radial-gradient(90% 80% at 80% 15%, var(--navy-600) 0%, var(--navy-900) 65%); border-color: transparent; color: #fff; }
 .bento-tile-feature h3 { color: #fff; font-size: var(--fs-xl); }
-.bento-tile-feature p, .bento-tile-feature .bento-count { color: rgba(255, 255, 255, 0.62); }
+.bento-tile-feature p { color: rgba(255, 255, 255, 0.62); }
 .bento-tile-feature .bento-art { top: 32px; right: 32px; color: rgba(255, 255, 255, 0.14); }
 .bento-tile-feature:hover .bento-art { color: rgba(91, 140, 255, 0.5); }
 .bento-tile-feature .bento-arrow { background: rgba(255, 255, 255, 0.1); color: #fff; }
