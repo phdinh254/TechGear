@@ -22,5 +22,36 @@ services:
       timeout: 3s
       retries: 20
 
+  # Cả backend + frontend trong Docker (chỉ khi bật profile app): docker compose --profile app up -d --build
+  # Chạy profile dev của Spring (dữ liệu mẫu, khóa JWT/VNPay giả) – chỉ để kiểm tra trên máy cá nhân, không dùng triển khai thật.
+  backend:
+    profiles: [app]
+    build: ./source/backend
+    container_name: techgear-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:mysql://mysql:3306/techgear
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "8080:8080"
+    volumes:
+      - techgear-uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Trình duyệt gọi backend qua http://localhost:8080 nên frontend giữ cổng 5173 cho khớp CORS mặc định
+  frontend:
+    profiles: [app]
+    build:
+      context: ./source/frontend
+      dockerfile: ../../docker/frontend.Dockerfile
+    container_name: techgear-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
   techgear-mysqldata:
+  techgear-uploads:
