@@ -4,13 +4,27 @@ import { useAuth } from '../context/AuthContext.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import '../styles/admin.css';
 
-const MUC_CHINH = [
-  { to: '/admin/danh-muc', nhan: 'Danh mục' },
-  { to: '/admin/thuong-hieu', nhan: 'Thương hiệu' },
-  { to: '/admin/san-pham', nhan: 'Sản phẩm' },
-  { to: '/admin/ton-kho', nhan: 'Tồn kho' },
+const NHOM_MENU = [
+  { tieuDe: null, muc: [
+    { to: '/admin/tong-quan', nhan: 'Tổng quan' },
+    { to: '/admin/don-hang', nhan: 'Đơn hàng' },
+  ] },
+  { tieuDe: 'Sản phẩm', muc: [
+    { to: '/admin/san-pham', nhan: 'Sản phẩm' },
+    { to: '/admin/danh-muc', nhan: 'Danh mục' },
+    { to: '/admin/thuong-hieu', nhan: 'Thương hiệu' },
+    { to: '/admin/ton-kho', nhan: 'Tồn kho' },
+  ] },
+  { tieuDe: 'Bán hàng', muc: [
+    { to: '/admin/ma-giam-gia', nhan: 'Mã giảm giá' },
+    { to: '/admin/banner', nhan: 'Banner' },
+    { to: '/admin/danh-gia', nhan: 'Đánh giá' },
+  ] },
+  { tieuDe: 'Hệ thống', muc: [
+    { to: '/admin/nguoi-dung', nhan: 'Người dùng' },
+    { to: '/admin/cai-dat', nhan: 'Cấu hình' },
+  ] },
 ];
-const MUC_SAU = ['Đơn hàng', 'Mã giảm giá', 'Banner', 'Cấu hình', 'Người dùng', 'Đánh giá', 'Tổng quan'];
 
 export default function AdminLayout() {
   const { nguoiDung, dangXuat } = useAuth();
@@ -42,9 +56,12 @@ export default function AdminLayout() {
           </button>
         </div>
         <nav className="admin-nav">
-          {MUC_CHINH.map((m) => <NavLink key={m.to} to={m.to}>{m.nhan}</NavLink>)}
-          <p className="admin-nav-label">Đợt sau</p>
-          {MUC_SAU.map((nhan) => <span key={nhan} className="admin-nav-disabled" aria-disabled="true">{nhan}</span>)}
+          {NHOM_MENU.map((nhom) => (
+            <div key={nhom.tieuDe || 'chinh'} className="admin-nav-group">
+              {nhom.tieuDe && <p className="admin-nav-label">{nhom.tieuDe}</p>}
+              {nhom.muc.map((m) => <NavLink key={m.to} to={m.to}>{m.nhan}</NavLink>)}
+            </div>
+          ))}
         </nav>
         <div className="admin-sidebar-foot">
           <Link to="/">Về cửa hàng</Link>

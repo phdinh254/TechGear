@@ -46,6 +46,44 @@ const adminApi = {
     dieuChinh: (bienTheId, duLieu) => axiosClient.post(`/admin/bien-the/${bienTheId}/dieu-chinh`, duLieu),
     lichSu: (bienTheId, trang = 0) => axiosClient.get('/admin/kho/lich-su', { params: { bienTheId, trang } }),
   },
+  donHang: {
+    timKiem: (thamSo) => axiosClient.get('/admin/don-hang', { params: thamSo }),
+    // Trả { don, ghiChuQuanTri?, nguoiDungId?, trangThaiTiepTheo, thanhToans }; 3 API sửa bên dưới trả lại đúng dạng này
+    layChiTiet: (ma) => axiosClient.get(`/admin/don-hang/${ma}`),
+    doiTrangThai: (ma, trangThai, ghiChu) => axiosClient.patch(`/admin/don-hang/${ma}/trang-thai`, { trangThai, ghiChu: ghiChu || null }),
+    doiThanhToan: (ma, trangThaiThanhToan) => axiosClient.patch(`/admin/don-hang/${ma}/thanh-toan`, { trangThaiThanhToan }),
+    luuGhiChu: (ma, ghiChuQuanTri) => axiosClient.patch(`/admin/don-hang/${ma}/ghi-chu`, { ghiChuQuanTri: ghiChuQuanTri || null }),
+  },
+  maGiamGia: {
+    timKiem: (thamSo) => axiosClient.get('/admin/ma-giam-gia', { params: thamSo }),
+    tao: (duLieu) => axiosClient.post('/admin/ma-giam-gia', duLieu),
+    capNhat: (id, duLieu) => axiosClient.put(`/admin/ma-giam-gia/${id}`, duLieu),
+    xoa: (id) => axiosClient.delete(`/admin/ma-giam-gia/${id}`),
+  },
+  banner: {
+    layTatCa: () => axiosClient.get('/admin/banner'),
+    tao: (duLieu) => axiosClient.post('/admin/banner', duLieu),
+    capNhat: (id, duLieu) => axiosClient.put(`/admin/banner/${id}`, duLieu),
+    xoa: (id) => axiosClient.delete(`/admin/banner/${id}`),
+  },
+  caiDat: {
+    layTatCa: () => axiosClient.get('/admin/cai-dat'),
+    luu: (giaTriTheoKhoa) => axiosClient.put('/admin/cai-dat', giaTriTheoKhoa),
+  },
+  nguoiDung: {
+    timKiem: (thamSo) => axiosClient.get('/admin/nguoi-dung', { params: thamSo }),
+    doiTrangThai: (id, trangThai) => axiosClient.patch(`/admin/nguoi-dung/${id}/trang-thai`, { trangThai }),
+  },
+  danhGia: {
+    timKiem: (thamSo) => axiosClient.get('/admin/danh-gia', { params: thamSo }),
+    doiTrangThai: (id, trangThai) => axiosClient.patch(`/admin/danh-gia/${id}`, { trangThai }),
+    xoa: (id) => axiosClient.delete(`/admin/danh-gia/${id}`),
+  },
+  thongKe: {
+    doanhThu: (tu, den, theo = 'ngay') => axiosClient.get('/admin/thong-ke/doanh-thu', { params: { tu, den, theo } }),
+    donHang: (tu, den) => axiosClient.get('/admin/thong-ke/don-hang', { params: { tu, den } }),
+    banChay: (tu, den, gioiHan = 5) => axiosClient.get('/admin/thong-ke/ban-chay', { params: { tu, den, gioiHan } }),
+  },
   async taiAnh(file, thuMuc) {
     const form = new FormData();
     form.append('file', file);
