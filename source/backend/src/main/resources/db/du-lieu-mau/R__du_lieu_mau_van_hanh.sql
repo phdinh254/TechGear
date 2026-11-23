@@ -1,4 +1,4 @@
--- Dữ liệu mẫu vận hành – chỉ profile dev: khách hàng, đơn hàng (đủ trạng thái, COD/VNPay), thanh toán, lịch sử đơn/kho,
+-- Dữ liệu mẫu vận hành – chỉ profile dev: khách hàng, đơn hàng (đủ trạng thái, COD/PayOS), thanh toán, lịch sử đơn/kho,
 -- đánh giá, giỏ hàng, yêu thích. Chạy sau R__du_lieu_mau_san_pham.sql (Flyway chạy file R__ theo thứ tự tên).
 -- Chỉ nạp khi chưa có đơn hàng nào; muốn nạp lại từ đầu: docker compose down -v.
 -- Khách mẫu: mật khẩu chung Khach@123; ngo.long@example.com bị khóa.
@@ -105,56 +105,56 @@ nap: BEGIN
         ('ly.huy@example.com', 'Lý Gia Huy', '0987654322', '66 Cách Mạng Tháng Tám, Phường Bàn Cờ, Thành phố Hồ Chí Minh');
 
     -- stt, đặt cách đây (ngày, phút), email khách, trạng thái cuối, thanh toán, mã giảm giá, dòng "SKU*số lượng;...",
-    -- kiểu: NULL bình thường | khach_huy | qt_huy (sau khi xác nhận) | tu_huy (VNPay quá hạn) | hoan_tien (VNPay đã trả, quản trị hủy)
-    --       | lan2 (VNPay lần 1 thất bại, lần 2 thành công); ghi chú hủy; ghi chú của khách
+    -- kiểu: NULL bình thường | khach_huy | qt_huy (sau khi xác nhận) | tu_huy (PayOS quá hạn) | hoan_tien (PayOS đã trả, quản trị hủy)
+    --       | lan2 (PayOS lần 1 thất bại, lần 2 thành công); ghi chú hủy; ghi chú của khách
     CREATE TEMPORARY TABLE don_mau (stt INT PRIMARY KEY, ngay INT, phut INT, email VARCHAR(150), trang_thai VARCHAR(20),
                                     pttt VARCHAR(10), ma_giam VARCHAR(50), dong VARCHAR(500), kieu VARCHAR(20),
                                     ghi_chu_huy VARCHAR(500), ghi_chu VARCHAR(500));
     INSERT INTO don_mau VALUES
         (1, 91, 200, 'nguyen.lan@example.com', 'hoan_thanh', 'cod', NULL, 'LOG-K380*1;UGR-AC3A*2', NULL, NULL, NULL),
-        (2, 89, 320, 'tran.minh@example.com', 'hoan_thanh', 'vnpay', 'GIAM10', 'SSG-PB10K*1;UGR-AC3A*1', NULL, NULL, NULL),
+        (2, 89, 320, 'tran.minh@example.com', 'hoan_thanh', 'payos', 'GIAM10', 'SSG-PB10K*1;UGR-AC3A*1', NULL, NULL, NULL),
         (3, 87, 150, 'le.huong@example.com', 'hoan_thanh', 'cod', NULL, 'LOG-M331-DO*1', NULL, NULL, 'Giao giờ hành chính'),
-        (4, 86, 480, 'pham.duc@example.com', 'hoan_thanh', 'vnpay', NULL, 'SNY-CH510*1;LOG-M331-DEN*1', NULL, NULL, NULL),
+        (4, 86, 480, 'pham.duc@example.com', 'hoan_thanh', 'payos', NULL, 'SNY-CH510*1;LOG-M331-DEN*1', NULL, NULL, NULL),
         (5, 84, 260, 'phan.hong@example.com', 'hoan_thanh', 'cod', NULL, 'SSG-25W*2', NULL, NULL, NULL),
         (6, 78, 90, 'vo.mai@example.com', 'da_huy', 'cod', NULL, 'JBL-CHG4-XANH*1', 'khach_huy', 'Đổi ý, muốn chọn màu khác', NULL),
         (7, 76, 400, 'dang.khoa@example.com', 'hoan_thanh', 'cod', 'MOILAN1', 'SSG-S22U-TPU*1;UGR-AC3A*1', NULL, NULL, NULL),
-        (8, 74, 210, 'bui.thao@example.com', 'hoan_thanh', 'vnpay', NULL, 'SSG-BUDS2P-TRANG*1', NULL, NULL, NULL),
+        (8, 74, 210, 'bui.thao@example.com', 'hoan_thanh', 'payos', NULL, 'SSG-BUDS2P-TRANG*1', NULL, NULL, NULL),
         (9, 72, 330, 'hoang.tuan@example.com', 'hoan_thanh', 'cod', 'GIAM50K', 'JBL-CHG4-DEN*1', NULL, NULL, 'Gọi trước khi giao'),
-        (10, 69, 120, 'nguyen.lan@example.com', 'hoan_thanh', 'vnpay', NULL, 'BAS-CC60-2M*2;SSG-25W*1', NULL, NULL, NULL),
-        (11, 64, 500, 'do.ngoc@example.com', 'da_huy', 'vnpay', NULL, 'XMI-PB10K-PRO*1', 'tu_huy', NULL, NULL),
+        (10, 69, 120, 'nguyen.lan@example.com', 'hoan_thanh', 'payos', NULL, 'BAS-CC60-2M*2;SSG-25W*1', NULL, NULL, NULL),
+        (11, 64, 500, 'do.ngoc@example.com', 'da_huy', 'payos', NULL, 'XMI-PB10K-PRO*1', 'tu_huy', NULL, NULL),
         (12, 63, 280, 'tran.minh@example.com', 'hoan_thanh', 'cod', NULL, 'XMI-PB10K-PRO*1;BAS-CC60-1M*1', NULL, NULL, NULL),
-        (13, 61, 190, 'khach@techgear.vn', 'hoan_thanh', 'vnpay', 'GIAM10', 'SSG-KCL-A04E*1;SSG-BUDS2P-DEN*1', NULL, NULL, NULL),
+        (13, 61, 190, 'khach@techgear.vn', 'hoan_thanh', 'payos', 'GIAM10', 'SSG-KCL-A04E*1;SSG-BUDS2P-DEN*1', NULL, NULL, NULL),
         (14, 59, 360, 'le.huong@example.com', 'hoan_thanh', 'cod', NULL, 'JBL-GO2-XANH*1', NULL, NULL, NULL),
         (15, 57, 100, 'ngo.long@example.com', 'da_huy', 'cod', NULL, 'JBL-GO2-DEN*3', 'qt_huy',
          'Gọi 3 lần không liên lạc được khách', NULL),
-        (16, 54, 230, 'pham.duc@example.com', 'hoan_thanh', 'vnpay', NULL, 'UGR-PRIV16*2;LOG-M331-DEN*1', NULL, NULL, NULL),
+        (16, 54, 230, 'pham.duc@example.com', 'hoan_thanh', 'payos', NULL, 'UGR-PRIV16*2;LOG-M331-DEN*1', NULL, NULL, NULL),
         (17, 51, 420, 'vo.mai@example.com', 'hoan_thanh', 'cod', 'MOILAN1', 'JBL-GO2-DEN*1', NULL, NULL, NULL),
-        (18, 49, 140, 'ly.huy@example.com', 'hoan_thanh', 'vnpay', NULL, 'LOG-G304*1', NULL, NULL, NULL),
+        (18, 49, 140, 'ly.huy@example.com', 'hoan_thanh', 'payos', NULL, 'LOG-G304*1', NULL, NULL, NULL),
         (19, 44, 300, 'bui.thao@example.com', 'hoan_thanh', 'cod', NULL, 'SNY-XB13*1;UGR-AC3A*1', NULL, NULL, NULL),
-        (20, 42, 250, 'hoang.tuan@example.com', 'da_huy', 'vnpay', NULL, 'LOG-K380*1', 'hoan_tien',
-         'Khách đổi ý sau khi thanh toán, đã hoàn tiền qua VNPay', NULL),
+        (20, 42, 250, 'hoang.tuan@example.com', 'da_huy', 'payos', NULL, 'LOG-K380*1', 'hoan_tien',
+         'Khách đổi ý sau khi thanh toán, đã hoàn tiền chuyển khoản', NULL),
         (21, 39, 180, 'nguyen.lan@example.com', 'hoan_thanh', 'cod', NULL, 'ANK-PL3-1M*1;SSG-25W*1', NULL, NULL, NULL),
-        (22, 36, 440, 'dang.khoa@example.com', 'hoan_thanh', 'vnpay', 'GIAM10', 'LOG-G304*1;LOG-M331-DO*1', NULL, NULL, NULL),
+        (22, 36, 440, 'dang.khoa@example.com', 'hoan_thanh', 'payos', 'GIAM10', 'LOG-G304*1;LOG-M331-DO*1', NULL, NULL, NULL),
         (23, 33, 160, 'do.ngoc@example.com', 'hoan_thanh', 'cod', NULL, 'JBL-CHG4-DEN*1', NULL, NULL, NULL),
-        (24, 29, 350, 'tran.minh@example.com', 'hoan_thanh', 'vnpay', NULL, 'ANK-NANO65-DEN*1;UGR-AC3A*1', NULL, NULL, NULL),
+        (24, 29, 350, 'tran.minh@example.com', 'hoan_thanh', 'payos', NULL, 'ANK-NANO65-DEN*1;UGR-AC3A*1', NULL, NULL, NULL),
         (25, 27, 220, 'khach@techgear.vn', 'hoan_thanh', 'cod', 'MOILAN1', 'APL-20W*1', NULL, NULL, NULL),
-        (26, 24, 310, 'le.huong@example.com', 'hoan_thanh', 'vnpay', NULL, 'UGR-CC100-1M*2', 'lan2', NULL, NULL),
+        (26, 24, 310, 'le.huong@example.com', 'hoan_thanh', 'payos', NULL, 'UGR-CC100-1M*2', 'lan2', NULL, NULL),
         (27, 21, 130, 'phan.hong@example.com', 'da_huy', 'cod', NULL, 'SSG-PB10K*1', 'qt_huy', 'Khách gọi điện xin hủy', NULL),
         (28, 19, 270, 'pham.duc@example.com', 'hoan_thanh', 'cod', NULL, 'BAS-GAN5-100-DEN*1', NULL, NULL, NULL),
-        (29, 17, 390, 'vo.mai@example.com', 'hoan_thanh', 'vnpay', 'GIAM50K', 'ANK-PC10K-XANH*1;ANK-NANO65-TRANG*1', NULL, NULL, NULL),
+        (29, 17, 390, 'vo.mai@example.com', 'hoan_thanh', 'payos', 'GIAM50K', 'ANK-PC10K-XANH*1;ANK-NANO65-TRANG*1', NULL, NULL, NULL),
         (30, 15, 110, 'bui.thao@example.com', 'hoan_thanh', 'cod', NULL, 'ANK-PC10K-DEN*1', NULL, NULL, NULL),
-        (31, 13, 340, 'hoang.tuan@example.com', 'hoan_thanh', 'vnpay', NULL, 'LOG-MX3S-DEN*1', NULL, NULL, NULL),
-        (32, 11, 200, 'nguyen.lan@example.com', 'hoan_thanh', 'vnpay', 'GIAM10', 'APL-APP2*1', NULL, NULL, NULL),
+        (31, 13, 340, 'hoang.tuan@example.com', 'hoan_thanh', 'payos', NULL, 'LOG-MX3S-DEN*1', NULL, NULL, NULL),
+        (32, 11, 200, 'nguyen.lan@example.com', 'hoan_thanh', 'payos', 'GIAM10', 'APL-APP2*1', NULL, NULL, NULL),
         (33, 9, 450, 'dang.khoa@example.com', 'hoan_thanh', 'cod', NULL, 'SNY-XM5-DEN*1', NULL, NULL, NULL),
         (34, 7, 170, 'do.ngoc@example.com', 'hoan_thanh', 'cod', NULL, 'SSG-BUDS3-TRANG*1', NULL, NULL, NULL),
         (35, 6, 290, 'tran.minh@example.com', 'da_huy', 'cod', NULL, 'APL-SC17*1', 'khach_huy', NULL, NULL),
-        (36, 5, 380, 'khach@techgear.vn', 'hoan_thanh', 'vnpay', NULL, 'LOG-MXMINI-TAC*1', NULL, NULL, NULL),
+        (36, 5, 380, 'khach@techgear.vn', 'hoan_thanh', 'payos', NULL, 'LOG-MXMINI-TAC*1', NULL, NULL, NULL),
         (37, 3, 240, 'le.huong@example.com', 'dang_giao', 'cod', NULL, 'LOG-M705*1;UGR-CAR30*1', NULL, NULL, NULL),
-        (38, 2, 330, 'pham.duc@example.com', 'dang_giao', 'vnpay', NULL, 'UGR-OP16P*1;APL-SC17*1', NULL, NULL, NULL),
+        (38, 2, 330, 'pham.duc@example.com', 'dang_giao', 'payos', NULL, 'UGR-OP16P*1;APL-SC17*1', NULL, NULL, NULL),
         (39, 1, 400, 'vo.mai@example.com', 'da_xac_nhan', 'cod', 'GIAM10', 'SNY-XM5-BAC*1', NULL, NULL, NULL),
-        (40, 1, 150, 'ly.huy@example.com', 'da_xac_nhan', 'vnpay', NULL, 'LOG-MX3S-XAM*1', NULL, NULL, NULL),
+        (40, 1, 150, 'ly.huy@example.com', 'da_xac_nhan', 'payos', NULL, 'LOG-MX3S-XAM*1', NULL, NULL, NULL),
         (41, 0, 180, 'bui.thao@example.com', 'cho_xac_nhan', 'cod', NULL, 'KEY-K8-RED*1', NULL, NULL, NULL),
-        (42, 0, 60, 'hoang.tuan@example.com', 'cho_xac_nhan', 'vnpay', NULL, 'KEY-K8-BROWN*1;LOG-M331-DEN*1', NULL, NULL, NULL),
+        (42, 0, 60, 'hoang.tuan@example.com', 'cho_xac_nhan', 'payos', NULL, 'KEY-K8-BROWN*1;LOG-M331-DEN*1', NULL, NULL, NULL),
         (43, 0, 30, 'nguyen.lan@example.com', 'cho_xac_nhan', 'cod', 'MOILAN1', 'UGR-CC100-2M*1', NULL, NULL, NULL);
 
     OPEN don_cur;
@@ -256,7 +256,7 @@ nap: BEGIN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = loi;
         END IF;
         SET tt_tt = CASE WHEN d_kieu = 'hoan_tien' THEN 'da_hoan_tien'
-                         WHEN d_pttt = 'vnpay' AND NOT (d_kieu <=> 'tu_huy') THEN 'da_thanh_toan'
+                         WHEN d_pttt = 'payos' AND NOT (d_kieu <=> 'tu_huy') THEN 'da_thanh_toan'
                          WHEN d_pttt = 'cod' AND d_trang_thai = 'hoan_thanh' THEN 'da_thanh_toan'
                          ELSE 'chua_thanh_toan' END;
 
@@ -318,7 +318,7 @@ nap: BEGIN
             INSERT INTO lich_su_don_hang (don_hang_id, trang_thai, ghi_chu, nguoi_thuc_hien_id, created_at)
             VALUES (v_don_id, 'da_huy',
                     coalesce(d_ghi_chu_huy, CASE d_kieu WHEN 'khach_huy' THEN 'Khách hủy đơn'
-                                                        WHEN 'tu_huy' THEN 'Quá 30 phút chưa thanh toán VNPay, hệ thống tự hủy'
+                                                        WHEN 'tu_huy' THEN 'Quá 30 phút chưa thanh toán PayOS, hệ thống tự hủy'
                                                         ELSE 'Quản trị hủy đơn' END),
                     CASE d_kieu WHEN 'khach_huy' THEN nguoi_dat WHEN 'tu_huy' THEN NULL ELSE quan_tri END, t_huy);
         END IF;
@@ -326,27 +326,28 @@ nap: BEGIN
             UPDATE don_hang SET ghi_chu_quan_tri = 'Đã thu tiền COD' WHERE id = v_don_id;
         END IF;
 
-        -- Giao dịch VNPay: mã tham chiếu = mã đơn + 2 chữ số lần thử (như ThanhToanService)
-        IF d_pttt = 'vnpay' THEN
+        -- Giao dịch PayOS: orderCode = id đơn × 100 + lần thử (như ThanhToanService); dữ liệu phản hồi dạng webhook PayOS
+        IF d_pttt = 'payos' THEN
             IF d_kieu = 'lan2' THEN
                 INSERT INTO thanh_toan (don_hang_id, phuong_thuc, so_tien, ma_tham_chieu, trang_thai, du_lieu_phan_hoi,
                                         thanh_toan_luc, created_at, updated_at)
-                VALUES (v_don_id, 'vnpay', tong, CONCAT(ma_don, '01'), 'that_bai',
-                        JSON_OBJECT('vnp_Amount', CAST(tong * 100 AS CHAR), 'vnp_BankCode', 'NCB',
-                                    'vnp_ResponseCode', '24', 'vnp_TransactionStatus', '02', 'vnp_TxnRef', CONCAT(ma_don, '01')),
-                        t + INTERVAL 2 MINUTE, t + INTERVAL 1 MINUTE, t + INTERVAL 2 MINUTE);
+                VALUES (v_don_id, 'payos', tong, CAST(v_don_id * 100 + 1 AS CHAR), 'that_bai',
+                        JSON_OBJECT('orderCode', v_don_id * 100 + 1, 'amount', tong, 'amountPaid', 0, 'status', 'CANCELLED'),
+                        NULL, t + INTERVAL 1 MINUTE, t + INTERVAL 2 MINUTE);
             END IF;
             INSERT INTO thanh_toan (don_hang_id, phuong_thuc, so_tien, ma_tham_chieu, ma_giao_dich, trang_thai,
                                     du_lieu_phan_hoi, thanh_toan_luc, created_at, updated_at)
-            SELECT v_don_id, 'vnpay', tong, CONCAT(ma_don, CASE WHEN d_kieu = 'lan2' THEN '02' ELSE '01' END),
-                   CASE WHEN d_kieu = 'tu_huy' THEN NULL ELSE CAST(14000000 + d_stt * 7919 AS CHAR) END,
+            SELECT v_don_id, 'payos', tong, CAST(v_don_id * 100 + CASE WHEN d_kieu = 'lan2' THEN 2 ELSE 1 END AS CHAR),
+                   CASE WHEN d_kieu = 'tu_huy' THEN NULL ELSE CONCAT('FT', 26000000 + d_stt * 7919) END,
                    CASE WHEN d_kieu = 'tu_huy' THEN 'cho_xu_ly' ELSE 'thanh_cong' END,
                    CASE WHEN d_kieu = 'tu_huy' THEN NULL
-                        ELSE JSON_OBJECT('vnp_Amount', CAST(tong * 100 AS CHAR), 'vnp_BankCode', 'NCB', 'vnp_CardType', 'ATM',
-                                         'vnp_PayDate', DATE_FORMAT(t + INTERVAL 3 MINUTE, '%Y%m%d%H%i%s'),
-                                         'vnp_ResponseCode', '00', 'vnp_TransactionNo', CAST(14000000 + d_stt * 7919 AS CHAR),
-                                         'vnp_TransactionStatus', '00',
-                                         'vnp_TxnRef', CONCAT(ma_don, CASE WHEN d_kieu = 'lan2' THEN '02' ELSE '01' END)) END,
+                        ELSE JSON_OBJECT('code', '00', 'desc', 'success', 'success', TRUE,
+                                         'data', JSON_OBJECT(
+                                             'orderCode', v_don_id * 100 + CASE WHEN d_kieu = 'lan2' THEN 2 ELSE 1 END,
+                                             'amount', tong, 'description', CONCAT('TG', v_don_id * 100 + CASE WHEN d_kieu = 'lan2' THEN 2 ELSE 1 END),
+                                             'reference', CONCAT('FT', 26000000 + d_stt * 7919),
+                                             'transactionDateTime', DATE_FORMAT(t + INTERVAL 3 MINUTE, '%Y-%m-%d %H:%i:%s'),
+                                             'currency', 'VND', 'code', '00', 'desc', 'Thành công')) END,
                    CASE WHEN d_kieu = 'tu_huy' THEN NULL ELSE t + INTERVAL 3 MINUTE END,
                    t + INTERVAL 2 MINUTE, t + INTERVAL 3 MINUTE;
         END IF;
@@ -429,14 +430,14 @@ nap: BEGIN
         SET loi = LEFT(CONCAT('Tạm tính lệch tổng dòng: ', loi), 128);
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = loi;
     END IF;
-    -- 3. Đơn đã thanh toán/hoàn tiền qua VNPay phải có giao dịch thành công khớp số tiền; COD hoàn thành đã thu tiền
+    -- 3. Đơn đã thanh toán/hoàn tiền qua PayOS phải có giao dịch thành công khớp số tiền; COD hoàn thành đã thu tiền
     SELECT GROUP_CONCAT(dh.ma_don_hang SEPARATOR ', ') INTO loi
     FROM don_hang dh
-    WHERE (dh.phuong_thuc_thanh_toan = 'vnpay' AND dh.trang_thai_thanh_toan <> 'chua_thanh_toan'
+    WHERE (dh.phuong_thuc_thanh_toan = 'payos' AND dh.trang_thai_thanh_toan <> 'chua_thanh_toan'
            AND NOT EXISTS (SELECT 1 FROM thanh_toan tt WHERE tt.don_hang_id = dh.id AND tt.trang_thai = 'thanh_cong'
                            AND tt.so_tien = dh.tong_tien))
        OR (dh.phuong_thuc_thanh_toan = 'cod' AND dh.trang_thai = 'hoan_thanh' AND dh.trang_thai_thanh_toan <> 'da_thanh_toan')
-       OR (dh.phuong_thuc_thanh_toan = 'vnpay' AND dh.trang_thai IN ('da_xac_nhan', 'dang_giao', 'hoan_thanh')
+       OR (dh.phuong_thuc_thanh_toan = 'payos' AND dh.trang_thai IN ('da_xac_nhan', 'dang_giao', 'hoan_thanh')
            AND dh.trang_thai_thanh_toan <> 'da_thanh_toan');
     IF loi IS NOT NULL THEN
         SET loi = LEFT(CONCAT('Trạng thái thanh toán sai: ', loi), 128);

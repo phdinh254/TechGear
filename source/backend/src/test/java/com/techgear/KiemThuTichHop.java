@@ -1,8 +1,10 @@
 package com.techgear;
 
+import com.techgear.thanhtoan.PayOsClientGia;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.mysql.MySQLContainer;
@@ -17,9 +19,12 @@ import org.testcontainers.mysql.MySQLContainer;
 @TestPropertySource(properties = {
         "app.jwt.khoa-bi-mat=khoa-kiem-thu-tich-hop-du-dai-32-ky-tu-0123456789",
         "app.upload.thu-muc=target/uploads-it",
-        "app.vnpay.tmn-code=TESTCODE",
-        "app.vnpay.hash-secret=khoa-kiem-thu-vnpay"
+        "app.payos.client-id=TEST-CLIENT",
+        "app.payos.api-key=TEST-KEY",
+        "app.payos.checksum-key=khoa-kiem-thu-payos",
+        "app.payos.gia-lap=false"
 })
+@Import(PayOsClientGia.class)
 public abstract class KiemThuTichHop {
 
     @ServiceConnection

@@ -5,6 +5,8 @@ import { layThongBaoLoi } from '../api/axiosClient';
 import { useAuth } from '../context/AuthContext.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import OrderView from '../components/OrderView.jsx';
+import PayNowButton from '../components/PayNowButton.jsx';
+import { coTheThanhToanNgay } from '../utils/thanhToan.js';
 import Breadcrumb from '../components/ui/Breadcrumb.jsx';
 import Icon from '../components/ui/Icon.jsx';
 
@@ -55,7 +57,7 @@ export default function OrderLookupPage() {
         </form>
       </div>
 
-      {donHang && <div className="lookup-result" aria-live="polite"><OrderView donHang={donHang} /></div>}
+      {donHang && <div className="lookup-result" aria-live="polite"><OrderView donHang={donHang} hanhDong={coTheThanhToanNgay(donHang) && <PayNowButton maDonHang={donHang.maDonHang} />} /></div>}
     </div>
   );
 }

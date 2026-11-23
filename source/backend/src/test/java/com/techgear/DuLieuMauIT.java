@@ -42,6 +42,12 @@ class DuLieuMauIT {
         assertEquals(5, dem("SELECT count(DISTINCT trang_thai) FROM don_hang"));
         assertEquals(27, dem("SELECT count(*) FROM danh_gia"));
         assertEquals(1, dem("SELECT count(*) FROM nguoi_dung WHERE trang_thai = 'bi_khoa'"));
+        // Thanh toán trực tuyến là PayOS: orderCode = id đơn × 100 + lần thử, dữ liệu phản hồi dạng webhook PayOS
+        assertEquals(19, dem("SELECT count(*) FROM don_hang WHERE phuong_thuc_thanh_toan = 'payos'"));
+        assertEquals(0, dem("SELECT count(*) FROM don_hang WHERE phuong_thuc_thanh_toan NOT IN ('cod', 'payos')"));
+        assertEquals(0, dem("SELECT count(*) FROM thanh_toan tt JOIN don_hang dh ON dh.id = tt.don_hang_id "
+                + "WHERE tt.phuong_thuc <> 'payos' OR tt.ma_tham_chieu NOT REGEXP '^[0-9]+$' OR tt.ma_tham_chieu DIV 100 <> dh.id "
+                + "OR JSON_EXTRACT(tt.du_lieu_phan_hoi, '$.data.orderCode') <> CAST(tt.ma_tham_chieu AS UNSIGNED)"));
     }
 
     private long dem(String sql) {

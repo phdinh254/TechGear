@@ -97,9 +97,9 @@ Trạng thái đơn hàng:
 
 [![Trạng thái đơn hàng](docs/thiet-ke/15_tt_don_hang.drawio.png)](docs/thiet-ke/15_tt_don_hang.drawio.png)
 
-### 8. Thanh toán VNPay
+### 8. Thanh toán PayOS
 
-[![Tuần tự thanh toán VNPay](docs/thiet-ke/16_td_thanh_toan_vnpay.drawio.png)](docs/thiet-ke/16_td_thanh_toan_vnpay.drawio.png)
+[![Tuần tự thanh toán PayOS](docs/thiet-ke/16_td_thanh_toan_payos.drawio.png)](docs/thiet-ke/16_td_thanh_toan_payos.drawio.png)
 
 Trạng thái thanh toán của đơn:
 
@@ -168,16 +168,22 @@ mvn spring-boot:run         # tự bật profile dev (kết nối CSDL ở trên
 ```
 - Swagger UI: `http://localhost:8080/swagger-ui.html` (bấm **Authorize**, dán token nhận được khi đăng nhập).
 - Dữ liệu mẫu (chỉ profile dev, nạp khi CSDL chưa có sản phẩm/đơn hàng; muốn nạp lại: `docker compose down -v`): 35 sản phẩm
-  có ảnh, 4 banner, 12 tài khoản, 43 đơn trong 90 ngày qua (đủ trạng thái, COD/VNPay), 27 đánh giá. Chi tiết:
+  có ảnh, 4 banner, 12 tài khoản, 43 đơn trong 90 ngày qua (đủ trạng thái, COD/PayOS), 27 đánh giá. Chi tiết:
   [`docs/bao-cao-cho-frontend.md`](docs/bao-cao-cho-frontend.md) mục 11. Ảnh là link Wikimedia Commons (cần internet),
   nguồn và giấy phép: [`docs/nguon-anh-mau.md`](docs/nguon-anh-mau.md).
 - Tài khoản mẫu: `admin@techgear.vn` / `Admin@123` (quản trị), `khach@techgear.vn` / `Khach@123` (khách hàng),
   10 khách `*@example.com` / `Khach@123` (`ngo.long@example.com` bị khóa).
 - Mã giảm giá mẫu: `GIAM10`, `GIAM50K`, `MOILAN1` (mỗi khách 1 lần), `HETHAN` (đã hết hạn).
 - Không chạy backend mà chỉ cần CSDL (VD để chấm/nộp bài): nạp `database/DB_TechGear.sql` vào CSDL trống, cách nạp ghi ở đầu file.
-- VNPay: dev dùng mã website và khóa giả (đủ để test IPN bằng Postman). Thanh toán thật trên sandbox: đặt `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` do sandbox.vnpayment.vn cấp.
+- PayOS (chuyển khoản / quét VietQR): khách thanh toán ngay trên trang `/thanh-toan/<mã đơn>` (khung PayOS nhúng bằng
+  `@payos/payos-checkout`, kèm đồng hồ 30 phút; tải lại trang dùng lại link cũ). Profile dev mặc định **giả lập** – bấm thanh toán là quay về trang kết quả với trạng thái
+  thành công, không cần tài khoản PayOS; webhook thử bằng Postman được ký bằng khóa checksum giả của dev.
+  Dùng PayOS thật (PayOS không có sandbox): tạo kênh thanh toán ở my.payos.vn, đặt `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`,
+  `PAYOS_CHECKSUM_KEY` vào file `source/backend/.env` (đã .gitignore, không commit; có khóa thì tự tắt giả lập) và đăng ký webhook `https://<miền-backend>/api/thanh-toan/payos/webhook`.
+  Chạy ở localhost PayOS không gọi được webhook, nhưng trang `/thanh-toan/ket-qua` vẫn tự hỏi PayOS nên đơn vẫn được ghi nhận.
 - Chưa cấu hình `MAIL_USERNAME` thì ở profile dev liên kết đặt lại mật khẩu được ghi ra log của backend thay vì gửi email (môi trường khác chỉ cảnh báo, không ghi liên kết).
-- Biến môi trường khi triển khai: xem `source/backend/.env.example` (bắt buộc `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
+- Biến môi trường: đặt trong hệ điều hành/IDE hoặc file `source/backend/.env` (backend tự đọc khi chạy từ thư mục
+  `source/backend`; chỉ ghi dòng cần đặt, vì dòng để trống sẽ ghi đè giá trị mặc định). Danh sách ở `source/backend/.env.example` (khi triển khai bắt buộc `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`).
 
 Kiểm thử:
 
@@ -203,7 +209,7 @@ Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env`
 docker compose --profile app up -d --build   # MySQL + backend (cổng 8080) + frontend nginx (cổng 5173)
 docker compose --profile app down            # dừng (thêm -v để xóa cả dữ liệu và ảnh upload)
 ```
-Mở `http://localhost:5173`. Backend chạy profile dev (dữ liệu mẫu, khóa JWT/VNPay giả) nên chỉ dùng để kiểm tra trên máy
+Mở `http://localhost:5173`. Backend chạy profile dev (dữ liệu mẫu, khóa JWT giả, PayOS giả lập) nên chỉ dùng để kiểm tra trên máy
 cá nhân. Cổng 8080 và 5173 phải trống (tắt `mvn spring-boot:run` / `npm run dev` trước). Ảnh upload lưu ở volume
 `techgear-uploads`. Dockerfile: `source/backend/Dockerfile`, `docker/frontend.Dockerfile`.
 
@@ -212,7 +218,7 @@ cá nhân. Cổng 8080 và 5173 phải trống (tắt `mvn spring-boot:run` / `n
 Đặc tả đầy đủ (dữ liệu gửi lên, trả về, mã lỗi): `docs/thiet-ke/dac-ta-api.md`. Backend mới giữ nguyên các API mà
 frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/auth/toi`, `/api/danh-muc`, `/api/thuong-hieu`,
 `/api/san-pham`, `/api/san-pham/noi-bat`, `/api/san-pham/{slug}`). Đã có: tài khoản (`/api/auth/**`, `/api/tai-khoan/**`), sản phẩm và cửa hàng (`/api/danh-muc`, `/api/thuong-hieu`,
-`/api/san-pham/**`, `/api/banner`, `/api/cai-dat`), giỏ hàng và yêu thích (`/api/gio-hang/**`, `/api/yeu-thich/**`), đơn hàng (`/api/don-hang/**`), thanh toán VNPay (`/api/thanh-toan/vnpay/**`), đánh giá (`/api/danh-gia/**`, `/api/san-pham/{slug}/danh-gia`), quản trị (`/api/admin/**`).
+`/api/san-pham/**`, `/api/banner`, `/api/cai-dat`), giỏ hàng và yêu thích (`/api/gio-hang/**`, `/api/yeu-thich/**`), đơn hàng (`/api/don-hang/**`), thanh toán PayOS (`/api/thanh-toan/payos/**`), đánh giá (`/api/danh-gia/**`, `/api/san-pham/{slug}/danh-gia`), quản trị (`/api/admin/**`).
 
 ## Tiến độ viết lại backend
 
@@ -225,7 +231,7 @@ frontend hiện đang gọi (`/api/auth/dang-ky`, `/api/auth/dang-nhap`, `/api/a
 | 4. Sản phẩm | Danh mục, thương hiệu, tìm kiếm/lọc, chi tiết, banner, cài đặt | Xong |
 | 5. Giỏ hàng | Giỏ hàng trên server, gộp giỏ, yêu thích | Xong |
 | 6. Đặt hàng | Mã giảm giá, phí vận chuyển, tồn kho, đơn hàng, hủy, tra cứu | Xong |
-| 7. Thanh toán | VNPay (sandbox) | Xong |
+| 7. Thanh toán | PayOS (chuyển khoản / VietQR), webhook, trang kết quả | Xong |
 | 8. Đánh giá | Đánh giá sản phẩm đã mua, chờ duyệt | Xong |
 | 9. Quản trị | Sản phẩm, kho, đơn hàng, khuyến mãi, người dùng, thống kê | Xong |
 | 10. Dữ liệu mẫu | Dữ liệu mẫu đầy đủ + file `database/DB_TechGear.sql` | Xong |

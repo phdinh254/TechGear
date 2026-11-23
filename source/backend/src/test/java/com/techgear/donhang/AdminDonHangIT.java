@@ -123,11 +123,11 @@ class AdminDonHangIT extends KiemThuQuanTri {
     }
 
     @Test
-    void donVnPayChuaTraKhongXacNhanDuocVaHoanTienSauKhiHuy() throws Exception {
-        String ma = datHang(khach, "vnpay", "");
+    void donPayOsChuaTraKhongXacNhanDuocVaHoanTienSauKhiHuy() throws Exception {
+        String ma = datHang(khach, "payos", "");
         doiTrangThai(ma, "da_xac_nhan")
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.thongBao").value("Đơn VNPay chưa thanh toán, chưa xác nhận được"));
+                .andExpect(jsonPath("$.thongBao").value("Đơn PayOS chưa thanh toán, chưa xác nhận được"));
         qt(patch("/api/admin/don-hang/" + ma + "/thanh-toan"), "{\"trangThaiThanhToan\":\"da_thanh_toan\"}")
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.thongBao").value("Không cập nhật được trạng thái thanh toán"));

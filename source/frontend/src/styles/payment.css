@@ -1,0 +1,36 @@
+/* Trang thanh toán PayOS nhúng (/thanh-toan/:maDonHang) – dùng lại .checkout-layout, .summary của checkout.css */
+.payment-page { padding-bottom: var(--sp-10); }
+.payment-page .checkout-top .muted { margin: 0; }
+.payment-page .checkout-top strong { color: var(--ink); }
+
+.payment-layout { grid-template-columns: minmax(0, 1fr) 380px; }
+
+.payment-card { display: grid; gap: var(--sp-3); padding: var(--sp-4); border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); }
+/* Thư viện payos-checkout đặt iframe cao 100% ô chứa nên ô cần chiều cao cố định */
+.payment-frame { height: 380px; overflow: hidden; border-radius: var(--r-md); background: var(--blue-50); }
+.payment-frame[hidden] { display: none; }
+.payment-frame iframe { display: block; border: 0; }
+.payment-frame-empty { display: grid; place-content: center; justify-items: center; gap: var(--sp-3); padding: var(--sp-6); color: var(--muted); text-align: center; }
+.payment-frame-empty p { max-width: 380px; margin: 0; }
+.payment-frame-empty strong { color: var(--ink); }
+.payment-frame-empty.is-expired { background: var(--danger-bg); }
+.payment-frame-empty.is-expired svg { color: var(--danger); }
+.payment-fallback { justify-self: center; color: var(--muted); font-size: var(--fs-sm); text-decoration: underline; }
+.payment-fallback:hover { color: var(--ink); }
+
+.payment-timer { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-5); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: var(--blue-50); color: var(--muted); font-size: var(--fs-sm); }
+.payment-timer strong { color: var(--ink); font-size: var(--fs-lg); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.payment-timer.is-warning { background: var(--warning-bg); }
+.payment-timer.is-warning strong { color: var(--warning); }
+.payment-timer.is-expired { background: var(--danger-bg); }
+.payment-timer.is-expired strong { color: var(--danger); }
+
+.payment-steps { display: grid; gap: var(--sp-3); margin: 0 0 var(--sp-5); padding: 0; list-style: none; counter-reset: buoc; color: var(--ink); font-size: var(--fs-sm); }
+.payment-steps li { display: grid; grid-template-columns: 24px 1fr; gap: var(--sp-3); align-items: start; counter-increment: buoc; }
+.payment-steps li::before { content: counter(buoc); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--surface); font-size: var(--fs-xs); font-weight: 600; }
+
+@media (max-width: 1023px) {
+  .payment-layout { grid-template-columns: 1fr; }
+  .payment-summary { position: static; }
+  .payment-frame { height: 400px; }
+}

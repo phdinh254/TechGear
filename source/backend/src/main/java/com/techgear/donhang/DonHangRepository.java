@@ -112,11 +112,11 @@ class DonHangRepository {
                 .param("ma", maDonHang).param("nd", nguoiDungId).query(DonKhoa.class).optional();
     }
 
-    /** Id các đơn VNPay chưa thanh toán đặt trước {@code moc} (chưa khóa). */
-    List<Long> donVnPayQuaHan(java.time.OffsetDateTime moc) {
+    /** Id các đơn PayOS chưa thanh toán đặt trước {@code moc} (chưa khóa). */
+    List<Long> donPayOsQuaHan(java.time.OffsetDateTime moc) {
         return jdbc.sql("""
                         SELECT id FROM don_hang
-                        WHERE phuong_thuc_thanh_toan = 'vnpay' AND trang_thai = 'cho_xac_nhan'
+                        WHERE phuong_thuc_thanh_toan = 'payos' AND trang_thai = 'cho_xac_nhan'
                           AND trang_thai_thanh_toan = 'chua_thanh_toan' AND created_at < :moc
                         ORDER BY id LIMIT 100
                         """)
@@ -124,10 +124,10 @@ class DonHangRepository {
     }
 
     /** Khóa lại một đơn quá hạn, kiểm lại điều kiện; bỏ qua nếu IPN/khách đang giữ khóa đơn. */
-    Optional<DonKhoa> khoaDonVnPayQuaHan(Long id, java.time.OffsetDateTime moc) {
+    Optional<DonKhoa> khoaDonPayOsQuaHan(Long id, java.time.OffsetDateTime moc) {
         return jdbc.sql("""
                         SELECT id, trang_thai, ma_giam_gia_id FROM don_hang
-                        WHERE id = :id AND phuong_thuc_thanh_toan = 'vnpay' AND trang_thai = 'cho_xac_nhan'
+                        WHERE id = :id AND phuong_thuc_thanh_toan = 'payos' AND trang_thai = 'cho_xac_nhan'
                           AND trang_thai_thanh_toan = 'chua_thanh_toan' AND created_at < :moc
                         FOR UPDATE SKIP LOCKED
                         """)
@@ -153,7 +153,7 @@ class DonHangRepository {
                 .param("id", donHangId).query(DongHoan.class).list();
     }
 
-    /** Hủy đơn đã thanh toán (VD VNPay trả trước khi quản trị xác nhận): ghi chú để quản trị hoàn tiền, như IPN đến trễ. */
+    /** Hủy đơn đã thanh toán (VD PayOS trả trước khi quản trị xác nhận): ghi chú để quản trị hoàn tiền, như IPN đến trễ. */
     void doiTrangThai(Long donHangId, TrangThaiDonHang trangThai) {
         jdbc.sql("""
                         UPDATE don_hang SET trang_thai = :tt, updated_at = now(),

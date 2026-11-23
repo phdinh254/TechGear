@@ -34,22 +34,23 @@ class ThanhToanRepository {
     void themGiaoDich(Long donHangId, long soTien, String maThamChieu) {
         jdbc.sql("""
                         INSERT INTO thanh_toan (don_hang_id, phuong_thuc, so_tien, ma_tham_chieu)
-                        VALUES (:dh, 'vnpay', :soTien, :ma)
+                        VALUES (:dh, 'payos', :soTien, :ma)
                         """)
                 .param("dh", donHangId).param("soTien", soTien).param("ma", maThamChieu).update();
     }
 
-    record GiaoDich(Long id, Long donHangId, String maDonHang, long soTien, String trangThai,
-                    String trangThaiThanhToan) {
+    record GiaoDich(Long id, Long donHangId, String maThamChieu, String maDonHang, long soTien, String trangThai,
+                    String trangThaiThanhToan, String trangThaiDon, String phuongThucThanhToan, OffsetDateTime ngayDat) {
     }
 
     private static final String CHON_GIAO_DICH = """
-            SELECT tt.id, tt.don_hang_id, dh.ma_don_hang, tt.so_tien, tt.trang_thai, dh.trang_thai_thanh_toan
+            SELECT tt.id, tt.don_hang_id, tt.ma_tham_chieu, dh.ma_don_hang, tt.so_tien, tt.trang_thai, dh.trang_thai_thanh_toan,
+                   dh.trang_thai AS trang_thai_don, dh.phuong_thuc_thanh_toan, dh.created_at AS ngay_dat
             FROM thanh_toan tt JOIN don_hang dh ON dh.id = tt.don_hang_id
             WHERE tt.ma_tham_chieu = :ma
             """;
 
-    /** Khóa giao dịch: hai IPN cùng mã tham chiếu đến cùng lúc chỉ một lần được ghi. */
+    /** Khóa giao dịch: webhook và trang kết quả cùng ghi một giao dịch thì chỉ một lần được ghi. */
     Optional<GiaoDich> khoaGiaoDich(String maThamChieu) {
         return jdbc.sql(CHON_GIAO_DICH + " FOR UPDATE OF tt").param("ma", maThamChieu).query(GiaoDich.class).optional();
     }
@@ -69,14 +70,23 @@ class ThanhToanRepository {
     }
 
     /** Đơn đã bị hủy (quá hạn, khách hủy) mà tiền vẫn về: giữ trạng thái hủy, ghi chú để quản trị hoàn tiền. */
-    void danhDauDaThanhToan(Long donHangId) {
+    /**
+     * Đơn đã bị hủy mà tiền vẫn về, hoặc đơn đã được trả bằng một link khác (khách trả hai lần): giữ trạng thái,
+     * ghi chú để quản trị hoàn tiền. ghi_chu_quan_tri gán TRƯỚC vì MySQL tính các phép gán từ trái sang phải.
+     */
+    void danhDauDaThanhToan(Long donHangId, String maThamChieu) {
         jdbc.sql("""
-                        UPDATE don_hang SET trang_thai_thanh_toan = 'da_thanh_toan', updated_at = now(),
-                               ghi_chu_quan_tri = CASE WHEN trang_thai = 'da_huy'
-                                   THEN concat_ws(' | ', ghi_chu_quan_tri, 'Đã nhận tiền VNPay sau khi đơn bị hủy – cần hoàn tiền')
-                                   ELSE ghi_chu_quan_tri END
+                        UPDATE don_hang SET
+                               ghi_chu_quan_tri = CASE
+                                   WHEN trang_thai = 'da_huy'
+                                   THEN concat_ws(' | ', ghi_chu_quan_tri, 'Đã nhận tiền PayOS sau khi đơn bị hủy – cần hoàn tiền')
+                                   WHEN trang_thai_thanh_toan = 'da_thanh_toan'
+                                   THEN concat_ws(' | ', ghi_chu_quan_tri,
+                                                  concat('Nhận tiền PayOS lần nữa (orderCode ', :ma, ') – cần hoàn tiền'))
+                                   ELSE ghi_chu_quan_tri END,
+                               trang_thai_thanh_toan = 'da_thanh_toan', updated_at = now()
                         WHERE id = :id
                         """)
-                .param("id", donHangId).update();
+                .param("id", donHangId).param("ma", maThamChieu).update();
     }
 }

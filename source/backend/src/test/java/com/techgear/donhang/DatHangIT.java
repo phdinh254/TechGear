@@ -116,15 +116,15 @@ class DatHangIT extends KiemThuDonHang {
     }
 
     @Test
-    void donVnPayTongTien0dPhaiChonCod() throws Exception {
+    void donPayOsTongTien0dPhaiChonCod() throws Exception {
         jdbc.update("UPDATE cai_dat SET gia_tri = '0' WHERE khoa = 'phi_van_chuyen'");
         long bt = bienThe("Cáp", 100_000, 5);
         long id = maGiamGia("Free-" + TaoDuLieuSanPham.hauTo(), "phan_tram", 100, 0, null, null, null);
         String ma = jdbc.queryForObject("SELECT ma FROM ma_giam_gia WHERE id = ?", String.class, id);
 
-        datHang(don(",\"maGiamGia\":\"" + ma + "\"", dong(bt, 1)).replace("\"cod\"", "\"vnpay\""))
+        datHang(don(",\"maGiamGia\":\"" + ma + "\"", dong(bt, 1)).replace("\"cod\"", "\"payos\""))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.thongBao").value("Đơn 0đ không cần thanh toán VNPay, vui lòng chọn thanh toán khi nhận hàng"));
+                .andExpect(jsonPath("$.thongBao").value("Đơn 0đ không cần thanh toán PayOS, vui lòng chọn thanh toán khi nhận hàng"));
         datHang(don(",\"maGiamGia\":\"" + ma + "\"", dong(bt, 1)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.tongTien").value(0));
@@ -201,10 +201,10 @@ class DatHangIT extends KiemThuDonHang {
         String ma = maDon(mvc.perform(ipNgauNhien(post("/api/don-hang/vang-lai"))
                         .header("Authorization", "Bearer token.da.het.han")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(don(",\"email\":\"" + emailKhach + "\",\"phuongThucThanhToan\":\"vnpay\"", dong(bt, 1))))
+                        .content(don(",\"email\":\"" + emailKhach + "\",\"phuongThucThanhToan\":\"payos\"", dong(bt, 1))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value(emailKhach.toLowerCase()))
-                .andExpect(jsonPath("$.phuongThucThanhToan").value("vnpay"))
+                .andExpect(jsonPath("$.phuongThucThanhToan").value("payos"))
                 .andExpect(jsonPath("$.coTheHuy").value(false)));
         assertThat(jdbc.queryForObject("SELECT nguoi_dung_id FROM don_hang WHERE ma_don_hang = ?", Long.class, ma)).isNull();
 

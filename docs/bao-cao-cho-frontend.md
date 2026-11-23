@@ -8,7 +8,7 @@ xong sẽ thêm một mục mới ở cuối. Chi tiết từng API (gửi lên,
 
 > **Phase 12:** frontend trên `main` (giao diện mới, trang quản trị) đã được nối với backend này: giỏ hàng, đặt hàng (đăng nhập
 > và vãng lai), đơn của tôi, tra cứu bằng email, yêu thích, đánh giá, quản trị danh mục, sản phẩm (lưu qua các API con), tồn kho.
-> Thanh toán VNPay vẫn đang tắt trên giao diện (lựa chọn bị vô hiệu ở trang thanh toán); API đã sẵn, xem mục 8.
+> Thanh toán trực tuyến dùng PayOS (đã nối cả giao diện: lựa chọn ở trang đặt hàng, trang kết quả, nút thanh toán lại), xem mục 8.
 
 ## 1. Chạy backend để thử
 
@@ -34,7 +34,7 @@ cd source/backend && mvn spring-boot:run
 | Banner, cấu hình cửa hàng | Xong (Phase 4) | API mới, frontend chưa có giao diện |
 | Giỏ hàng trên server, gộp giỏ khi đăng nhập, yêu thích | Xong (Phase 5) | API mới, frontend chưa dùng (giỏ hiện lưu `localStorage`, vẫn chạy bình thường) |
 | Tính thử, đặt hàng (đăng nhập + vãng lai), mã giảm giá, đơn của tôi, hủy, tra cứu | Xong (Phase 6) | API mới; nút "Đặt hàng" ở trang giỏ đang tắt, có thể nối ngay |
-| Thanh toán VNPay (sandbox) | Xong (Phase 7) | API mới; frontend cần thêm route `/thanh-toan/ket-qua` |
+| Thanh toán PayOS | Xong (Phase 7) | API mới; frontend đã có route `/thanh-toan/ket-qua` |
 | Đánh giá: viết, xem đánh giá đã duyệt, điểm trung bình ở chi tiết sản phẩm | Xong (Phase 8) | API mới; trường mới ở chi tiết sản phẩm không làm hỏng trang hiện tại |
 | Trang quản trị: danh mục, thương hiệu, sản phẩm, kho, đơn hàng, mã giảm giá, banner, cài đặt, người dùng, đánh giá, thống kê | Xong (Phase 9) | API mới; frontend chưa có trang quản trị (`laQuanTri` trong `AuthContext` đã có sẵn để ẩn/hiện menu) |
 | Dữ liệu mẫu đầy đủ: ảnh, banner, khách, đơn đủ trạng thái, đánh giá | Xong (Phase 10) | Có ngay khi chạy backend trên CSDL trống (mục 11) |
@@ -195,7 +195,7 @@ Hình dạng dữ liệu, cách tính tiền, thông báo lỗi mã giảm giá:
 | Sau khi đặt | Trả 201 + cả đơn | Hiện `maDonHang`. Khách đăng nhập: các biến thể vừa đặt đã tự bị xóa khỏi giỏ server, gọi lại `GET /gio-hang` |
 
 Thân đặt hàng: `{ dongs, tenNguoiNhan, soDienThoai, tinhThanh, phuongXa, diaChiChiTiet, email?, maGiamGia?,
-phuongThucThanhToan: "cod" | "vnpay", ghiChu? }`. Lỗi từng ô trả trong `loi` như các form khác.
+phuongThucThanhToan: "cod" | "payos", ghiChu? }`. Lỗi từng ô trả trong `loi` như các form khác.
 
 ### 7.2 Hành vi cần biết
 
@@ -206,7 +206,7 @@ phuongThucThanhToan: "cod" | "vnpay", ghiChu? }`. Lỗi từng ô trả trong `l
 | Phiên bản ngừng bán | 404 "Phiên bản sản phẩm không còn bán" |
 | Hai người cùng mua món cuối cùng | Đúng một người thành công, người kia nhận 409 hết hàng (đã có test tự động) |
 | Khách vãng lai đặt quá 10 đơn / 15 phút cùng một IP | 429 |
-| Đơn chọn `vnpay` | Đặt được, `trangThaiThanhToan` = `chua_thanh_toan`. Trang chuyển sang VNPay và tự hủy sau 30 phút làm ở Phase 7 |
+| Đơn chọn `payos` | Đặt được, `trangThaiThanhToan` = `chua_thanh_toan`. Trang chuyển tới `/thanh-toan/<mã đơn>` (khung PayOS nhúng); quá 30 phút chưa trả thì đơn tự hủy |
 
 ### 7.3 Đơn của tôi, hủy, tra cứu
 
@@ -221,36 +221,36 @@ phuongThucThanhToan: "cod" | "vnpay", ghiChu? }`. Lỗi từng ô trả trong `l
 - Trạng thái nên hiển thị: `cho_xac_nhan` Chờ xác nhận, `da_xac_nhan` Đã xác nhận, `dang_giao` Đang giao,
   `hoan_thanh` Hoàn thành, `da_huy` Đã hủy; thanh toán: `chua_thanh_toan`, `da_thanh_toan`, `da_hoan_tien`.
 
-## 8. Phase 7 – Thanh toán VNPay
+## 8. Phase 7 – Thanh toán PayOS
 
-Sơ đồ: [tuần tự thanh toán](thiet-ke/16_td_thanh_toan_vnpay.drawio.png), [trạng thái thanh toán](thiet-ke/17_tt_thanh_toan.drawio.png).
-Chi tiết: mục "Chi tiết thanh toán VNPay" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md) (làm theo tài liệu VNPay 2.1.0).
+Sơ đồ: [tuần tự thanh toán](thiet-ke/16_td_thanh_toan_payos.drawio.png), [trạng thái thanh toán](thiet-ke/17_tt_thanh_toan.drawio.png).
+Chi tiết: mục "Chi tiết thanh toán PayOS" trong [`dac-ta-api.md`](thiet-ke/dac-ta-api.md) (theo tài liệu payos.vn/docs).
+Thiết kế chuyển đổi cổng thanh toán: `docs/superpowers/specs/2026-11-23-thanh-toan-payos-design.md`.
 
-### 8.1 Việc của frontend
+### 8.1 Frontend đã làm
 
-| Bước | Làm gì |
+| Bước | Cách làm |
 |---|---|
-| Sau khi đặt đơn `vnpay` (201), hoặc ở trang chi tiết đơn khi `phuongThucThanhToan = vnpay`, `trangThaiThanhToan = chua_thanh_toan`, `trangThai = cho_xac_nhan` | Gọi `POST /thanh-toan/vnpay/{maDonHang}` (không cần token) → nhận `{ duongDan }` → `window.location.href = duongDan` |
-| Thêm route **`/thanh-toan/ket-qua`** (VNPay chuyển khách về đây kèm `?vnp_...`) | Gọi `GET /thanh-toan/vnpay/ket-qua` + **nguyên** `window.location.search`, hiện `thongBao`. `hopLe = false`: dữ liệu bị sửa, báo lỗi |
-| `thanhCong = true` mà `trangThaiThanhToan` vẫn `chua_thanh_toan` | IPN của VNPay chưa tới (thường vài giây): hiện "Đang xác nhận thanh toán", gọi lại sau 2–3 giây hoặc mở chi tiết đơn |
-| Thanh toán thất bại / khách hủy trên VNPay | Gọi lại `POST /thanh-toan/vnpay/{maDonHang}` để có liên kết mới (mỗi lần một mã giao dịch mới) |
+| Trang đặt hàng chọn "Chuyển khoản / quét mã QR qua PayOS" (ẩn khi `tinh-thu` trả `tongTien = 0`) | Đặt đơn (201) → `POST /thanh-toan/payos/{maDonHang}` (không cần token) → `{ duongDan }` → `window.location.assign(duongDan)`. Tạo link lỗi thì hiện màn đặt hàng thành công kèm nút "Thanh toán ngay" |
+| Chi tiết đơn / tra cứu đơn khi `phuongThucThanhToan = payos`, `trangThaiThanhToan = chua_thanh_toan`, `trangThai = cho_xac_nhan`, chưa quá 30 phút | Nút "Thanh toán ngay" (gọi lại API trên, mỗi lần một giao dịch mới) |
+| Route **`/thanh-toan/ket-qua/:maDonHang`** (PayOS chuyển khách về kèm `?orderCode=…&status=…`) | Gọi `GET /thanh-toan/payos/ket-qua?orderCode=&ma=<maDonHang>` rồi hiện theo `trangThai`: `thanh_cong` / `cho_xu_ly` (nút "Kiểm tra lại") / `that_bai` (nút "Thanh toán lại" khi `coTheThanhToanLai`); tiền về khi `trangThaiDon = da_huy` → báo cửa hàng sẽ hoàn tiền. `hopLe = false` → "Không tìm thấy giao dịch" |
 
 ### 8.2 Hành vi cần biết
 
 - Liên kết thanh toán hết hạn 30 phút sau lúc đặt đơn. Quá 35 phút chưa trả, hệ thống **tự hủy đơn** (hoàn kho, trả lượt mã)
-  và lịch sử đơn ghi "Quá 30 phút chưa thanh toán VNPay, hệ thống tự hủy". Nên hiện đồng hồ đếm ngược 30 phút.
-- 409 khi tạo liên kết: "Đơn hàng không thanh toán qua VNPay", "Đơn hàng đã được thanh toán", "Đơn hàng không còn chờ thanh toán",
-  "Đơn hàng đã quá hạn thanh toán". 503 "Chưa cấu hình VNPay" khi backend chưa có mã website VNPay.
-- Chỉ IPN (VNPay gọi thẳng backend) mới đổi trạng thái thanh toán; trang kết quả chỉ đọc. Vì vậy sửa query string trên trình
-  duyệt không làm đơn thành "đã thanh toán".
+  và lịch sử đơn ghi "Quá 30 phút chưa thanh toán PayOS, hệ thống tự hủy".
+- 409 khi tạo liên kết: "Đơn hàng không thanh toán qua PayOS", "Đơn hàng đã được thanh toán", "Đơn hàng không còn chờ thanh toán",
+  "Đơn hàng đã quá hạn thanh toán". 502 khi PayOS từ chối; 503 "Chưa cấu hình PayOS" khi backend chưa có khóa (và không giả lập).
+- Tham số PayOS gắn vào URL kết quả không có chữ ký nên **không** dùng để ghi nhận: backend tự hỏi PayOS (hoặc nhận webhook).
+  Sửa query string trên trình duyệt không làm đơn thành "đã thanh toán".
 
 ### 8.3 Thử trên máy
 
-- Dev mặc định dùng mã website và khóa **giả**: trang VNPay sẽ báo lỗi. Muốn thanh toán thật trên sandbox: đăng ký tài khoản
-  tại sandbox.vnpayment.vn, chạy backend với `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` được cấp (thẻ test do VNPay cung cấp trong
-  email đăng ký).
-- IPN cần địa chỉ HTTPS công khai (khai báo trong cổng quản lý của VNPay), nên trên máy cá nhân VNPay không gọi được IPN về
-  `localhost`. Để thử trọn luồng không cần VNPay: thư mục Postman "05 Thanh toán" giả lập IPN đã ký bằng khóa dev.
+- Profile dev mặc định **giả lập PayOS**: bấm thanh toán là về thẳng trang kết quả với trạng thái thành công, đơn thành "đã thanh toán".
+- PayOS không có sandbox. Muốn thử PayOS thật: tạo kênh thanh toán ở my.payos.vn, chạy backend với `PAYOS_CLIENT_ID`,
+  `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY` (có khóa thì tự tắt giả lập), thanh toán số tiền nhỏ bằng app ngân hàng.
+- Webhook cần địa chỉ HTTPS công khai (đăng ký ở my.payos.vn), trên máy cá nhân PayOS không gọi được về `localhost` – trang kết
+  quả vẫn tự hỏi PayOS nên đơn vẫn được ghi nhận. Thư mục Postman "05 Thanh toán" giả lập webhook đã ký bằng khóa dev.
 
 ## 9. Phase 8 – Đánh giá sản phẩm
 
@@ -301,7 +301,7 @@ Chi tiết từng API: các mục "Chi tiết API quản trị" (9.1 → 9.5) tr
   Muốn giữ đường dẫn cũ thì gửi lại `slug` hiện tại.
 - Xóa danh mục, thương hiệu, sản phẩm, biến thể, mã giảm giá là xóa mềm: biến mất khỏi danh sách, đơn cũ vẫn xem được.
 - SKU, mã giảm giá lưu chữ hoa. Giá hiển thị của sản phẩm tự cập nhật theo biến thể rẻ nhất, không cần gửi.
-- Đơn VNPay chưa thanh toán không xác nhận được (chỉ hủy). Đơn COD chuyển "hoàn thành" thì tự thành "đã thanh toán".
+- Đơn PayOS chưa thanh toán không xác nhận được (chỉ hủy). Đơn COD chuyển "hoàn thành" thì tự thành "đã thanh toán".
   Hoàn tiền chỉ đánh dấu được sau khi đơn đã thanh toán bị hủy.
 
 Sơ đồ: [quản trị xử lý đơn](thiet-ke/19_hd_qt_xu_ly_don_hang.drawio.png), [quản trị thêm sản phẩm](thiet-ke/20_hd_qt_them_san_pham.drawio.png).
@@ -318,7 +318,7 @@ Chạy backend profile dev trên CSDL trống là có sẵn dữ liệu để d�
 | Biến thể hết hàng (`BAS-GAN5-100-TRANG`, `XMI-PB20K`) và sắp hết | Nút "Hết hàng", cảnh báo tồn kho ở trang quản trị |
 | 4 banner: 3 đang chạy, 1 đã hết hạn (chỉ thấy ở trang quản trị) | Slider trang chủ |
 | 10 khách `*@example.com` / `Khach@123`, trong đó `ngo.long@example.com` bị khóa (đăng nhập trả 403) | Trang quản trị người dùng |
-| 43 đơn trong 90 ngày qua: đủ 5 trạng thái, COD và VNPay (đã trả, thất bại rồi trả lại, quá hạn tự hủy, hoàn tiền), có đơn vãng lai | Đơn của tôi, tra cứu, trang quản trị đơn, thống kê doanh thu theo ngày/tháng, bán chạy |
+| 43 đơn trong 90 ngày qua: đủ 5 trạng thái, COD và PayOS (đã trả, thất bại rồi trả lại, quá hạn tự hủy, hoàn tiền), có đơn vãng lai | Đơn của tôi, tra cứu, trang quản trị đơn, thống kê doanh thu theo ngày/tháng, bán chạy |
 | 27 đánh giá (đã duyệt, chờ duyệt, đã ẩn) | Sao + đánh giá ở chi tiết sản phẩm, trang duyệt đánh giá |
 | `khach@techgear.vn`: 3 đơn, 2 địa chỉ, giỏ hàng 2 dòng, 3 sản phẩm yêu thích | Đăng nhập là thấy ngay giỏ, yêu thích, lịch sử đơn |
 
@@ -328,9 +328,9 @@ Nguồn và giấy phép của từng ảnh: [`nguon-anh-mau.md`](nguon-anh-mau.
 ## 12. Phase 11 – Hành vi mới và hạn chế đã biết
 
 Hành vi mới (sau review bảo mật và review code):
-- `POST /don-hang` (và `/vang-lai`) chọn VNPay mà tổng tiền 0đ → 400 "Đơn 0đ không cần thanh toán VNPay, vui lòng chọn thanh
-  toán khi nhận hàng". Gợi ý: ẩn lựa chọn VNPay khi `tinh-thu` trả `tongTien = 0`.
-- Khách hoặc quản trị hủy đơn **đã thanh toán** (VNPay trả xong khi đơn còn chờ xác nhận) → đơn `da_huy`, vẫn
+- `POST /don-hang` (và `/vang-lai`) chọn PayOS mà tổng tiền 0đ → 400 "Đơn 0đ không cần thanh toán PayOS, vui lòng chọn thanh
+  toán khi nhận hàng". Trang đặt hàng khóa lựa chọn PayOS khi `tinh-thu` trả `tongTien = 0`.
+- Khách hoặc quản trị hủy đơn **đã thanh toán** (PayOS trả xong khi đơn còn chờ xác nhận) → đơn `da_huy`, vẫn
   `da_thanh_toan`, `ghiChuQuanTri` thêm "Đơn đã thanh toán bị hủy – cần hoàn tiền". Quản trị hoàn tiền xong thì
   `PATCH /admin/don-hang/{ma}/thanh-toan` `{ trangThaiThanhToan: "da_hoan_tien" }`.
 - Giới hạn số lần (đăng nhập sai, quên mật khẩu, tra cứu đơn, đặt hàng vãng lai) tính cả các request gửi song song.
@@ -338,7 +338,7 @@ Hành vi mới (sau review bảo mật và review code):
 Hạn chế đã biết (cố ý giữ, ghi lại để không bất ngờ):
 - `POST /don-hang/tinh-thu` là đường dẫn công khai nên backend bỏ qua token. Khách đã đăng nhập cần gửi kèm `email` của
   tài khoản thì kết quả kiểm lượt dùng mã "mỗi khách N lần" mới khớp lúc đặt hàng thật.
-- `POST /thanh-toan/vnpay/{ma}` công khai (khách vãng lai cần trả tiền). Ai biết mã đơn (6 ký tự ngẫu nhiên) có thể tạo thêm
+- `POST /thanh-toan/payos/{ma}` công khai (khách vãng lai cần trả tiền). Ai biết mã đơn (6 ký tự ngẫu nhiên) có thể tạo thêm
   liên kết thanh toán cho đơn đó, nhưng không xem được thông tin đơn và mỗi đơn tối đa 99 lần thử.
 - Sửa tùy chọn mà **đổi chéo** tên hai giá trị trong một lần gửi (VD Đen ↔ Trắng) → 409; đổi qua một tên tạm rồi sửa tiếp.
 - Bộ đếm giới hạn số lần lưu trong bộ nhớ một máy chủ (chạy nhiều máy chủ thì cần kho dùng chung).

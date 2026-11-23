@@ -208,7 +208,7 @@ DonHang        { maDonHang, trangThai, trangThaiThanhToan, phuongThucThanhToan, 
                  lichSu: [{ trangThai, ghiChu?, thoiGian }] }
 ```
 Giá trị liệt kê: `trangThai` `cho_xac_nhan` | `da_xac_nhan` | `dang_giao` | `hoan_thanh` | `da_huy`;
-`trangThaiThanhToan` `chua_thanh_toan` | `da_thanh_toan` | `da_hoan_tien`; `phuongThucThanhToan` `cod` | `vnpay`.
+`trangThaiThanhToan` `chua_thanh_toan` | `da_thanh_toan` | `da_hoan_tien`; `phuongThucThanhToan` `cod` | `payos`.
 
 Cách tính (mọi số tiền tính ở server từ giá hiện tại, không nhận giá từ frontend):
 - `tamTinh` = Σ đơn giá biến thể × số lượng. `tienGiamGia`: mã phần trăm = làm tròn xuống (`tamTinh` × % / 100), không vượt
@@ -224,7 +224,7 @@ tổng lượt, khách chưa hết lượt của mình (đếm đơn chưa hủy
 | API | Gửi lên | Trả về | Lỗi riêng |
 |---|---|---|---|
 | `POST /don-hang/tinh-thu` | `{ dongs, maGiamGia?, email? }` (`email` để kiểm lượt mỗi người) | 200 `TinhThu` (không lưu, không giữ hàng) | Như đặt hàng |
-| `POST /don-hang` | `{ dongs, ...NguoiNhan, maGiamGia?, phuongThucThanhToan, ghiChu? }`; email lấy từ tài khoản | 201 `DonHang`; các biến thể vừa đặt bị xóa khỏi giỏ server | 404 "Phiên bản sản phẩm không còn bán"; 409 "Sản phẩm X (phân loại) chỉ còn N trong kho" / "... đã hết hàng"; 400 mã giảm giá; 400 "Đơn 0đ không cần thanh toán VNPay, vui lòng chọn thanh toán khi nhận hàng" |
+| `POST /don-hang` | `{ dongs, ...NguoiNhan, maGiamGia?, phuongThucThanhToan, ghiChu? }`; email lấy từ tài khoản | 201 `DonHang`; các biến thể vừa đặt bị xóa khỏi giỏ server | 404 "Phiên bản sản phẩm không còn bán"; 409 "Sản phẩm X (phân loại) chỉ còn N trong kho" / "... đã hết hàng"; 400 mã giảm giá; 400 "Đơn 0đ không cần thanh toán PayOS, vui lòng chọn thanh toán khi nhận hàng" |
 | `POST /don-hang/vang-lai` | như trên + `email` (bắt buộc) | 201 `DonHang` | như trên; 429 khi một IP đặt quá 10 đơn / 15 phút |
 | `GET /don-hang` | `trangThai?`, `trang`, `kichThuoc` (1–50, mặc định 10) | 200 trang `DonHangTomTat`, mới nhất trước | |
 | `GET /don-hang/{maDonHang}` | – | 200 `DonHang` | 404 "Không tìm thấy đơn hàng" (kể cả đơn người khác) |
@@ -233,36 +233,49 @@ tổng lượt, khách chưa hết lượt của mình (đếm đơn chưa hủy
 
 Mã đơn: `DH` + `yyMMdd` (giờ Việt Nam) + 6 ký tự ngẫu nhiên trong `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`. Đặt hàng khóa dòng các
 biến thể theo thứ tự id (tránh khóa chéo) và dòng mã giảm giá, trừ kho trong cùng giao dịch, ghi `lich_su_ton_kho` và
-`lich_su_don_hang`. Hai người đặt cùng lúc món chỉ còn 1 thì đúng một người thành công. Đơn VNPay: tạo URL thanh toán và tự hủy
+`lich_su_don_hang`. Hai người đặt cùng lúc món chỉ còn 1 thì đúng một người thành công. Đơn PayOS: tạo link thanh toán và tự hủy
 sau 30 phút làm ở Phase 7.
 
-### 3.5 Thanh toán (`thanhtoan`) – Phase 7
+### 3.5 Thanh toán (`thanhtoan`) – Phase 7 (PayOS)
 | PT | Đường dẫn | Quyền | Mô tả |
 |---|---|---|---|
-| POST | `/thanh-toan/vnpay/{maDonHang}` | CK | Tạo URL thanh toán VNPay |
-| GET | `/thanh-toan/vnpay/ket-qua` | CK | Return URL: đọc kết quả để hiển thị (không đổi trạng thái) |
-| GET | `/thanh-toan/vnpay/ipn` | VNPay | IPN: kiểm chữ ký, cập nhật thanh toán; trả `{ RspCode, Message }` theo chuẩn VNPay |
+| POST | `/thanh-toan/payos/{maDonHang}` | CK | Tạo link thanh toán PayOS, trả `checkoutUrl` |
+| POST | `/thanh-toan/payos/webhook` | PayOS | Webhook: kiểm chữ ký, ghi kết quả giao dịch |
+| GET | `/thanh-toan/payos/ket-qua?orderCode=&ma=` | CK | Trang kết quả: hỏi lại PayOS nếu giao dịch còn chờ, ghi kết quả, trả trạng thái để hiển thị |
 
-#### Chi tiết thanh toán VNPay
+#### Chi tiết thanh toán PayOS
 
-Theo tài liệu VNPay chính thức, phiên bản 2.1.0: <https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html>.
+Theo tài liệu PayOS chính thức: <https://payos.vn/docs/api/>, webhook <https://payos.vn/docs/du-lieu-tra-ve/webhook/>.
+PayOS không có môi trường sandbox.
 
-- Chữ ký `vnp_SecureHash` = HMAC-SHA512 (khóa `VNPAY_HASH_SECRET`) của chuỗi `ten=giá_trị_mã_hóa` nối bằng `&`, các tham số
-  `vnp_*` xếp tăng dần theo tên, giá trị mã hóa URL kiểu `URLEncoder` (US-ASCII, dấu cách thành `+`); khi kiểm bỏ
-  `vnp_SecureHash`, `vnp_SecureHashType`. Như mẫu Java của VNPay.
-- URL thanh toán: `vnp_Amount` = tổng tiền × 100, `vnp_CurrCode` VND, `vnp_Locale` vn, `vnp_OrderType` other,
-  `vnp_OrderInfo` "Thanh toan don hang <mã>" (không dấu), `vnp_TxnRef` = mã tham chiếu mới mỗi lần tạo (mã đơn + 2 chữ số),
-  `vnp_CreateDate`/`vnp_ExpireDate` `yyyyMMddHHmmss` giờ GMT+7; liên kết hết hạn lúc đặt hàng + 30 phút.
-- Thanh toán thành công khi **cả** `vnp_ResponseCode` và `vnp_TransactionStatus` = "00".
-- Chỉ IPN cập nhật CSDL; Return URL chỉ kiểm chữ ký và đọc trạng thái để hiển thị.
-- Đơn VNPay chưa thanh toán: liên kết hết hạn sau 30 phút; hệ thống tự hủy đơn (hoàn kho, trả lượt mã) sau **35 phút**
-  (5 phút cho giao dịch đang dở trên VNPay).
+- Gọi PayOS: gốc `PAYOS_API_URL` (mặc định `https://api-merchant.payos.vn`), header `x-client-id`, `x-api-key`.
+  Tạo link `POST /v2/payment-requests`, hỏi trạng thái `GET /v2/payment-requests/{orderCode}`.
+- `orderCode` (PayOS bắt buộc là số) = id đơn × 100 + số lần thử (1–99), lưu ở `thanh_toan.ma_tham_chieu`; mỗi lần tạo link là
+  một giao dịch mới. `amount` = tổng tiền; `description` = `TG<orderCode>` (tối đa 9 ký tự – giới hạn của PayOS với tài khoản
+  ngân hàng không liên kết); `expiredAt` = lúc đặt hàng + 30 phút (Unix giây); `returnUrl` = `cancelUrl` = trang kết quả frontend + `/<mã đơn>`
+  (mã đơn ngẫu nhiên là khóa bí mật của trang kết quả: `orderCode` tuần tự nên một mình nó không đủ). Lời gọi PayOS có thời gian
+  chờ 10 giây (kết nối và đọc).
+- Chữ ký tạo link = HMAC-SHA256 (khóa `PAYOS_CHECKSUM_KEY`, hex) của
+  `amount=<…>&cancelUrl=<…>&description=<…>&orderCode=<…>&returnUrl=<…>`.
+- Chữ ký webhook = HMAC-SHA256 của các trường trong `data` xếp tăng dần theo tên, `ten=giá_trị` nối bằng `&`, giá trị null thành
+  chuỗi rỗng; so sánh thời gian hằng, không phân biệt hoa thường.
+- Tham số PayOS gắn vào returnUrl (`code, id, cancel, status, orderCode`) **không có chữ ký** nên không được dùng để ghi nhận thanh
+  toán: trang kết quả gọi `ket-qua`, backend tự hỏi PayOS. Nhờ vậy chạy ở localhost (PayOS không gọi được webhook) vẫn ghi nhận được.
+- Webhook và trang kết quả ghi qua cùng một hàm: khóa dòng giao dịch, chỉ ghi khi còn `cho_xu_ly` (gửi lại / đến sau không ghi lần hai).
+  Trang kết quả hỏi PayOS **trước** khi khóa (PayOS chậm không giữ khóa dòng), rồi khóa và kiểm lại.
+  Thành công thì đơn thành `da_thanh_toan`; đơn đã bị hủy mà tiền vẫn về thì giữ `da_huy`, ghi chú quản trị "Đã nhận tiền PayOS sau
+  khi đơn bị hủy – cần hoàn tiền"; đơn đã được trả bằng link khác (khách trả hai lần) thì ghi chú "Nhận tiền PayOS lần nữa
+  (orderCode …) – cần hoàn tiền".
+- Đơn PayOS chưa thanh toán: liên kết hết hạn sau 30 phút; hệ thống tự hủy đơn (hoàn kho, trả lượt mã) sau **35 phút**
+  (5 phút cho giao dịch đang dở).
+- Profile dev chưa đặt khóa thật thì **giả lập** (`app.payos.gia-lap`): link dẫn thẳng về trang kết quả, hỏi lại luôn báo `PAID`.
+  Có đủ `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY` thì luôn gọi PayOS thật; môi trường khác không giả lập.
 
 | API | Gửi lên | Trả về | Lỗi riêng |
 |---|---|---|---|
-| `POST /thanh-toan/vnpay/{maDonHang}` | – (mã đơn khó đoán; trả hộ đơn người khác không gây hại) | 200 `{ duongDan }`: frontend chuyển trình duyệt tới đây | 404 "Không tìm thấy đơn hàng"; 409 "Đơn hàng không thanh toán qua VNPay" / "Đơn hàng đã được thanh toán" / "Đơn hàng không còn chờ thanh toán" / "Đơn hàng đã quá hạn thanh toán"; 503 "Chưa cấu hình VNPay" |
-| `GET /thanh-toan/vnpay/ket-qua?<toàn bộ tham số VNPay trả về>` | Frontend chuyển nguyên query string từ trang `VNPAY_RETURN_URL` | 200 `{ hopLe, thanhCong, maDonHang?, trangThaiThanhToan?, thongBao }`: `hopLe` = chữ ký đúng; `thanhCong` theo mã VNPay; `trangThaiThanhToan` đọc từ CSDL (có thể còn `chua_thanh_toan` vài giây nếu IPN đến sau) | |
-| `GET /thanh-toan/vnpay/ipn` | VNPay gọi | 200 `{ RspCode, Message }`: `00` Confirm Success · `01` Order not found · `02` Order already confirmed · `04` Invalid amount · `97` Invalid signature · `99` Unknow error | Kiểm theo thứ tự: chữ ký → tìm giao dịch theo `vnp_TxnRef` → số tiền → còn chờ xử lý → cập nhật. Gửi lại IPN đã xử lý trả `02`, không ghi lần hai |
+| `POST /thanh-toan/payos/{maDonHang}` | – (mã đơn khó đoán; trả hộ đơn người khác không gây hại) | 200 `{ duongDan, orderCode, maDonHang, tongTien, hetHan }` (`duongDan` = `checkoutUrl` của PayOS; `hetHan` ISO-8601 = lúc đặt + 30 phút): trang `/thanh-toan/:maDonHang` nhúng `duongDan` bằng thư viện `@payos/payos-checkout` (giả lập dev: chuyển trình duyệt tới `duongDan`) | 404 "Không tìm thấy đơn hàng"; 409 "Đơn hàng không thanh toán qua PayOS" / "Đơn hàng đã được thanh toán" / "Đơn hàng không còn chờ thanh toán" / "Đơn hàng đã quá hạn thanh toán" / "Đơn hàng đã thử thanh toán quá nhiều lần"; 502 "Không tạo được liên kết thanh toán PayOS"; 503 "Chưa cấu hình PayOS" |
+| `POST /thanh-toan/payos/webhook` | PayOS gọi: `{ code, desc, success, data: { orderCode, amount, description, reference, transactionDateTime, currency, paymentLinkId, code, desc, … }, signature }` | 200 `{ success: true }` khi đã ghi hoặc bỏ qua; 500 khi lỗi bất ngờ (PayOS gửi lại) | Kiểm theo thứ tự: chữ ký → tìm giao dịch theo `data.orderCode` (không có → bỏ qua, VD webhook thử khi đăng ký URL) → số tiền → còn chờ → ghi. `data.code` = "00" là thành công; `ma_giao_dich` = `data.reference` |
+| `GET /thanh-toan/payos/ket-qua?orderCode=&ma=` | Frontend lấy `orderCode` từ query và `ma` (mã đơn) từ đường dẫn `/thanh-toan/ket-qua/<mã đơn>` | 200 `{ hopLe, thanhCong, trangThai, maDonHang?, trangThaiThanhToan?, trangThaiDon?, coTheThanhToanLai, thongBao }`: `trangThai` của giao dịch `cho_xu_ly` \| `thanh_cong` \| `that_bai`; giao dịch còn chờ thì hỏi PayOS – `PAID` đủ tiền → `thanh_cong`, `CANCELLED`/`EXPIRED` → `that_bai`, khác (hoặc PayOS lỗi) → giữ `cho_xu_ly`; `coTheThanhToanLai` = đơn PayOS chưa trả, còn chờ xác nhận, chưa quá 30 phút | `orderCode` sai/không có, hoặc `ma` không khớp đơn của giao dịch → 200 `hopLe = false` (không hỏi PayOS, không lộ thông tin) |
 
 ### 3.6 Đánh giá (`danhgia`) – Phase 8
 | PT | Đường dẫn | Quyền | Mô tả |
@@ -375,15 +388,15 @@ Thay đổi tồn kho khóa dòng biến thể (cùng cơ chế với đặt hà
 |---|---|---|---|
 | `GET /admin/don-hang` | `tuKhoa?` (mã đơn, tên, SĐT, email – không phân biệt hoa thường), `trangThai?`, `trangThaiThanhToan?`, `phuongThucThanhToan?`, `tuNgay?`, `denNgay?` (`yyyy-MM-dd`, giờ VN, gồm cả hai ngày), `trang`, `kichThuoc` (1–50, mặc định 20) | trang `{ maDonHang, tenNguoiNhan, email, soDienThoai, tongTien, trangThai, trangThaiThanhToan, phuongThucThanhToan, soLuongSanPham, khachVangLai, ngayDat }`, mới nhất trước | 400 `tuNgay > denNgay` |
 | `GET /admin/don-hang/{maDonHang}` | – | `{ don: DonHang, ghiChuQuanTri?, nguoiDungId?, trangThaiTiepTheo: [...], thanhToans: [{ maThamChieu, soTien, trangThai, maGiaoDich?, thanhToanLuc?, ngayTao }] }`; `don.lichSu[]` có thêm `nguoiThucHien?` | 404 |
-| `PATCH /admin/don-hang/{maDonHang}/trang-thai` | `{ trangThai, ghiChu? }` | 200 như trên | 409 "Không chuyển được đơn từ \"X\" sang \"Y\"" / "Đơn VNPay chưa thanh toán, chưa xác nhận được" |
+| `PATCH /admin/don-hang/{maDonHang}/trang-thai` | `{ trangThai, ghiChu? }` | 200 như trên | 409 "Không chuyển được đơn từ \"X\" sang \"Y\"" / "Đơn PayOS chưa thanh toán, chưa xác nhận được" |
 | `PATCH /admin/don-hang/{maDonHang}/thanh-toan` | `{ trangThaiThanhToan }` | 200 như trên | 409 "Không cập nhật được trạng thái thanh toán" |
 | `PATCH /admin/don-hang/{maDonHang}/ghi-chu` | `{ ghiChuQuanTri? }` (≤ 500, rỗng = xóa) | 200 như trên | |
 
 - Chuyển trạng thái theo sơ đồ trạng thái đơn: `cho_xac_nhan → da_xac_nhan → dang_giao → hoan_thanh`; hủy được từ
   `cho_xac_nhan`, `da_xac_nhan`. Hủy: hoàn kho, trả lượt mã (như khách hủy), ghi lịch sử kèm ghi chú.
-- Đơn VNPay chưa thanh toán không xác nhận được (chỉ hủy được). Đơn COD chuyển `hoan_thanh` thì tự thành `da_thanh_toan`.
+- Đơn PayOS chưa thanh toán không xác nhận được (chỉ hủy được). Đơn COD chuyển `hoan_thanh` thì tự thành `da_thanh_toan`.
 - Thanh toán chỉ đổi được: COD `chua_thanh_toan → da_thanh_toan` (đơn chưa hủy), và `da_thanh_toan → da_hoan_tien` khi đơn đã hủy
-  (hoàn tiền thủ công, không gọi API VNPay).
+  (hoàn tiền thủ công, không gọi API PayOS).
 - Đơn chuyển `hoan_thanh` thì khách viết được đánh giá các sản phẩm trong đơn.
 
 #### Chi tiết API quản trị: mã giảm giá, banner, cài đặt, người dùng, đánh giá (9.4)
@@ -426,7 +439,8 @@ Mọi số liệu tính theo **ngày đặt hàng** (giờ Việt Nam); doanh th
 | `FRONTEND_URL` | `http://localhost:5173` | Liên kết trong email |
 | `CORS_ALLOWED_ORIGINS` | = `FRONTEND_URL` | Origin được phép, phân cách dấu phẩy |
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | Gmail SMTP, rỗng | Chưa có `MAIL_USERNAME`: profile dev ghi liên kết ra log, nơi khác chỉ cảnh báo |
-| `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` | rỗng (dev: giá trị giả để test IPN bằng Postman) | Mã website và khóa bí mật VNPay sandbox (đăng ký tại sandbox.vnpayment.vn) |
-| `VNPAY_PAY_URL` | `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html` | Cổng thanh toán |
-| `VNPAY_RETURN_URL` | `FRONTEND_URL/thanh-toan/ket-qua` | Trang frontend VNPay chuyển khách về |
+| `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY` | rỗng (dev: checksum key giả để ký webhook thử bằng Postman) | Khóa kênh thanh toán PayOS (tạo tại my.payos.vn); có đủ 3 khóa thì gọi PayOS thật |
+| `PAYOS_API_URL` | `https://api-merchant.payos.vn` | Gốc API PayOS |
+| `PAYOS_RETURN_URL`, `PAYOS_CANCEL_URL` | `FRONTEND_URL/thanh-toan/ket-qua` | Trang frontend PayOS chuyển khách về sau khi trả / hủy |
+| `PAYOS_GIA_LAP` | dev: `true` (chỉ có tác dụng khi chưa đặt khóa) | Giả lập PayOS trên máy cá nhân |
 | `UPLOAD_DIR` | `uploads` | Thư mục lưu ảnh |

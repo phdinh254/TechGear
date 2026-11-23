@@ -5,6 +5,8 @@ import { layThongBaoLoi } from '../api/axiosClient';
 import AccountShell from '../components/AccountShell.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import OrderView from '../components/OrderView.jsx';
+import PayNowButton from '../components/PayNowButton.jsx';
+import { coTheThanhToanNgay } from '../utils/thanhToan.js';
 import Icon from '../components/ui/Icon.jsx';
 import { SkeletonBlock } from '../components/ui/Skeleton.jsx';
 import { useToast } from '../context/ToastContext.jsx';
@@ -80,10 +82,15 @@ export default function OrderDetailPage() {
         <OrderView
           donHang={donHang}
           renderItemExtra={(item) => donHang.trangThai === 'hoan_thanh' && item.sanPhamId && <ReviewForm item={item} maDonHang={donHang.maDonHang} />}
-          hanhDong={donHang.coTheHuy && (
-            <button type="button" className="btn btn-outline btn-block btn-cancel" onClick={huyDon} disabled={dangHuy}>
-              {dangHuy ? 'Đang hủy...' : 'Hủy đơn hàng'}
-            </button>
+          hanhDong={(coTheThanhToanNgay(donHang) || donHang.coTheHuy) && (
+            <div className="order-actions">
+              {coTheThanhToanNgay(donHang) && <PayNowButton maDonHang={donHang.maDonHang} />}
+              {donHang.coTheHuy && (
+                <button type="button" className="btn btn-outline btn-block btn-cancel" onClick={huyDon} disabled={dangHuy}>
+                  {dangHuy ? 'Đang hủy...' : 'Hủy đơn hàng'}
+                </button>
+              )}
+            </div>
           )}
         />
       )}

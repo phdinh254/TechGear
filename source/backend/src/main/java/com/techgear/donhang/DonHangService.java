@@ -39,7 +39,7 @@ public class DonHangService {
     private static final SecureRandom NGAU_NHIEN = new SecureRandom();
     private static final int GIOI_HAN_IP = 10;
     private static final Duration CUA_SO_IP = Duration.ofMinutes(15);
-    static final Duration HUY_VNPAY_SAU = Duration.ofMinutes(35);
+    static final Duration HUY_PAYOS_SAU = Duration.ofMinutes(35);
 
     private final DonHangRepository donHangRepository;
     private final KhuyenMaiService khuyenMaiService;
@@ -125,15 +125,15 @@ public class DonHangService {
     }
 
     /**
-     * Hủy các đơn VNPay chưa thanh toán sau 35 phút (liên kết hết hạn ở phút 30, thêm 5 phút cho giao dịch đang dở).
+     * Hủy các đơn PayOS chưa thanh toán sau 35 phút (liên kết hết hạn ở phút 30, thêm 5 phút cho giao dịch đang dở).
      * Mỗi đơn một giao dịch riêng để thứ tự khóa (biến thể → mã giảm giá) giống lúc đặt hàng, không khóa chéo.
      */
-    public int huyDonVnPayQuaHan() {
-        java.time.OffsetDateTime moc = java.time.OffsetDateTime.now(clock).minus(HUY_VNPAY_SAU);
+    public int huyDonPayOsQuaHan() {
+        java.time.OffsetDateTime moc = java.time.OffsetDateTime.now(clock).minus(HUY_PAYOS_SAU);
         int soDon = 0;
-        for (Long id : donHangRepository.donVnPayQuaHan(moc)) {
-            Boolean daHuy = giaoDich.execute(t -> donHangRepository.khoaDonVnPayQuaHan(id, moc).map(don -> {
-                huy(don, null, "Quá 30 phút chưa thanh toán VNPay, hệ thống tự hủy");
+        for (Long id : donHangRepository.donPayOsQuaHan(moc)) {
+            Boolean daHuy = giaoDich.execute(t -> donHangRepository.khoaDonPayOsQuaHan(id, moc).map(don -> {
+                huy(don, null, "Quá 30 phút chưa thanh toán PayOS, hệ thống tự hủy");
                 return true;
             }).orElse(false));
             if (Boolean.TRUE.equals(daHuy)) {
@@ -143,7 +143,7 @@ public class DonHangService {
         return soDon;
     }
 
-    /** Hủy đơn đã khóa: hoàn kho, trả lượt mã giảm giá, ghi lịch sử (dùng chung cho khách, quản trị, hết hạn VNPay). */
+    /** Hủy đơn đã khóa: hoàn kho, trả lượt mã giảm giá, ghi lịch sử (dùng chung cho khách, quản trị, hết hạn PayOS). */
     void huy(DonHangRepository.DonKhoa don, Long nguoiThucHienId, String ghiChu) {
         donHangRepository.doiTrangThai(don.id(), TrangThaiDonHang.da_huy);
         for (DonHangRepository.DongHoan d : donHangRepository.dongHoanKho(don.id())) {
@@ -158,9 +158,9 @@ public class DonHangService {
 
     private DonHangResponse.ChiTiet dat(Long nguoiDungId, String email, DatHangRequest req) {
         BangGia g = tinh(req.dongs(), req.maGiamGia(), nguoiDungId, email, true);
-        if (g.tongTien() == 0 && "vnpay".equals(req.phuongThucThanhToan().name())) {
-            // VNPay không nhận số tiền 0 → đơn không bao giờ thanh toán được rồi bị tự hủy
-            throw ApiException.yeuCauKhongHopLe("Đơn 0đ không cần thanh toán VNPay, vui lòng chọn thanh toán khi nhận hàng");
+        if (g.tongTien() == 0 && "payos".equals(req.phuongThucThanhToan().name())) {
+            // PayOS không nhận số tiền 0 → đơn không bao giờ thanh toán được rồi bị tự hủy
+            throw ApiException.yeuCauKhongHopLe("Đơn 0đ không cần thanh toán PayOS, vui lòng chọn thanh toán khi nhận hàng");
         }
 
         Map<String, Object> cot = new HashMap<>();

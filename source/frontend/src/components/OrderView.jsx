@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatTien } from '../utils/format';
+import { nhanPhuongThuc } from '../utils/thanhToan.js';
 import Icon from './ui/Icon.jsx';
 import ProductMedia from './ui/ProductMedia.jsx';
 
@@ -102,7 +103,7 @@ export default function OrderView({ donHang, renderItemExtra, hanhDong }) {
               <div><dt>Phí vận chuyển</dt><dd>{Number(donHang.phiVanChuyen) === 0 ? 'Miễn phí' : formatTien(donHang.phiVanChuyen)}</dd></div>
             </dl>
             <div className="summary-total"><span>Tổng cộng</span><strong>{formatTien(donHang.tongTien)}</strong></div>
-            <p className="muted">{donHang.phuongThucThanhToan === 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán qua VNPay'}</p>
+            <p className="muted">{nhanPhuongThuc(donHang.phuongThucThanhToan)}{donHang.trangThaiThanhToan === 'da_thanh_toan' && ' · Đã thanh toán'}</p>
             {hanhDong}
           </section>
         </aside>

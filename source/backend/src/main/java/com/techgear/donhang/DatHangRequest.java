@@ -30,5 +30,5 @@ public record DatHangRequest(
         @NotNull(message = "Vui lòng chọn phương thức thanh toán") PhuongThucThanhToan phuongThucThanhToan,
         @Size(max = 500, message = "Ghi chú tối đa 500 ký tự") String ghiChu
 ) {
-    public enum PhuongThucThanhToan { cod, vnpay }
+    public enum PhuongThucThanhToan { cod, payos }
 }

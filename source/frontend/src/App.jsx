@@ -16,6 +16,8 @@ import OrdersPage from './pages/OrdersPage.jsx';
 import OrderDetailPage from './pages/OrderDetailPage.jsx';
 import WishlistPage from './pages/WishlistPage.jsx';
 import OrderLookupPage from './pages/OrderLookupPage.jsx';
+import PaymentResultPage from './pages/PaymentResultPage.jsx';
+import PaymentPage from './pages/PaymentPage.jsx';
 import PolicyPage from './pages/PolicyPage.jsx';
 import ContactPage from './pages/ContactPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
@@ -33,6 +35,9 @@ export default function App() {
         <Route path="gio-hang" element={<CartPage />} />
         <Route path="dat-hang" element={<CheckoutPage />} />
         <Route path="tra-cuu-don-hang" element={<OrderLookupPage />} />
+        <Route path="thanh-toan/ket-qua" element={<PaymentResultPage />} />
+        <Route path="thanh-toan/ket-qua/:maDonHang" element={<PaymentResultPage />} />
+        <Route path="thanh-toan/:maDonHang" element={<PaymentPage />} />
         <Route path="chinh-sach" element={<PolicyPage />} />
         <Route path="lien-he" element={<ContactPage />} />
         <Route path="dang-nhap" element={<LoginPage />} />

@@ -196,3 +196,10 @@
   .lookup-form { padding: var(--sp-6); }
   .checkout-step, .summary { padding: var(--sp-5); }
 }
+
+/* ---------- Thanh toán PayOS ---------- */
+.payment-result.is-pending .success-mark { background: var(--warning-bg); color: var(--warning); }
+.payment-result.is-failed .success-mark { background: var(--danger-bg); color: var(--danger); }
+.payment-result > .muted { margin-top: var(--sp-4); }
+.order-actions { display: grid; gap: var(--sp-3); margin-top: var(--sp-4); }
+.order-actions .btn-cancel { margin-top: 0; }

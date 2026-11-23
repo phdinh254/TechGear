@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import accountApi from '../api/accountApi';
 import checkoutApi from '../api/checkoutApi';
 import { layThongBaoLoi } from '../api/axiosClient';
@@ -25,6 +25,11 @@ function Step({ so, tieuDe, children, phu }) {
     </section>
   );
 }
+
+const PHUONG_THUC = [
+  { giaTri: 'cod', icon: 'wallet', nhan: 'Thanh toán khi nhận hàng (COD)', moTa: 'Kiểm tra hàng rồi thanh toán cho nhân viên giao hàng' },
+  { giaTri: 'payos', icon: 'bolt', nhan: 'Chuyển khoản / quét mã QR qua PayOS', moTa: 'Thanh toán ngay bằng ứng dụng ngân hàng, đơn được xác nhận nhanh hơn' },
+];
 
 export default function CheckoutPage() {
   const { nguoiDung } = useAuth();
@@ -52,7 +57,15 @@ export default function CheckoutPage() {
   const dongs = dong.map((item) => ({ bienTheId: item.bienTheId, soLuong: item.soLuong }));
   // Email giúp backend kiểm mã giảm giá giới hạn theo khách; chỉ gửi khi đã đúng định dạng
   const emailTinh = () => (/^\S+@\S+\.\S+$/.test(form.email.trim()) ? form.email.trim() : null);
+  const navigate = useNavigate();
   const doi = (khoa) => (e) => setForm({ ...form, [khoa]: e.target.value });
+
+  // Mã giảm giá làm đơn về 0đ thì PayOS không dùng được: chuyển về COD
+  useEffect(() => {
+    if (tinhTien && Number(tinhTien.tongTien) === 0 && form.phuongThucThanhToan === 'payos') {
+      setForm((f) => ({ ...f, phuongThucThanhToan: 'cod' }));
+    }
+  }, [tinhTien, form.phuongThucThanhToan]);
 
   const chonDiaChi = (diaChi) => {
     setDiaChiChon(String(diaChi.id));
@@ -138,6 +151,11 @@ export default function CheckoutPage() {
         dongs,
       }, Boolean(nguoiDung));
       await xoaHet();
+      if (response.phuongThucThanhToan === 'payos') {
+        // Trang thanh toán nhúng PayOS tự tạo link (lỗi tạo link hiện ở đó, kèm nút xem đơn)
+        navigate(`/thanh-toan/${encodeURIComponent(response.maDonHang)}`, { replace: true });
+        return;
+      }
       setKetQua(response);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
@@ -232,16 +250,18 @@ export default function CheckoutPage() {
 
           <Step so={3} tieuDe="Phương thức thanh toán">
             <div className="payment-options">
-              <label className="radio-card is-active">
-                <input type="radio" name="thanh-toan" checked readOnly />
-                <Icon name="wallet" size={22} />
-                <span><strong>Thanh toán khi nhận hàng (COD)</strong><span className="muted">Kiểm tra hàng rồi thanh toán cho nhân viên giao hàng</span></span>
-              </label>
-              <label className="radio-card is-disabled">
-                <input type="radio" name="thanh-toan" disabled />
-                <Icon name="lock" size={22} />
-                <span><strong>VNPay</strong><span className="muted">Sắp ra mắt</span></span>
-              </label>
+              {PHUONG_THUC.map((pt) => {
+                // PayOS không nhận đơn 0đ (backend cũng chặn)
+                const khoa = pt.giaTri === 'payos' && tinhTien && Number(tinhTien.tongTien) === 0;
+                const chon = form.phuongThucThanhToan === pt.giaTri;
+                return (
+                  <label key={pt.giaTri} className={`radio-card${chon ? ' is-active' : ''}${khoa ? ' is-disabled' : ''}`}>
+                    <input type="radio" name="thanh-toan" value={pt.giaTri} checked={chon} disabled={khoa} onChange={doi('phuongThucThanhToan')} />
+                    <Icon name={pt.icon} size={22} />
+                    <span><strong>{pt.nhan}</strong><span className="muted">{khoa ? 'Đơn 0đ không cần thanh toán trực tuyến' : pt.moTa}</span></span>
+                  </label>
+                );
+              })}
             </div>
           </Step>
         </div>
@@ -292,7 +312,7 @@ export default function CheckoutPage() {
           {tinhTien && <div className="summary-total"><span>Tổng cộng</span><strong>{formatTien(tinhTien.tongTien)}</strong></div>}
 
           <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={dangDat || dangTinh || !tinhTien}>
-            {dangDat ? <><span className="spinner" /> Đang đặt hàng...</> : 'Xác nhận đặt hàng'}
+            {dangDat ? <><span className="spinner" /> Đang đặt hàng...</> : form.phuongThucThanhToan === 'payos' ? 'Đặt hàng và thanh toán' : 'Xác nhận đặt hàng'}
           </button>
           <p className="summary-note"><Icon name="lock" size={14} /><span>Bằng việc đặt hàng, bạn đồng ý với <Link to="/chinh-sach">chính sách mua hàng</Link>.</span></p>
         </aside>

@@ -21,7 +21,7 @@ Thành công khi:
 | Khách vãng lai | Chưa đăng nhập: xem, tìm kiếm sản phẩm; giỏ hàng (lưu ở trình duyệt); đặt hàng; tra cứu đơn; đăng ký, đăng nhập, quên mật khẩu |
 | Khách hàng | Đã đăng nhập, kế thừa khách vãng lai; thêm: thông tin cá nhân, sổ địa chỉ, giỏ hàng trên server, đơn hàng của tôi, đánh giá, yêu thích |
 | Quản trị viên | Quản lý danh mục, thương hiệu, sản phẩm, kho, đơn hàng, mã giảm giá, banner, cấu hình, người dùng, đánh giá, thống kê |
-| Cổng thanh toán VNPay | Hệ thống ngoài: nhận thanh toán, gọi lại backend (IPN) |
+| Cổng thanh toán PayOS | Hệ thống ngoài: nhận chuyển khoản / VietQR, gọi lại backend (webhook), trả trạng thái giao dịch |
 | Dịch vụ Email (SMTP) | Hệ thống ngoài: gửi liên kết đặt lại mật khẩu |
 
 ## 3. Bản đồ module
@@ -37,7 +37,7 @@ Thành công khi:
 | `giohang` | Giỏ hàng trên server, gộp giỏ, yêu thích | taikhoan, sanpham | 03, 05 |
 | `khuyenmai` | Mã giảm giá | chung | 03, 08 |
 | `donhang` | Đặt hàng, tồn kho, đơn của tôi, hủy, tra cứu, quản trị đơn và kho | taikhoan, sanpham, khuyenmai, cuahang | 03, 05, 07 |
-| `thanhtoan` | VNPay (tạo URL, return, IPN), COD | donhang | 03, 07 |
+| `thanhtoan` | PayOS (tạo link, webhook, trang kết quả), COD | donhang | 03, 07 |
 | `danhgia` | Viết, xem, duyệt đánh giá | taikhoan, sanpham, donhang | 02, 05, 09 |
 | `thongke` | Doanh thu, đơn theo trạng thái, sản phẩm bán chạy | donhang | 09 |
 
@@ -87,7 +87,7 @@ danhgia → phần quản trị của từng module → thongke.
 
 ### 4.5 Đặt hàng & đơn hàng (`donhang`)
 - Đặt hàng (vãng lai hoặc khách hàng): danh sách (biến thể, số lượng), thông tin người nhận (chọn từ sổ địa chỉ hoặc nhập),
-  mã giảm giá (tùy chọn), phương thức thanh toán COD hoặc VNPay, ghi chú. Có API **tính thử** trả tạm tính – giảm giá – phí ship – tổng.
+  mã giảm giá (tùy chọn), phương thức thanh toán COD hoặc PayOS, ghi chú. Có API **tính thử** trả tạm tính – giảm giá – phí ship – tổng.
 - **Mọi số tiền tính ở server** từ giá hiện tại; tổng = tạm tính − giảm giá + phí vận chuyển. Phí vận chuyển theo cấu hình,
   miễn phí khi (tạm tính − giảm giá) ≥ ngưỡng.
 - Tồn kho trừ ngay khi đặt, trong cùng giao dịch, có khóa dòng; không đủ hàng → 409 nêu rõ biến thể. Ghi lịch sử tồn kho.
@@ -99,13 +99,14 @@ danhgia → phần quản trị của từng module → thongke.
   Đơn của người khác → 404.
 - Tra cứu đơn (vãng lai): mã đơn + email đặt hàng; sai → 404; giới hạn số lần.
 - Hủy đơn (khách hoặc quản trị): hoàn tồn kho (ghi lịch sử), trả lại lượt mã giảm giá.
-- Đơn VNPay chưa thanh toán sau 30 phút thì hệ thống tự hủy (hoàn kho).
+- Đơn PayOS chưa thanh toán sau 30 phút thì hệ thống tự hủy (hoàn kho).
 
 ### 4.6 Thanh toán (`thanhtoan`)
 - COD: trạng thái thanh toán chuyển `da_thanh_toan` khi đơn `hoan_thanh`.
-- VNPay (sandbox, giao thức 2.1.0): tạo URL thanh toán cho đơn VNPay chưa thanh toán; **chỉ IPN cập nhật kết quả**
-  (kiểm chữ ký HMAC-SHA512, mã đơn, số tiền; mỗi giao dịch chỉ xử lý một lần); return URL chỉ đọc trạng thái để hiển thị.
-- Hoàn tiền VNPay (đơn đã thanh toán bị hủy): quản trị đánh dấu `da_hoan_tien` thủ công (không gọi API hoàn tiền).
+- PayOS (chuyển khoản / VietQR): tạo link thanh toán cho đơn PayOS chưa thanh toán; kết quả ghi nhận qua **webhook** (kiểm chữ ký
+  HMAC-SHA256, mã giao dịch, số tiền) hoặc khi khách về trang kết quả – backend tự hỏi PayOS, không tin tham số trên URL;
+  mỗi giao dịch chỉ ghi một lần. Profile dev giả lập PayOS khi chưa có khóa thật.
+- Hoàn tiền PayOS (đơn đã thanh toán bị hủy): quản trị đánh dấu `da_hoan_tien` thủ công (không gọi API hoàn tiền).
 
 ### 4.7 Đánh giá (`danhgia`)
 - Chỉ khách có đơn `hoan_thanh` chứa sản phẩm; mỗi (khách, sản phẩm, đơn) một lần; 1–5 sao, nội dung ≤ 2000 ký tự.
@@ -177,7 +178,7 @@ public DiaChiResponse tao(Long nguoiDungId, DiaChiRequest req) {
 ## 7. Chiến lược kiểm thử
 | Mức | Công cụ | Phạm vi |
 |---|---|---|
-| Unit | JUnit 5 + Mockito (`mvn test`) | Logic: tính tiền, mã giảm giá, chuyển trạng thái đơn, chữ ký VNPay, slug, kiểm tra ảnh |
+| Unit | JUnit 5 + Mockito (`mvn test`) | Logic: tính tiền, mã giảm giá, chuyển trạng thái đơn, chữ ký PayOS, slug, kiểm tra ảnh |
 | Tích hợp | Testcontainers MySQL (`mvn verify`) | Khởi động với Flyway thật + `ddl-auto=validate`; đặt hàng đồng thời không bán quá tồn kho |
 | API | Postman + Newman | Mọi API: mã trạng thái, hình dạng JSON, quy tắc nghiệp vụ, 401/403/404/409/429, hợp đồng frontend |
 
@@ -191,11 +192,11 @@ Chi tiết trường: `docs/thiet-ke/dac-ta-api.md`.
 - **Luôn:** viết test trước code logic; chạy `mvn test` + Newman trước mỗi commit; kiểm đầu vào ở controller (Bean Validation);
   giữ hợp đồng API mục 8; thông báo lỗi tiếng Việt.
 - **Hỏi trước:** đổi lược đồ đã duyệt; thêm thư viện ngoài danh sách mục 6; đổi hợp đồng API đã công bố; đổi cấu hình bảo mật/CORS.
-- **Không bao giờ:** sửa/xóa `source/frontend`; commit bí mật (JWT secret, mật khẩu SMTP, khóa VNPay); push trước khi kiểm tra toàn bộ;
+- **Không bao giờ:** sửa/xóa `source/frontend`; commit bí mật (JWT secret, mật khẩu SMTP, khóa PayOS); push trước khi kiểm tra toàn bộ;
   bỏ/tắt test đang lỗi để qua.
 
 ## 10. Câu hỏi cần chốt
 1. Giá đặt ở **biến thể**, giá hiển thị của sản phẩm là giá biến thể rẻ nhất (tự cập nhật) – đồng ý?
-2. Đơn VNPay chưa thanh toán sau **30 phút** tự hủy và hoàn kho – đồng ý thời gian này?
+2. Đơn PayOS chưa thanh toán sau **30 phút** tự hủy và hoàn kho – đồng ý thời gian này?
 3. Doanh thu thống kê chỉ tính đơn **hoàn thành** – đồng ý?
 4. Mật khẩu tối thiểu 8 ký tự, có chữ và số – đồng ý?

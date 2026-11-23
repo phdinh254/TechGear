@@ -23,7 +23,7 @@ services:
       retries: 20
 
   # Cả backend + frontend trong Docker (chỉ khi bật profile app): docker compose --profile app up -d --build
-  # Chạy profile dev của Spring (dữ liệu mẫu, khóa JWT/VNPay giả) – chỉ để kiểm tra trên máy cá nhân, không dùng triển khai thật.
+  # Chạy profile dev của Spring (dữ liệu mẫu, khóa JWT giả, PayOS giả lập) – chỉ để kiểm tra trên máy cá nhân, không dùng triển khai thật.
   backend:
     profiles: [app]
     build: ./source/backend
@@ -32,6 +32,10 @@ services:
       SPRING_PROFILES_ACTIVE: dev
       DB_URL: jdbc:mysql://mysql:3306/techgear
       TZ: Asia/Ho_Chi_Minh
+      # Để trống = PayOS giả lập; đặt đủ 3 khóa (trong shell hoặc file .env cạnh file này) để dùng PayOS thật
+      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID:-}
+      PAYOS_API_KEY: ${PAYOS_API_KEY:-}
+      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY:-techgear-dev-payos-khong-phai-khoa-that}
     ports:
       - "8080:8080"
     volumes:

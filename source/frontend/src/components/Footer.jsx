@@ -57,6 +57,7 @@ export default function Footer() {
           <div className="footer-pay" aria-label="Phương thức thanh toán">
             <span>Thanh toán</span>
             <span className="pay-chip"><Icon name="wallet" size={16} /> COD</span>
+            <span className="pay-chip"><Icon name="bolt" size={16} /> PayOS</span>
           </div>
         </div>
       </div>

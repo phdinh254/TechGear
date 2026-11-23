@@ -24,7 +24,7 @@ left to right direction
 
 actor "Khách vãng lai" as KVL
 actor "Khách hàng" as KH
-actor "Cổng thanh toán\nVNPay" as VNP <<Hệ thống>>
+actor "Cổng thanh toán\nPayOS" as PAYOS <<Hệ thống>>
 actor "Dịch vụ Email" as MAIL <<Hệ thống>>
 
 KH -|> KVL
@@ -37,7 +37,7 @@ rectangle "Website TechGear" {
   usecase "UC11. Đặt hàng" as UC11
   usecase "Nhập thông tin giao hàng" as INC1
   usecase "Áp dụng mã giảm giá" as EXT1
-  usecase "UC12. Thanh toán qua VNPay" as UC12
+  usecase "UC12. Thanh toán qua PayOS" as UC12
   usecase "UC01. Đăng ký tài khoản" as UC01
   usecase "UC02. Đăng nhập" as UC02
   usecase "UC03. Quên mật khẩu" as UC03
@@ -76,6 +76,6 @@ UC11 <.. UC12 : <<extend>>
 UC13 <.. EXT2 : <<extend>>
 
 ' Hệ thống ngoài
-UC12 --> VNP
+UC12 --> PAYOS
 UC03 --> MAIL
 @enduml

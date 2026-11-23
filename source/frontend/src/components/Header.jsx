@@ -31,7 +31,7 @@ function AnnouncementBar() {
           <Icon name="truck" size={16} />
           {nguong > 0 ? <>Miễn phí vận chuyển cho đơn từ <strong>{formatTien(nguong)}</strong></> : 'Giao hàng toàn quốc'}
           <span className="announcement-sep" aria-hidden="true">·</span>
-          <span className="announcement-extra">Thanh toán khi nhận hàng (COD)</span>
+          <span className="announcement-extra">COD hoặc chuyển khoản qua PayOS</span>
         </p>
         <Link to="/tra-cuu-don-hang" className="announcement-link">Tra cứu đơn hàng</Link>
       </div>

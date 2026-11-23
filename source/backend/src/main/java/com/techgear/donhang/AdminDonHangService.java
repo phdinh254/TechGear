@@ -119,7 +119,7 @@ public class AdminDonHangService {
 
     /**
      * Chuyển trạng thái theo {@link TrangThaiDonHang#coTheChuyenSang}; hủy thì hoàn kho, trả lượt mã;
-     * COD hoàn thành thì thành đã thanh toán; đơn VNPay chưa trả không xác nhận được.
+     * COD hoàn thành thì thành đã thanh toán; đơn PayOS chưa trả không xác nhận được.
      */
     @Transactional
     public ChiTietQT doiTrangThai(String maDonHang, DoiTrangThaiRequest req, Long quanTriId) {
@@ -132,9 +132,9 @@ public class AdminDonHangService {
         Map<String, Object> thanhToan = jdbc.sql(
                         "SELECT phuong_thuc_thanh_toan AS pt, trang_thai_thanh_toan AS ttt FROM don_hang WHERE id = :id")
                 .param("id", don.id()).query().singleRow();
-        boolean vnpayChuaTra = "vnpay".equals(thanhToan.get("pt")) && "chua_thanh_toan".equals(thanhToan.get("ttt"));
-        if (moi == TrangThaiDonHang.da_xac_nhan && vnpayChuaTra) {
-            throw ApiException.xungDot("Đơn VNPay chưa thanh toán, chưa xác nhận được");
+        boolean payosChuaTra = "payos".equals(thanhToan.get("pt")) && "chua_thanh_toan".equals(thanhToan.get("ttt"));
+        if (moi == TrangThaiDonHang.da_xac_nhan && payosChuaTra) {
+            throw ApiException.xungDot("Đơn PayOS chưa thanh toán, chưa xác nhận được");
         }
         String ghiChu = req.ghiChu() == null || req.ghiChu().isBlank() ? null : req.ghiChu().trim();
         if (moi == TrangThaiDonHang.da_huy) {

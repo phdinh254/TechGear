@@ -236,7 +236,7 @@ Chỉ mục: `danh_muc_id`, `thuong_hieu_id`, `gia_ban`.
 | tien_giam_gia | BIGINT | NN, CK ≥ 0, mặc định 0; CK `tien_giam_gia <= tam_tinh` | |
 | phi_van_chuyen | BIGINT | NN, CK ≥ 0, mặc định 0 | |
 | tong_tien | BIGINT | NN; CK `tong_tien = tam_tinh - tien_giam_gia + phi_van_chuyen` | |
-| phuong_thuc_thanh_toan | VARCHAR(10) | NN, CK `cod`,`vnpay` | |
+| phuong_thuc_thanh_toan | VARCHAR(10) | NN, CK `cod`,`payos` (ràng buộc `ck_don_hang_phuong_thuc`, V8) | |
 | trang_thai_thanh_toan | VARCHAR(20) | NN, CK `chua_thanh_toan`,`da_thanh_toan`,`da_hoan_tien`, mặc định `chua_thanh_toan` | |
 | trang_thai | VARCHAR(20) | NN, CK `cho_xac_nhan`,`da_xac_nhan`,`dang_giao`,`hoan_thanh`,`da_huy`, mặc định `cho_xac_nhan` | |
 | created_at, updated_at | DATETIME(6) | | created_at = ngày đặt |
@@ -273,12 +273,12 @@ Chỉ mục: `nguoi_dung_id`, `(trang_thai, created_at)`, `email`.
 |---|---|---|---|
 | id | BIGINT | PK | |
 | don_hang_id | BIGINT | NN, FK → don_hang (CASCADE) | Một đơn có thể nhiều lần thử |
-| phuong_thuc | VARCHAR(10) | NN, CK `cod`,`vnpay` | |
+| phuong_thuc | VARCHAR(10) | NN, CK `cod`,`payos` (ràng buộc `ck_thanh_toan_phuong_thuc`, V8) | |
 | so_tien | BIGINT | NN, CK ≥ 0 | |
-| ma_tham_chieu | VARCHAR(50) | NN, UQ | Gửi sang VNPay (`vnp_TxnRef`) |
-| ma_giao_dich | VARCHAR(50) | UQ | Mã giao dịch VNPay trả về (`vnp_TransactionNo`) |
+| ma_tham_chieu | VARCHAR(50) | NN, UQ | `orderCode` gửi PayOS = id đơn × 100 + lần thử (chuỗi số) |
+| ma_giao_dich | VARCHAR(50) | UQ | Mã giao dịch ngân hàng PayOS trả về (`data.reference` của webhook) |
 | trang_thai | VARCHAR(20) | NN, CK `cho_xu_ly`,`thanh_cong`,`that_bai`, mặc định `cho_xu_ly` | |
-| du_lieu_phan_hoi | JSON | | Toàn bộ tham số IPN |
+| du_lieu_phan_hoi | JSON | | Toàn bộ body webhook PayOS, hoặc thông tin link khi trang kết quả hỏi lại PayOS |
 | thanh_toan_luc | DATETIME(6) | | |
 | created_at, updated_at | DATETIME(6) | | |
 
@@ -320,7 +320,7 @@ UQ `(nguoi_dung_id, san_pham_id, don_hang_id)`; chỉ mục `(san_pham_id, trang
 | `danh_gia`: `da_duyet` + `deleted_at` → `trang_thai` (`cho_duyet`/`da_duyet`/`da_an`) | Khớp use case Duyệt / Ẩn đánh giá |
 | `ma_dat_lai_mat_khau.ma` → `ma_bam` (SHA-256) | Lộ CSDL không lộ mã đặt lại |
 | Thêm `nguoi_dung.doi_mat_khau_luc` | Thu hồi token khi đổi/đặt lại mật khẩu |
-| Thêm `thanh_toan.ma_tham_chieu` | Mã gửi VNPay, tách khỏi mã giao dịch VNPay trả về |
+| Thêm `thanh_toan.ma_tham_chieu` | Mã gửi PayOS (`orderCode`), tách khỏi mã giao dịch PayOS trả về |
 | Bỏ `deleted_at` ở `nguoi_dung`, `danh_gia` | Không có use case xóa tài khoản; đánh giá dùng trạng thái |
 | Duy nhất giữa các dòng chưa xóa mềm, một địa chỉ mặc định, một ảnh chính – ràng buộc ở CSDL | Chỉ mục duy nhất trên biểu thức (MySQL 8) |
 | Tiền `BIGINT`, thời gian `DATETIME(6)` (giờ Việt Nam), `thuoc_tinh_san_pham` → `thong_so`, `bien_the_san_pham` → `bien_the`, `password` → `mat_khau` | Tiền không lẻ, tên ngắn gọn thống nhất |

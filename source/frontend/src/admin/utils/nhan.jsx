@@ -7,7 +7,7 @@ export const NHAN_THANH_TOAN = {
   da_hoan_tien: { nhan: 'Đã hoàn tiền', lop: 'admin-badge--muted' },
 };
 
-export const NHAN_PHUONG_THUC = { cod: 'COD', vnpay: 'VNPay' };
+export const NHAN_PHUONG_THUC = { cod: 'COD', payos: 'PayOS' };
 
 export const NHAN_GIAO_DICH = {
   cho_xu_ly: { nhan: 'Chờ xử lý', lop: 'admin-badge--warning' },
