@@ -9,7 +9,7 @@
 .auth-form-inner { width: 100%; max-width: 420px; animation: rise 520ms var(--ease-out) both; }
 .auth-form h1 { margin-bottom: var(--sp-2); font-size: var(--fs-xl); text-align: center; }
 .auth-desc { margin-bottom: var(--sp-8); color: var(--muted); text-align: center; }
-.auth-foot { margin-top: var(--sp-6); padding-top: var(--sp-6); border-top: 1px solid var(--line); color: var(--muted); font-size: var(--fs-sm); text-align: center; }
+.auth-foot { margin-top: var(--sp-6); color: var(--muted); font-size: var(--fs-sm); text-align: center; }
 .auth-foot a { color: var(--ink); font-weight: 600; }
 .auth-foot a:hover { color: var(--blue-500); }
 .auth-success { display: grid; justify-items: center; gap: var(--sp-2); text-align: center; }

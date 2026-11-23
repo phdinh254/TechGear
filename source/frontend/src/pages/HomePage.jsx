@@ -248,7 +248,6 @@ export default function HomePage() {
       )}
 
       <PromoBanners banners={banners} />
-      <BrandBanner />
 
       {(dangTai || moiNhat.length > 0) && (
         <Reveal as="section" className="section container" aria-labelledby="mn-title">
@@ -257,6 +256,7 @@ export default function HomePage() {
         </Reveal>
       )}
 
+      <BrandBanner />
       <WhyUs />
     </div>
   );

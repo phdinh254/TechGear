@@ -376,15 +376,12 @@ export default function Header() {
               <Icon name="heart" size={22} />
               {soYeuThich > 0 && <span className="cart-count">{soYeuThich > 99 ? '99+' : soYeuThich}</span>}
             </Link>
-            {nguoiDung ? (
-              <AccountMenu nguoiDung={nguoiDung} dangXuat={dangXuat} />
-            ) : (
-              <Link to="/dang-nhap" className="icon-btn" aria-label="Đăng nhập"><Icon name="user" size={22} /></Link>
-            )}
+            {nguoiDung && <AccountMenu nguoiDung={nguoiDung} dangXuat={dangXuat} />}
             <Link to="/gio-hang" className={`icon-btn cart-btn${nay ? ' is-bump' : ''}`} aria-label={`Giỏ hàng, ${tongSoLuong} sản phẩm`}>
               <Icon name="bag" size={22} />
               {tongSoLuong > 0 && <span className="cart-count">{tongSoLuong > 99 ? '99+' : tongSoLuong}</span>}
             </Link>
+            {!nguoiDung && <Link to="/dang-nhap" className="btn btn-primary btn-sm header-login">Đăng nhập</Link>}
           </div>
         </div>
         {moTim && <SearchPanel onClose={() => setMoTim(false)} />}

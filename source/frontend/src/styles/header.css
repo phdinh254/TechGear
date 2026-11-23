@@ -42,6 +42,7 @@
 .nav-mega { display: flex; }
 
 .header-actions { display: flex; align-items: center; gap: 4px; }
+.header-login { margin-left: var(--sp-2); white-space: nowrap; }
 .cart-btn .cart-count, .wishlist-btn .cart-count { position: absolute; top: 3px; right: 1px; display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-pill); background: var(--blue-500); color: #fff; font-size: 0.66rem; font-weight: 700; line-height: 1; box-shadow: 0 0 0 2px #fff; }
 .cart-btn.is-bump .cart-count { animation: bump 450ms var(--ease-out); }
 .cart-btn.is-bump svg { animation: wiggle 450ms var(--ease-out); }
@@ -140,6 +141,8 @@
   .search-panel { padding-block: var(--sp-4) var(--sp-6); }
   .search-field { padding-left: 14px; }
   .search-field .btn { display: none; }
+  /* Màn hẹp không đủ chỗ cho nút chữ: dùng nút "Đăng nhập" ở cuối menu trượt */
+  .header-login { display: none; }
 }
 
 /* Điện thoại rất nhỏ: thu gọn cụm icon để vừa 5 nút (menu, tìm, yêu thích, tài khoản, giỏ) */
