@@ -197,6 +197,16 @@ npm run dev
 ```
 Mở `http://localhost:5173`. Địa chỉ backend cấu hình trong file `.env` (`VITE_API_URL`).
 
+### Chạy cả hệ thống bằng Docker (không cần JDK/Maven/Node)
+
+```bash
+docker compose --profile app up -d --build   # MySQL + backend (cổng 8080) + frontend nginx (cổng 5173)
+docker compose --profile app down            # dừng (thêm -v để xóa cả dữ liệu và ảnh upload)
+```
+Mở `http://localhost:5173`. Backend chạy profile dev (dữ liệu mẫu, khóa JWT/VNPay giả) nên chỉ dùng để kiểm tra trên máy
+cá nhân. Cổng 8080 và 5173 phải trống (tắt `mvn spring-boot:run` / `npm run dev` trước). Ảnh upload lưu ở volume
+`techgear-uploads`. Dockerfile: `source/backend/Dockerfile`, `docker/frontend.Dockerfile`.
+
 ## Danh sách API
 
 Đặc tả đầy đủ (dữ liệu gửi lên, trả về, mã lỗi): `docs/thiet-ke/dac-ta-api.md`. Backend mới giữ nguyên các API mà
